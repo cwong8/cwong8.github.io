@@ -1,3 +1,8 @@
+---
+layout: page
+title: Black Desert Online Worker Optimization
+permalink: /projects/BDO_Optimization/webscrape/
+---
 
 # Web Scraping
 I web scraped the website [bdodae.com](https://www.bdodae.com/) for data to use for my project. Since I am optimizing profits I need item values and information about the nodes.
