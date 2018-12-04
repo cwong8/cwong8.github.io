@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Black Desert Online Worker Optimization</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="table-of-contents">Table of contents</h1>
+<ol>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="/projects/BDO_Optimization/web_scrape/BDODAE_webscrape.md">Obtaining the data through web scraping</a></li>
+  <li><a href="/projects/BDO_Optimization/analysis/">Exploratory analysis</a></li>
+  <li><a href="">Optimization (in progress)</a></li>
+  <li><a href="#information">Information</a></li>
+</ol>
+
+<h2 id="introduction-">Introduction <a name="introduction"></a></h2>
+<p>This is a personal project of mine where I attempt to optimize the worker system in the online MMORPG Black Desert Online using Python. This was my first time using Python having used R throughout my college years.</p>
+
+<p>The worker system consists of a map of main nodes and their subnodes that can be reached by connecting together nodes starting from a city. For a more detailed/accurate map see: <a href="http://www.somethinglovely.net/bdo/">Famme’s BDO map</a>. Below is a simplified map of the in-game node network where colors denote different regions in the game and shapes denote node type.</p>
+
+<p><img src="analysis/figures/output_10_0.svg" alt="svg" /></p>
+
+<p>The following information is taken directly from the <a href="http://blackdesertonline.wikia.com/wiki/">game wiki</a>.</p>
+
+<h3 id="main-nodes">(Main) Nodes</h3>
+<p>Nodes can be activated by investing Contribution Points at the Node Manager. If two adjacent ones are activated the nodes become connected. If all the nodes between two towns are connected it allows automatic transport between their warehouses for a lower price (otherwise one pays 3x the fee) and manual trade between them for full pricing (otherwise you only received 30% of the item price).</p>
+
+<p>Furthermore activating a node allows you to invest Energy into the node which in turn gives you bonuses in the node area such as more loot drops.</p>
+
+<p>Activating a node is also necessary to automatically assign workers to gather resources from resource nodes and bring them back to the region’s warehouses. Certain nodes not only have regular resource nodes attached to them but can have additional hidden nodes too. The latter become available at the Node Manager if one talks to it and pays 35 Energy. Afterwards they are unlocked for workers. Hidden nodes offer special resource gathering for workers, like the excavation node at the Ancient Stone Chamber for Trace of Earth and Trace of Ascension.</p>
+
+<h3 id="subnodes">Subnodes</h3>
+<p>Resource nodes are places you can send your workers to gather resource or make financial investments for you.</p>
+
+<p>Each resource node belongs to a location node. Before you can assign workers to a resource node its location node needs to be connected with a node where you have purchased lodging for a worker. Farms, Forests and Mines belong to Trading Posts, Connection nodes and Dangerous nodes. Investment nodes can be found at Village nodes.</p>
+
+<h3 id="workers">Workers</h3>
+<p>There are three types of workers: Goblin, Human and Giant.</p>
+
+<p>Goblin workers have fast work speed and movement speed, so they finish work in the fastest time. They have the lowest stamina out of the three species of workers so they need to be maintained more often.</p>
+
+<p>Giant workers have the highest stamina so they can work for longer. The Giants movement speed is the lowest and they have the second highest work speed. Giants require less maintenance.</p>
+
+<p>Human workers are the jack of all trades with average work speed, movement speed, and stamina.</p>
+
+<p>Your workers are divided into 5 categories that represent their skill/grade. They’re shown with various colors. The higher the quality/tier the better base stats the workers will have. The qualities are: Naive (white), Basic (green), Skilled (blue), Professional (yellow) and Artisan (orange).</p>
+
+<h2 id="information-">Information <a name="information"></a></h2>
+<p>I quit this game back in March 2017 so updates after then are completely new to me. This includes the new workers Papu(?) as well as most of the Kamasylvia region. As such, some information may be dated (or at least as accurate as Black Desert Tools by Dae).</p>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

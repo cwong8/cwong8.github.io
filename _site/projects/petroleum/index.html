@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Petroleum consumption</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="introduction">Introduction</h1>
+
+<p>Our data file contains two columns, one containing petroleum consumed (in trillion BTU) by the residential sector in the US (per month) and the other months from January 1984 to December 2015. In total, we have 384 observations, one for each month. Our data is a time series because it is a set of observations recorded at specific times. In our case, we have a descrete-time time series because we record one observation per month (monthly). Time series modeling can allow us to predict/forecast long-term trends after removing the presence of seasonal components.</p>
+
+<h1 id="the-data">The Data</h1>
+
+<p>Let’s take a look at our plotted data: <img src="petroleum_files/figure-markdown_github/unnamed-chunk-2-1.png" style="display: block; margin: auto;" /> We notice that there is some kind of seasonality in our data because we have a very sharp increase and decrease in petroleum consumption approximately every 12 months (or a year). Oscillations with fixed periods clue us into the fact that there is seasonality in our data. We expect to see a gradual increase in petroleum consumption as time goes on because population will increase and thus so will people using automobiles. This is confirmed when we look at our time series plot and see that the general trend is increasing as time increases. Since there is both trend and seasonality present in our data, we will model our data with a smooth part for trend, a seasonal part for seasonality, and the rough part will be determined later. Our model will be as follows:
+<em>Y</em><sub><em>t</em></sub> = <em>m</em><sub><em>t</em></sub> + <em>s</em><sub><em>t</em></sub> + <em>X</em><sub><em>t</em></sub>  <em>t</em> = 1, …, 384
+ where <em>Y</em><sub><em>t</em></sub> is our observed data (petroleum consumption (in trillion BTU)), <em>m</em><sub><em>t</em></sub> is our trend, <em>s</em><sub><em>t</em></sub> is our seasonality, and <em>X</em><sub><em>t</em></sub> is our rough part.</p>
+
+<h1 id="the-data-and-transformations">The Data and Transformations</h1>
+
+<p>Here is our plotted data again: <img src="petroleum_files/figure-markdown_github/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /> where t = 1 corresponds to January 1984 and t = 384 corresponds to December 2015.</p>
+
+<p>We plot a few common Box-Cox transformations for <em>λ</em> = -2, -1, -0.5, 1, 2 <img src="petroleum_files/figure-markdown_github/unnamed-chunk-4-1.png" style="display: block; margin: auto;" /><img src="petroleum_files/figure-markdown_github/unnamed-chunk-4-2.png" style="display: block; margin: auto;" /> We see that for <em>λ</em> = -0.5, i.e. the $\frac{1}{\sqrt{x}}$ transform, the fluctuations in our data seem to be almost the same over time unlike the other transformations above. Thus, we will choose to work with our $\frac{1}{sqrt}$ transformed data from here on out. Also, we can verify that while this is not the absolute best transformation, it is very reasonable. We use the function from the library and find that <em>λ</em> = -0.653 is the absolute best transformation. The plot of the log-likelihood vs <em>λ</em> given below also includes a 95% confidence interval for <em>λ</em> and clearly <em>λ</em> = −0.5 is in that interval which makes it a very reasonable transformation. <img src="petroleum_files/figure-markdown_github/unnamed-chunk-5-1.png" style="display: block; margin: auto;" /> We can also consider the $\frac{1}{x}$ transform, but if we compare the log-likelihood values at <em>λ</em> = −0.5 and <em>λ</em> = −1, we find that:
+<script type="math/tex">% <![CDATA[
+\\begin{tabular}{|c|c|c|}
+  \\hline
+  $\\lambda$ & -1 & -0.5\\\\
+  \\hline
+  \\text{log-likelihood} & -564.8943267 & -563.9076205\\\\
+  \\hline
+\\end{tabular} %]]></script>
+ Clearly, the $\frac{1}{\sqrt{x}}$ transform is better than the $\frac{1}{x}$ transform, but barely.</p>
+
+<h1 id="trend-and-seasonality-of-the-transformed-data">Trend and Seasonality (of the transformed data)</h1>
+
+<p><img src="petroleum_files/figure-markdown_github/unnamed-chunk-6-1.png" style="display: block; margin: auto;" /> After tinkering around with a few values, we find that a degree 3 polynomial model fits the trend very well, so we choose to go with a degree 3 polynomial model. We also find that a yearly (12 month) seasonality period matches up very well with our oscillations in our data. Our fitted model turns out to be
+<em>Y</em><sub><em>t</em></sub><sup>′</sup> = <em>β</em><sub>0</sub> + <em>β</em><sub>1</sub><em>t</em> + <em>β</em><sub>2</sub><em>t</em><sup>2</sup> + <em>β</em><sub>3</sub><em>t</em><sup>3</sup> + <em>β</em><sub>4</sub><em>I</em><sub><em>t</em>, 1</sub> + <em>β</em><sub>5</sub><em>I</em><sub><em>t</em>, 2</sub> + <em>β</em><sub>6</sub><em>I</em><sub><em>t</em>, 3</sub> + <em>β</em><sub>7</sub><em>I</em><sub><em>t</em>, 4</sub> + <em>β</em><sub>8</sub><em>I</em><sub><em>t</em>, 5</sub> + <em>β</em><sub>9</sub><em>I</em><sub><em>t</em>, 6</sub> + <em>β</em><sub>10</sub><em>I</em><sub><em>t</em>, 7</sub> + <em>β</em><sub>11</sub><em>I</em><sub><em>t</em>, 8</sub> + <em>β</em><sub>12</sub><em>I</em><sub><em>t</em>, 9</sub> + <em>β</em><sub>13</sub><em>I</em><sub><em>t</em>, 10</sub> + <em>β</em><sub>14</sub><em>I</em><sub><em>t</em>, 11</sub> + <em>X</em><sub><em>t</em></sub>
+ where <em>β</em><sub>0</sub> = 0.0280833, <em>β</em><sub>1</sub> = −0.0053302, <em>β</em><sub>2</sub> = −0.0059232, <em>β</em><sub>3</sub> = 0.0077356, <em>β</em><sub>4</sub> = −0.004547, <em>β</em><sub>5</sub> = −0.0028595, <em>β</em><sub>6</sub> = −0.0016832, <em>β</em><sub>7</sub> = 0.0015151, <em>β</em><sub>8</sub> = 0.0028122, <em>β</em><sub>9</sub> = 0.0018471, <em>β</em><sub>10</sub> = −1.0139541 × 10<sup>−5</sup>, <em>β</em><sub>11</sub> = 1.2031183 × 10<sup>−4</sup>, <em>β</em><sub>12</sub> = 0.002252, <em>β</em><sub>13</sub> = 0.0028012, <em>β</em><sub>14</sub> = 7.6622444 × 10<sup>−4</sup>.</p>
+
+<h1 id="plots-of-the-trend-seasonal-component-rough-of-the-transformed-data">Plots of the trend, seasonal component, rough (of the transformed data)</h1>
+
+<p><img src="petroleum_files/figure-markdown_github/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /><img src="petroleum_files/figure-markdown_github/unnamed-chunk-7-2.png" style="display: block; margin: auto;" /><img src="petroleum_files/figure-markdown_github/unnamed-chunk-7-3.png" style="display: block; margin: auto;" /> Note that trend is decreasing because we are plotting the transformed data, so a decreasing trend of $\frac{1}{\sqrt{x}}$ is equivalent to an increasing trend in the original data.</p>
+
+<h1 id="diagnostics-for-the-rough">Diagnostics for the Rough</h1>
+
+<p><img src="petroleum_files/figure-markdown_github/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /> We see that the rough looks centered around 0 and has equal variance for the most part.</p>
+
+<p><img src="petroleum_files/figure-markdown_github/unnamed-chunk-9-1.png" style="display: block; margin: auto;" /> The assumption of normality is satisfied because the all of our points except the first and last few lie on the qqline and the histogram looks normal.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## 
+##  Box-Ljung test
+## 
+## data:  rough
+## X-squared = 238.18, df = 10, p-value &lt; 2.2e-16
+</code></pre></div></div>
+
+<p>Since our p-value ≈ 0 &lt; 0.05, we reject the assumption of independence for our data. It is safe to say at this point that we have a stationary sequence.</p>
+
+<p><img src="petroleum_files/figure-markdown_github/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /><img src="petroleum_files/figure-markdown_github/unnamed-chunk-11-2.png" style="display: block; margin: auto;" /> Our ACF and PACF plots look consistent with what we would expect from an ARMA model which we will expand on in the next section.</p>
+
+<p><img src="petroleum_files/figure-markdown_github/unnamed-chunk-12-1.png" style="display: block; margin: auto;" /> Top left: Raw periodogram</p>
+
+<p>Top right: Smoothed periodogram using 3 neighbors</p>
+
+<p>Bottom left: Smoothed periodogram using 7 neighbors</p>
+
+<p>Bottom right: Smoothed periodogram using 11 neighbors</p>
+
+<p>These are periodograms for the rough part of our data (i.e. data-trend-seasonality). There is little difference in the periodograms using strictly detrended (i.e. data-trend) and only the rough part, so we will choose to use the rough part. We would use the smooted periodogram using 7 neighbors. We see that there is one outstanding peak in our periodogram which implies that there may be a hidden periodicity in our data at frequency $\frac{1}{12}$ (or period 12 months).</p>
+
+<h1 id="obtaining-an-appropriate-arimap-d-q-model">Obtaining an appropriate ARIMA(p, d, q) model</h1>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## Warning: package 'forecast' was built under R version 3.5.1
+</code></pre></div></div>
+
+<p>From the previous section, the ACF and PACF plots gradually oscillate and tail off to 0, which is consistent with an ARMA(p, q) model. We will use the function from the package to find the best ARIMA model using the AICC criterion. It turns out that an ARMA(2, 1) model is the best model with <em>ϕ</em><sub>1</sub> = 0.1444391, <em>ϕ</em><sub>2</sub> = 0.5582085, <em>θ</em> = −0.2688684. <img src="petroleum_files/figure-markdown_github/unnamed-chunk-14-1.png" style="display: block; margin: auto;" /><img src="petroleum_files/figure-markdown_github/unnamed-chunk-14-2.png" style="display: block; margin: auto;" /> Looking at the ACF and PACF plots of our ARMA(2, 1) model residuals, we can safely say that the residuals are white noise since most of them lie within the 95% confidence interval. We can also perform a Box-Ljung test to show that they are indeed independent:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## 
+##  Box-Ljung test
+## 
+## data:  res
+## X-squared = 7.44, df = 10, p-value = 0.6834
+</code></pre></div></div>
+
+<p>We plot the spectral density of our ARMA(2, 1) model and the smoothed periodogram below: <img src="petroleum_files/figure-markdown_github/unnamed-chunk-16-1.png" style="display: block; margin: auto;" /> We see that there is one outstanding peak in our periodogram and spectral density graph which implies that there may be a hidden periodicity in our data at frequency $\frac{1}{12}$ (or period 12 months).</p>
+
+<h1 id="final-model">Final model</h1>
+
+<p>Our final model turns out to be
+where <em>β</em><sub>0</sub> = 0.0280833, <em>β</em><sub>1</sub> = −0.0053302, <em>β</em><sub>2</sub> = −0.0059232, <em>β</em><sub>3</sub> = 0.0077356, <em>β</em><sub>4</sub> = −0.004547, <em>β</em><sub>5</sub> = −0.0028595, <em>β</em><sub>6</sub> = −0.0016832, <em>β</em><sub>7</sub> = 0.0015151, <em>β</em><sub>8</sub> = 0.0028122, <em>β</em><sub>9</sub> = 0.0018471, <em>β</em><sub>10</sub> = −1.0139541 × 10<sup>−5</sup>, <em>β</em><sub>11</sub> = 1.2031183 × 10<sup>−4</sup>, <em>β</em><sub>12</sub> = 0.002252, <em>β</em><sub>13</sub> = 0.0028012, <em>β</em><sub>14</sub> = 7.6622444 × 10<sup>−4</sup>, <em>β</em><sub>15</sub> = <em>μ</em>(1 − <em>ϕ</em><sub>1</sub> − <em>ϕ</em><sub>2</sub>), <em>β</em><sub>16</sub> = <em>ϕ</em><sub>1</sub>, <em>β</em><sub>17</sub> = <em>ϕ</em><sub>2</sub>, <em>β</em><sub>18</sub> = <em>θ</em><sub>1</sub>.
+<script type="math/tex">\\phi\_1 = 0.1444391, \\phi\_2 = 0.5582085, \\theta\_1 = -0.2688684\\\\
+  se(\\phi\_1) = 0.1419163, se(\\phi\_2) = 0.0799025, se(\\theta\_1) = 0.092635</script></p>
+
+<p>A simpler description would be that we model our trend with a degree 3 polynomial, our seasonality (which has period 12) with 11 indicator variables, and our rough by an ARMA(2, 1) model.</p>
+
+<p>Also, our model is not perfect. There are ways to improve, e.g. using loess to model the trend instead of a polynomial.</p>
+
+<h1 id="predicting-the-last-7-days">Predicting the last 7 days</h1>
+
+<p><img src="petroleum_files/figure-markdown_github/unnamed-chunk-17-1.png" style="display: block; margin: auto;" /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## Time Series:
+## Start = 373 
+## End = 384 
+## Frequency = 1 
+##       Forecast     Actual
+## 373 0.02017992 0.01973395
+## 374 0.02192576 0.02058011
+## 375 0.02304584 0.02250179
+## 376 0.02614166 0.02705967
+## 377 0.02740655 0.02751887
+## 378 0.02642078 0.02578833
+## 379 0.02453994 0.02386320
+## 380 0.02465704 0.02419363
+## 381 0.02680427 0.02609575
+## 382 0.02735335 0.02721035
+## 383 0.02532927 0.02556758
+## 384 0.02154110 0.02280865
+</code></pre></div></div>
+
+<p>Since this prediction was done using our transformed data, we will transform it back to the original data below:</p>
+
+<p><img src="petroleum_files/figure-markdown_github/unnamed-chunk-18-1.png" style="display: block; margin: auto;" /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## Time Series:
+## Start = 373 
+## End = 384 
+## Frequency = 1 
+##     Forecast   Actual
+## 373 2455.620 2567.863
+## 374 2080.131 2361.047
+## 375 1882.846 1974.995
+## 376 1463.301 1365.699
+## 377 1331.347 1320.501
+## 378 1432.546 1503.674
+## 379 1660.554 1756.073
+## 380 1644.820 1708.433
+## 381 1391.849 1468.454
+## 382 1336.531 1350.616
+## 383 1558.671 1529.751
+## 384 2155.083 1922.210
+</code></pre></div></div>
+
+<p>We notice that our model predicts US residential petroleum consumption (in trillon BTU) very well.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Our first step was transforming the model utilizing the 1/sqrt(x) transformation. The reasoning behind this is that it acts as a remedy for the equal variance assumption that the original dataset violated. Afterwards, by fitting a cubic model (with seasonality set to 12) and fitting the ARMA(2,1) model with the residuals, we were able to generate a model that can forecast the amount of petroleum consumption in the United States.</p>
+
+<p>Outside of the statistical, graphical realm, understanding and being able to forecast domestic petroleum consumption grants valuable information. Petroleum consumption trends is one of the best indicator for economical health throughout the years, and we can observe this from historic trends. In the data set, the two lowest levels of petroleum consumption correspond to the year 2001 (9/11 at Twin Tower) and 2012 (the middle of a recession). Fast forwarding to the present, we can observe that consumption is increasing, indicating that the economic system is reviving.</p>
+
+<p>The seasonality of petroleum consumption shows the activeness of the economy within a year. We can see the level of petroleum consumption is highest between December and March during any given year, slows down, and increases again in July and August. This indicates that the economy is most active during these months of increasing levels.</p>
+
+<p>In conclusion, the power of time series on petroleum consumption in the United States is a force to be reckoned. Using appropriate methods and techniques, we can predict information as sensitive as the economy of the nation.</p>
+
+<h1 id="code-appendix">Code Appendix</h1>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">setwd</span><span class="p">(</span><span class="s2">"C:/Users/Christopher/Desktop/STA 137/Final"</span><span class="p">)</span><span class="w">
+</span><span class="n">source</span><span class="p">(</span><span class="s2">"C:/Users/Christopher/Desktop/STA 137/Midterm/trndseas.R"</span><span class="p">)</span><span class="w">
+</span><span class="n">source</span><span class="p">(</span><span class="s2">"C:/Users/Christopher/Desktop/STA 137/Homework 4/aicc.R"</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">xlsx</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">MASS</span><span class="p">)</span><span class="w">
+</span><span class="n">petroleum</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">read.xlsx</span><span class="p">(</span><span class="s2">"petrolium.xlsx"</span><span class="p">,</span><span class="w"> </span><span class="n">sheetIndex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># The Data</span><span class="w">
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">,</span><span class="w"> 
+        </span><span class="n">ylab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Petroleum consumed (in trillion BTU)"</span><span class="p">,</span><span class="w">
+        </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"US residential petroleum consumption (Jan 1984 - Dec 2015)"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># The Data and Transformations</span><span class="w">
+</span><span class="n">transformPlots</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">data</span><span class="p">){</span><span class="w">
+  </span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">))</span><span class="w">
+  </span><span class="n">plot.ts</span><span class="p">(</span><span class="n">data</span><span class="o">^</span><span class="m">-2</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">expression</span><span class="p">(</span><span class="s2">""</span><span class="o">*</span><span class="n">lambda</span><span class="o">*</span><span class="s2">" = -2"</span><span class="p">))</span><span class="w">
+  </span><span class="n">plot.ts</span><span class="p">(</span><span class="n">data</span><span class="o">^</span><span class="m">-1</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">expression</span><span class="p">(</span><span class="s2">""</span><span class="o">*</span><span class="n">lambda</span><span class="o">*</span><span class="s2">" = -1"</span><span class="p">))</span><span class="w">
+  </span><span class="n">plot.ts</span><span class="p">(</span><span class="n">data</span><span class="o">^</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">expression</span><span class="p">(</span><span class="s2">""</span><span class="o">*</span><span class="n">lambda</span><span class="o">*</span><span class="s2">" = 1"</span><span class="p">))</span><span class="w">
+  </span><span class="n">plot.ts</span><span class="p">(</span><span class="n">data</span><span class="o">^</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">expression</span><span class="p">(</span><span class="s2">""</span><span class="o">*</span><span class="n">lambda</span><span class="o">*</span><span class="s2">" = 2"</span><span class="p">))</span><span class="w">
+  </span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">))</span><span class="w">
+  </span><span class="n">plot.ts</span><span class="p">(</span><span class="m">1</span><span class="o">/</span><span class="nf">sqrt</span><span class="p">(</span><span class="n">data</span><span class="p">),</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">expression</span><span class="p">(</span><span class="s2">""</span><span class="o">*</span><span class="n">lambda</span><span class="o">*</span><span class="s2">" = -0.5"</span><span class="p">))</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="n">transformPlots</span><span class="p">(</span><span class="n">petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">)</span><span class="w">
+
+</span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">boxcox</span><span class="p">(</span><span class="n">petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="o">~</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">lambda</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="m">-2</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0.001</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># Trend and Seasonality (of the transformed data)</span><span class="w">
+</span><span class="n">t.petroleum</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">petroleum</span><span class="w">
+</span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">1</span><span class="o">/</span><span class="nf">sqrt</span><span class="p">(</span><span class="n">petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">)</span><span class="w">
+</span><span class="n">mod</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">trndseas</span><span class="p">(</span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">,</span><span class="w"> </span><span class="n">degtrnd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="n">seas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">12</span><span class="p">)</span><span class="w">
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">,</span><span class="w">
+        </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1/sqrt US residential petroleum consumption (Jan 1984 - Dec 2015)"</span><span class="p">)</span><span class="w">
+</span><span class="n">points</span><span class="p">(</span><span class="n">mod</span><span class="o">$</span><span class="n">fit</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'l'</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'red'</span><span class="p">)</span><span class="w">
+</span><span class="n">legend</span><span class="p">(</span><span class="s2">"topright"</span><span class="p">,</span><span class="w"> </span><span class="n">legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"Observed data"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Fitted smooth"</span><span class="p">),</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"black"</span><span class="p">,</span><span class="w"> </span><span class="s2">"red"</span><span class="p">),</span><span class="w"> </span><span class="n">lty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Plots of the trend, seasonal component, rough (of the transformed data)</span><span class="w">
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">mod</span><span class="o">$</span><span class="n">trend</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Trend of 1/sqrt petroleum consumed"</span><span class="p">,</span><span class="w"> </span><span class="n">ylab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1/sqrt Petroleum consumed (in trillion BTU)"</span><span class="p">)</span><span class="w">
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">mod</span><span class="o">$</span><span class="n">season</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Seasonality of 1/sqrt petroleum consumed"</span><span class="p">,</span><span class="w"> </span><span class="n">ylab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1/sqrt Petroleum consumed (in trillion BTU)"</span><span class="p">)</span><span class="w">
+</span><span class="n">rough</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mod</span><span class="o">$</span><span class="n">fit</span><span class="w">
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">rough</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Rough of 1/sqrt petroleum consumed"</span><span class="p">,</span><span class="w"> </span><span class="n">ylab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1/sqrt Petroleum consumed (in trillion BTU)"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Diagnostics for the Rough</span><span class="w">
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">rough</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Rough of 1/sqrt petroleum consumed"</span><span class="p">,</span><span class="w"> </span><span class="n">ylab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1/sqrt Petroleum consumed (in trillion BTU)"</span><span class="p">)</span><span class="w">
+
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">))</span><span class="w">
+</span><span class="n">qqnorm</span><span class="p">(</span><span class="n">rough</span><span class="p">)</span><span class="w">
+</span><span class="n">qqline</span><span class="p">(</span><span class="n">rough</span><span class="p">)</span><span class="w">
+</span><span class="n">hist</span><span class="p">(</span><span class="n">rough</span><span class="p">)</span><span class="w">
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">))</span><span class="w">
+
+</span><span class="n">Box.test</span><span class="p">(</span><span class="n">rough</span><span class="p">,</span><span class="w"> </span><span class="n">lag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Ljung-Box"</span><span class="p">)</span><span class="w">
+
+</span><span class="n">acf</span><span class="p">(</span><span class="n">rough</span><span class="p">)</span><span class="w">
+</span><span class="n">pacf</span><span class="p">(</span><span class="n">rough</span><span class="p">)</span><span class="w">
+
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">))</span><span class="w">
+</span><span class="n">Petroleum</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">rough</span><span class="w">
+</span><span class="n">petroleum.pgrm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spec.pgram</span><span class="p">(</span><span class="n">Petroleum</span><span class="p">)</span><span class="w">
+</span><span class="n">petroleum.pgrm3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spec.pgram</span><span class="p">(</span><span class="n">Petroleum</span><span class="p">,</span><span class="w"> </span><span class="n">spans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span><span class="p">)</span><span class="w">
+</span><span class="n">petroleum.pgrm7</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spec.pgram</span><span class="p">(</span><span class="n">Petroleum</span><span class="p">,</span><span class="w"> </span><span class="n">spans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">7</span><span class="p">)</span><span class="w">
+</span><span class="n">petroleum.pgrm11</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spec.pgram</span><span class="p">(</span><span class="n">Petroleum</span><span class="p">,</span><span class="w"> </span><span class="n">spans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">11</span><span class="p">)</span><span class="w">
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># Obtaining an appropriate ARIMA(p, d, q) model</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">forecast</span><span class="p">)</span><span class="w">
+</span><span class="n">mod1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">auto.arima</span><span class="p">(</span><span class="n">rough</span><span class="p">,</span><span class="w"> </span><span class="n">max.p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">8</span><span class="p">,</span><span class="w"> </span><span class="n">max.q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">8</span><span class="p">)</span><span class="w">
+</span><span class="n">res</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">mod1</span><span class="o">$</span><span class="n">res</span><span class="w">
+
+</span><span class="n">acf</span><span class="p">(</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ARMA(2, 1) fit residuals"</span><span class="p">)</span><span class="w">
+</span><span class="n">pacf</span><span class="p">(</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ARMA(2, 1) fit residuals"</span><span class="p">)</span><span class="w">
+
+</span><span class="n">Box.test</span><span class="p">(</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">lag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Ljung-Box"</span><span class="p">)</span><span class="w">
+
+</span><span class="n">library</span><span class="p">(</span><span class="n">astsa</span><span class="p">)</span><span class="w">
+</span><span class="n">coef.ar</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">mod1</span><span class="o">$</span><span class="n">coef</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">2</span><span class="p">]</span><span class="w">
+</span><span class="n">coef.ma</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">mod1</span><span class="o">$</span><span class="n">coef</span><span class="p">[</span><span class="m">3</span><span class="p">]</span><span class="w">
+</span><span class="n">sigma2</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">mod1</span><span class="o">$</span><span class="n">sigma2</span><span class="w">
+</span><span class="n">mod1spec</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">arma.spec</span><span class="p">(</span><span class="n">ar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">coef.ar</span><span class="p">,</span><span class="w"> </span><span class="n">ma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">coef.ma</span><span class="p">,</span><span class="w"> </span><span class="n">var.noise</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sigma2</span><span class="p">,</span><span class="w"> </span><span class="n">log</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"no"</span><span class="p">,</span><span class="w">
+                      </span><span class="n">ylim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="nf">min</span><span class="p">(</span><span class="n">petroleum.pgrm7</span><span class="o">$</span><span class="n">spec</span><span class="p">),</span><span class="w"> </span><span class="nf">max</span><span class="p">(</span><span class="n">petroleum.pgrm7</span><span class="o">$</span><span class="n">spec</span><span class="p">)))</span><span class="w">
+</span><span class="n">lines</span><span class="p">(</span><span class="n">petroleum.pgrm</span><span class="o">$</span><span class="n">freq</span><span class="p">,</span><span class="w"> </span><span class="n">petroleum.pgrm7</span><span class="o">$</span><span class="n">spec</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s1">'l'</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Final model</span><span class="w">
+</span><span class="c1"># Written in TeX</span><span class="w">
+
+</span><span class="c1"># Predicting the last 7 days</span><span class="w">
+</span><span class="n">n</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">372</span><span class="w">
+</span><span class="n">h</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">12</span><span class="w">
+</span><span class="n">mod0</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">trndseas</span><span class="p">(</span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="n">n</span><span class="p">],</span><span class="w"> </span><span class="n">degtrnd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="n">seas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">12</span><span class="p">)</span><span class="w">
+</span><span class="n">m.fit</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">mod0</span><span class="o">$</span><span class="n">trend</span><span class="w">
+</span><span class="n">s.fit</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="n">mod0</span><span class="o">$</span><span class="n">season</span><span class="p">,</span><span class="w"> </span><span class="n">length.out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w">
+</span><span class="n">smooth.fit</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">mod0</span><span class="o">$</span><span class="n">fit</span><span class="w">
+</span><span class="n">deg</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="n">coef</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mod0</span><span class="o">$</span><span class="n">coef</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="p">(</span><span class="n">deg</span><span class="m">+1</span><span class="p">)]</span><span class="w">
+</span><span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="n">h</span><span class="p">))</span><span class="o">/</span><span class="n">n</span><span class="w">
+</span><span class="n">predmat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">(</span><span class="nf">rep</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">deg</span><span class="p">)</span><span class="o">^</span><span class="nf">rep</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="n">deg</span><span class="p">,</span><span class="n">each</span><span class="o">=</span><span class="n">h</span><span class="p">),</span><span class="n">nrow</span><span class="o">=</span><span class="n">h</span><span class="p">,</span><span class="n">byrow</span><span class="o">=</span><span class="nb">F</span><span class="p">)</span><span class="w">
+</span><span class="n">predmat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cbind</span><span class="p">(</span><span class="nf">rep</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="n">h</span><span class="p">),</span><span class="n">predmat</span><span class="p">)</span><span class="w">
+
+</span><span class="n">rough0</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="n">n</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mod0</span><span class="o">$</span><span class="n">fit</span><span class="w">
+</span><span class="n">fit0</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">arima</span><span class="p">(</span><span class="n">rough0</span><span class="p">,</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">))</span><span class="w">
+
+</span><span class="n">m.fc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">predmat</span><span class="w"> </span><span class="o">%*%</span><span class="w"> </span><span class="n">coef</span><span class="w">
+</span><span class="n">s.fc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="n">mod0</span><span class="o">$</span><span class="n">season</span><span class="p">,</span><span class="n">length.out</span><span class="o">=</span><span class="n">n</span><span class="o">+</span><span class="n">h</span><span class="p">)</span><span class="w">
+</span><span class="n">s.fc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s.fc</span><span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="n">n</span><span class="p">)]</span><span class="w">
+</span><span class="n">fcast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">predict</span><span class="p">(</span><span class="n">fit0</span><span class="p">,</span><span class="n">n.ahead</span><span class="o">=</span><span class="n">h</span><span class="p">)</span><span class="w">
+</span><span class="n">x.fc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fcast</span><span class="o">$</span><span class="n">pred</span><span class="w">
+</span><span class="n">y.fc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m.fc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s.fc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x.fc</span><span class="w">
+
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="n">n</span><span class="p">],</span><span class="n">xlim</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="n">h</span><span class="p">),</span><span class="w">
+        </span><span class="n">ylab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1/sqrt Petroleum consumed (in trillion BTU)"</span><span class="p">,</span><span class="w">
+        </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1/sqrt US residential petroleum consumption (Jan 1984 - Dec 2015)"</span><span class="p">)</span><span class="w">
+</span><span class="n">points</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">n</span><span class="m">+1</span><span class="o">:</span><span class="n">h</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="n">y.fc</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="o">=</span><span class="s1">'purple'</span><span class="p">,</span><span class="n">type</span><span class="o">=</span><span class="s1">'b'</span><span class="p">,</span><span class="n">pch</span><span class="o">=</span><span class="m">19</span><span class="p">)</span><span class="w">
+</span><span class="n">points</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">n</span><span class="m">+1</span><span class="o">:</span><span class="n">h</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">[</span><span class="m">373</span><span class="o">:</span><span class="m">384</span><span class="p">],</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"red"</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"l"</span><span class="p">)</span><span class="w">
+</span><span class="n">legend</span><span class="p">(</span><span class="s2">"topright"</span><span class="p">,</span><span class="w"> </span><span class="n">legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"Observed data"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Fitted smooth"</span><span class="p">),</span><span class="w">
+       </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"red"</span><span class="p">,</span><span class="w"> </span><span class="s2">"purple"</span><span class="p">),</span><span class="w"> </span><span class="n">lty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">pch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="kc">NA</span><span class="p">,</span><span class="w"> </span><span class="m">19</span><span class="p">))</span><span class="w">
+</span><span class="n">t.result</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">cbind</span><span class="p">(</span><span class="n">y.fc</span><span class="p">,</span><span class="w"> </span><span class="n">t.petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">[</span><span class="m">373</span><span class="o">:</span><span class="m">384</span><span class="p">])</span><span class="w">
+</span><span class="n">colnames</span><span class="p">(</span><span class="n">t.result</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"Forecast"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Actual"</span><span class="p">)</span><span class="w">
+</span><span class="n">t.result</span><span class="w">
+
+</span><span class="n">a</span><span class="m">1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">1</span><span class="o">/</span><span class="p">(</span><span class="n">y.fc</span><span class="p">)</span><span class="o">^</span><span class="m">2</span><span class="w">
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="n">n</span><span class="p">],</span><span class="n">xlim</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="n">h</span><span class="p">),</span><span class="w">
+        </span><span class="n">ylab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Petroleum consumed (in trillion BTU)"</span><span class="p">,</span><span class="w">
+        </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"US residential petroleum consumption (Jan 1984 - Dec 2015)"</span><span class="p">)</span><span class="w">
+</span><span class="n">points</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">n</span><span class="m">+1</span><span class="o">:</span><span class="n">h</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="n">a</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="o">=</span><span class="s1">'purple'</span><span class="p">,</span><span class="n">type</span><span class="o">=</span><span class="s1">'b'</span><span class="p">,</span><span class="n">pch</span><span class="o">=</span><span class="m">19</span><span class="p">)</span><span class="w">
+</span><span class="n">points</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">n</span><span class="m">+1</span><span class="o">:</span><span class="n">h</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="n">petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">[</span><span class="m">373</span><span class="o">:</span><span class="m">384</span><span class="p">],</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"red"</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"l"</span><span class="p">)</span><span class="w">
+</span><span class="n">legend</span><span class="p">(</span><span class="s2">"topright"</span><span class="p">,</span><span class="w"> </span><span class="n">legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"Observed data"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Fitted smooth"</span><span class="p">),</span><span class="w">
+       </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"red"</span><span class="p">,</span><span class="w"> </span><span class="s2">"purple"</span><span class="p">),</span><span class="w"> </span><span class="n">lty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">pch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="kc">NA</span><span class="p">,</span><span class="w"> </span><span class="m">19</span><span class="p">))</span><span class="w">
+</span><span class="n">result</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">cbind</span><span class="p">(</span><span class="n">a</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">petroleum</span><span class="o">$</span><span class="n">Petrolium.Consumption</span><span class="p">[</span><span class="m">373</span><span class="o">:</span><span class="m">384</span><span class="p">])</span><span class="w">
+</span><span class="n">colnames</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"Forecast"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Actual"</span><span class="p">)</span><span class="w">
+</span><span class="n">result</span><span class="w">
+</span></code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Online Retail of Gifts Over One Year</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="introduction">Introduction</h1>
+
+<p>Online retail and shopping has been an emerging and booming industry in the past decade. For example, everybody knows about Amazon.com and how it is the largest online retailer in the world, constantly expanding its services and products. The convenience of online shopping is attractive to consumers and as such they are continually trending towards it. In our project, we analyze data from a UK-based non-store online retailer which sells unique all-occasion gifts to mainly wholesalers.</p>
+
+<h1 id="material-and-methods">Material and Methods</h1>
+
+<p>The data can be found at: <a href="http://archive.ics.uci.edu/ml/datasets/Online+Retail">http://archive.ics.uci.edu/ml/datasets/Online+Retail</a></p>
+
+<p>Attribute Information:
+The data consists of 541,909 observations of these variables. This is a transnational data set which contains all the transactions occurring between December 1, 2010 and December 9, 2011 for a UK-based and registered non-store online retail. The company mainly sells unique all-occasion gifts. Many customers of the company are wholesalers.</p>
+
+<p>To analyze the data, we used the packages to visualize the countries and plot them on a world map, and base plotting functions to visualize the data, and base string manipulation functions (such as strsplit) to work with the invoice dates, and and to make manipulating the data easier.</p>
+
+<h1 id="results">Results</h1>
+
+<h3 id="does-the-popularity-of-products-change-with-respect-to-time-season-month-etc">Does the popularity of products change with respect to time (season, month, etc.)?</h3>
+
+<p>To answer this question, we began by finding the start and end dates of seasons for the years 2010 and 2011. The relevant dates and seasons are:
+Then, we created each season and their corresponding range of dates before extracting the dates from the invoice dates. Using these dates, we categorized our data into seasons. From this, we separated the individual products and their corresponding quantities sold. Then, we made sure to compare only items that net at least one sale in every season throughout the year. We found that there were 1933 products that satisfied this criteria. It was a bit much to analyze all of these products individually, so instead we opted to find the top 3 products sold per season over the entire year. We ended up with the following 8 products:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## [1] "WORLD WAR 2 GLIDERS ASSTD DESIGNS" 
+## [2] "PACK OF 72 RETROSPOT CAKE CASES"   
+## [3] "HAND WARMER BABUSHKA DESIGN"       
+## [4] "WHITE HANGING HEART T-LIGHT HOLDER"
+## [5] "JUMBO BAG RED RETROSPOT"           
+## [6] "SMALL POPCORN HOLDER"              
+## [7] "ASSORTED COLOUR BIRD ORNAMENT"     
+## [8] "PAPER CHAIN KIT 50'S CHRISTMAS"
+</code></pre></div></div>
+
+<p>Then we plotted the quantities sold for each of these products over the year from which this data was gathered. It is important to note that we do not have full data for some seasons! Fall 2010 only has 3 weeks worth of data and Fall 2011 is missing 11 days of data. However, we can still see some general trends in popularity of products throughout the seasons. We look into this closer in the next section where we separate the data by month instead of season.</p>
+
+<p><img src="online_retail_files/figure-markdown_github/unnamed-chunk-4-1.png" style="display: block; margin: auto;" /></p>
+
+<p>Since seasons cover a lot of days, we may have lost some details in trends of products. To remedy this we divided the data by months. We began by extracting the month and year from the invoice dates and used those as factors by which we split the data. Now that we had our data split by month, we separated the individual products and their corresponding quantities. Then, we made sure to compare only items that net at least one sale in every month throughout the year. We found that there were 1116 products that satisfied this criteria. It was a bit much to analyze all of these products individually, so instead we opted to find the top 3 products sold per month over the entire year. We ended up with the following 15 products:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>##  [1] "WORLD WAR 2 GLIDERS ASSTD DESIGNS" 
+##  [2] "PACK OF 72 RETROSPOT CAKE CASES"   
+##  [3] "BALLOON WATER BOMB PACK OF 35"     
+##  [4] "ASSORTED COLOUR BIRD ORNAMENT"     
+##  [5] "SMALL POPCORN HOLDER"              
+##  [6] "JUMBO BAG RED RETROSPOT"           
+##  [7] "HAND WARMER BABUSHKA DESIGN"       
+##  [8] "BLACK RECORD COVER FRAME"          
+##  [9] "DISCO BALL CHRISTMAS DECORATION"   
+## [10] "GROW A FLYTRAP OR SUNFLOWER IN TIN"
+## [11] "WHITE HANGING HEART T-LIGHT HOLDER"
+## [12] "FAIRY CAKE FLANNEL ASSORTED COLOUR"
+## [13] "GIRLS ALPHABET IRON ON PATCHES"    
+## [14] "ASSORTED COLOURS SILK FAN"         
+## [15] "PACK OF 60 PINK PAISLEY CAKE CASES"
+</code></pre></div></div>
+
+<p>Then we plotted the quantities sold for each of these products over the year from which this data was gathered. Again, it is important to note that we do not have full data for December 2011! Specifically, we only had 9 days worth of data from this month. However, this still gives us a complete year’s coverage from December 2010 to November 2011.</p>
+
+<p><img src="online_retail_files/figure-markdown_github/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /></p>
+
+<h3 id="which-products-are-the-most-profitable-for-this-company-what-about-least-profitable">Which products are the most profitable for this company? What about least profitable?</h3>
+
+<p>We defined profit of a product by (net) quantity sold × unit price.</p>
+
+<p>Items that made more than $50,000 in profit were:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>##                                  Item    Profit
+## 1      PAPER CHAIN KIT 50'S CHRISTMAS  63791.94
+## 2                SMALL POPCORN HOLDER  50987.47
+## 3            REGENCY CAKESTAND 3 TIER 164762.19
+## 4          PICNIC BASKET WICKER SMALL  51041.37
+## 5                  RABBIT NIGHT LIGHT  66756.59
+## 6                       PARTY BUNTING  98302.98
+## 7                       CHILLI LIGHTS  53768.06
+## 8       ASSORTED COLOUR BIRD ORNAMENT  58959.73
+## 9             JUMBO BAG RED RETROSPOT  92356.03
+## 10 WHITE HANGING HEART T-LIGHT HOLDER  97894.50
+## 11                     DOTCOM POSTAGE 206245.48
+## 12                            POSTAGE  66230.64
+</code></pre></div></div>
+
+<p>Items that made less than $1, but did not lose the company money were:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>##                                  Item Profit
+## 1            VINTAGE BLUE TINSEL REEL  0.840
+## 2              FEATHER PEN,COAL BLACK  0.830
+## 3       3 WICK CHRISTMAS BRIAR CANDLE  0.970
+## 4      HAPPY BIRTHDAY CARD TEDDY/CAKE  0.950
+## 5      CAT WITH SUNGLASSES BLANK CARD  0.950
+## 6 WHITE BEADED GARLAND STRING 20LIGHT  0.800
+## 7     PINK CRYSTAL GUITAR PHONE CHARM  0.850
+## 8          PADS TO MATCH ALL CUSHIONS  0.003
+</code></pre></div></div>
+
+<p>Note that there were 198 items that made less than $10, but it would be wasteful to print all 198 of them, so we went with a smaller threshold of $1.</p>
+
+<p>Items that made no money ($0) were:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>##                                 Item Profit
+## 1 HANGING RIDGE GLASS T-LIGHT HOLDER      0
+## 2  TRAVEL CARD WALLET DOTCOMGIFTSHOP      0
+## 3        PAPER CRAFT , LITTLE BIRDIE      0
+## 4                BLACK CHERRY LIGHTS      0
+</code></pre></div></div>
+
+<p>The most profitable item (that was not postage) was REGENCY CAKESTAND 3 TIER making the company $164,762.19.</p>
+
+<h3 id="which-products-are-the-most-popular-in-certain-countries-is-there-a-difference-in-price-between-countries-how-does-this-affect-sales">Which products are the most popular in certain countries? Is there a difference in price between countries? How does this affect sales?</h3>
+
+<p>We split our data by country before looking at individual products and their quantities sold. We also found the average unit price for the most popular products within each country. In the end we found:
+We noticed that we had some duplicate items in our data frame. That is, some items were popular in more than one country. We checked the average prices of these items between countries and found that there was no difference in price between countries.</p>
+
+<p>This was surprising at first, but then we remembered that prices are in British pounds and that online postage accounted for $206,245.48 of this company’s profit. So, of course unit price per product would be consistent because the company would charge more for postage depending on country. We then proceeded to visualize this information by plotting the quantity and average price of the most popular product bought by country.</p>
+
+<p><img src="online_retail_files/figure-markdown_github/unnamed-chunk-18-1.png" style="display: block; margin: auto;" /></p>
+
+<h1 id="conclusion-and-discussion">Conclusion and Discussion</h1>
+
+<p>In conclusion, we would offer the following advice to this online retailer. First, stock up on items before peak sales occur such as Christmas time for hand warmers. Second, get rid of low profit items and items that do not make any money. Third, recognize that business booms around the holiday season and they should plan accordingly. Also, they could try to do something special about countries’ most popular products such as special deals to boost sales.</p>
+
+<p>Although our analysis answered questions that we thought were initially interesting about this dataset, we quickly found that new questions emerged from our analysis. For example, we would have liked to analyze separate products individually such as the regency cakestands that brought in the most profit for this company. We could use time series to model its price and also compare it with different customers. In addition, we would have liked to find the most popular and profitable customers for this company and see if they could expand their business further by making deals with them.</p>
+
+<h1 id="distribution-of-work">Distribution of work</h1>
+
+<h1 id="code-appendix">Code Appendix</h1>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">setwd</span><span class="p">(</span><span class="s2">"C:/Users/Christopher/Desktop/STA 141A/Project"</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">data.table</span><span class="p">)</span><span class="w">
+
+</span><span class="n">online.retail</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.data.frame</span><span class="p">(</span><span class="n">fread</span><span class="p">(</span><span class="s2">"Online Retail.csv"</span><span class="p">))</span><span class="w">
+</span><span class="n">attach</span><span class="p">(</span><span class="n">online.retail</span><span class="p">)</span><span class="w">
+
+</span><span class="c1">################################################################################</span><span class="w">
+</span><span class="c1"># Does the popularity of products change with respect to time (season, month, etc.)? </span><span class="w">
+
+</span><span class="n">library</span><span class="p">(</span><span class="n">dplyr</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">stringr</span><span class="p">)</span><span class="w">
+
+</span><span class="c1">### Seasons</span><span class="w">
+</span><span class="c1">## Equinox/Solstice times</span><span class="w">
+</span><span class="c1"># 2010: Fall: Sep 23, 2010  Winter: Dec 21, 2010</span><span class="w">
+</span><span class="c1"># 2011: Spring: Mar 20, 2011 Summer:    Jun 21, 2011    Fall:   Sep 23, 2011  Winter: Dec 21, 2011</span><span class="w">
+</span><span class="n">Date2</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">str_extract</span><span class="p">(</span><span class="n">InvoiceDate</span><span class="p">,</span><span class="w"> </span><span class="s2">"\\d{1,2}\\/\\d{1,2}\\/\\d{4}"</span><span class="p">)</span><span class="w"> 
+</span><span class="n">Date2</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.Date</span><span class="p">(</span><span class="n">Date2</span><span class="p">,</span><span class="w"> </span><span class="s2">"%m/%d/%Y"</span><span class="p">)</span><span class="w">
+
+</span><span class="n">f</span><span class="m">2010</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2010-9-23"</span><span class="p">),</span><span class="w"> </span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2010-12-20"</span><span class="p">),</span><span class="w"> </span><span class="s2">"day"</span><span class="p">)</span><span class="w">
+</span><span class="n">w</span><span class="m">2010</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2010-12-21"</span><span class="p">),</span><span class="w"> </span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2011-3-19"</span><span class="p">),</span><span class="w"> </span><span class="s2">"day"</span><span class="p">)</span><span class="w">
+</span><span class="n">s</span><span class="m">2011</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2011-3-20"</span><span class="p">),</span><span class="w"> </span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2011-6-20"</span><span class="p">),</span><span class="w"> </span><span class="s2">"day"</span><span class="p">)</span><span class="w">
+</span><span class="n">su2011</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2011-6-21"</span><span class="p">),</span><span class="w"> </span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2011-9-22"</span><span class="p">),</span><span class="w"> </span><span class="s2">"day"</span><span class="p">)</span><span class="w">
+</span><span class="n">f</span><span class="m">2011</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2011-9-23"</span><span class="p">),</span><span class="w"> </span><span class="n">as.Date</span><span class="p">(</span><span class="s2">"2011-12-20"</span><span class="p">),</span><span class="w"> </span><span class="s2">"day"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Data split by seasons (data frames)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">dplyr</span><span class="p">)</span><span class="w">
+</span><span class="n">online.retail.f2010</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">Date2</span><span class="w"> </span><span class="o">%in%</span><span class="w"> </span><span class="n">f</span><span class="m">2010</span><span class="p">)</span><span class="w">
+</span><span class="n">online.retail.w2010</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">Date2</span><span class="w"> </span><span class="o">%in%</span><span class="w"> </span><span class="n">w</span><span class="m">2010</span><span class="p">)</span><span class="w">
+</span><span class="n">online.retail.s2011</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">Date2</span><span class="w"> </span><span class="o">%in%</span><span class="w"> </span><span class="n">s</span><span class="m">2011</span><span class="p">)</span><span class="w">
+</span><span class="n">online.retail.su2011</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">Date2</span><span class="w"> </span><span class="o">%in%</span><span class="w"> </span><span class="n">su2011</span><span class="p">)</span><span class="w">
+</span><span class="n">online.retail.f2011</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">Date2</span><span class="w"> </span><span class="o">%in%</span><span class="w"> </span><span class="n">f</span><span class="m">2011</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># List of 5 data frames, each with a season name</span><span class="w">
+</span><span class="n">online.retail.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="s2">"Fall 2010"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">online.retail.f2010</span><span class="p">,</span><span class="w"> 
+                              </span><span class="s2">"Winter 2011"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">online.retail.w2010</span><span class="p">,</span><span class="w">
+                              </span><span class="s2">"Spring 2011"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">online.retail.s2011</span><span class="p">,</span><span class="w"> 
+                              </span><span class="s2">"Summer 2011"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">online.retail.su2011</span><span class="p">,</span><span class="w">
+                              </span><span class="s2">"Fall 2011"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">online.retail.f2011</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Separating quantities by product and season</span><span class="w">
+</span><span class="n">quantities.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">online.retail.seasons</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">online.retail.seasons</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="w">
+  </span><span class="c1"># Summing over all quantities to get the total instead of single quantity</span><span class="w">
+  </span><span class="c1"># observations using an lapply.</span><span class="w">
+  </span><span class="n">quantities</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">split</span><span class="p">(</span><span class="n">a</span><span class="o">$</span><span class="n">Quantity</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="o">$</span><span class="n">StockCode</span><span class="p">),</span><span class="w"> </span><span class="n">sum</span><span class="p">)</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">quantities</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">online.retail.seasons</span><span class="p">)</span><span class="w">
+</span><span class="c1"># Calls can be made by quantities$'(Season Year)'$(StockCode)</span><span class="w">
+
+</span><span class="c1"># Making sure we only compare the same items sold throughout the year</span><span class="w">
+</span><span class="c1"># There is no way around a for loop here since this is a recursive process</span><span class="w">
+</span><span class="n">same.products.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">intersect</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">[[</span><span class="m">1</span><span class="p">]][</span><span class="n">which</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">[[</span><span class="m">1</span><span class="p">]]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)]),</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">[[</span><span class="m">2</span><span class="p">]][</span><span class="n">which</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">[[</span><span class="m">2</span><span class="p">]]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)]))</span><span class="w">
+</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">3</span><span class="o">:</span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">)))</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="n">same.products.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">intersect</span><span class="p">(</span><span class="n">same.products.seasons</span><span class="p">,</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">[[</span><span class="n">i</span><span class="p">]][</span><span class="n">which</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)]))</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c1"># There are 1933 products that net at least 1 sale every season</span><span class="w">
+
+</span><span class="c1"># Sorting the quantities sold</span><span class="w">
+</span><span class="n">quantities.sorted.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">L</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">quantities.seasons</span><span class="p">[[</span><span class="n">i</span><span class="p">]][</span><span class="n">same.products.seasons</span><span class="p">]</span><span class="w">
+  </span><span class="n">sorted</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">L</span><span class="p">[</span><span class="n">order</span><span class="p">(</span><span class="n">sapply</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="m">1</span><span class="p">],</span><span class="w"> </span><span class="n">simplify</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">),</span><span class="w"> </span><span class="n">decreasing</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">)]</span><span class="w">
+  </span><span class="nf">return</span><span class="p">(</span><span class="n">sorted</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.sorted.seasons</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">online.retail.seasons</span><span class="p">)</span><span class="w">
+
+</span><span class="n">top.quantities.sorted.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">quantities.sorted.seasons</span><span class="p">,</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="n">head</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># All top 3 items sold per season over the entire year</span><span class="w">
+</span><span class="n">top.products.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">union</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">top.quantities.sorted.seasons</span><span class="p">[[</span><span class="m">1</span><span class="p">]]),</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">top.quantities.sorted.seasons</span><span class="p">[[</span><span class="m">2</span><span class="p">]]))</span><span class="w">
+</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">3</span><span class="o">:</span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">)))</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="n">top.products.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">union</span><span class="p">(</span><span class="n">top.products.seasons</span><span class="p">,</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">top.quantities.sorted.seasons</span><span class="p">[[</span><span class="n">i</span><span class="p">]]))</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="c1"># Finding the quantity sold of each of these items per season</span><span class="w">
+</span><span class="n">quantities.sold.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities.seasons</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">quantities.seasons</span><span class="p">[[</span><span class="n">i</span><span class="p">]][</span><span class="n">top.products.seasons</span><span class="p">]</span><span class="w">
+  </span><span class="nf">return</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.sold.seasons</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">online.retail.seasons</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Finding the item descriptions from StockCode</span><span class="w">
+</span><span class="n">items.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">top.products.seasons</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">head</span><span class="p">(</span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">StockCode</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">top.products.seasons</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="o">$</span><span class="n">Description</span><span class="p">})</span><span class="w">
+
+</span><span class="c1"># Plotting all of this information</span><span class="w">
+</span><span class="n">item.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">items.seasons</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">d</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="n">quantities.sold.seasons</span><span class="p">,</span><span class="w"> </span><span class="s1">'[['</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w">
+  </span><span class="nf">return</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">item.seasons</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">items.seasons</span><span class="w">
+
+</span><span class="n">d.seasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">item.seasons</span><span class="p">)</span><span class="w">
+
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">),</span><span class="w"> </span><span class="n">mar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">6</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">0.1</span><span class="p">)</span><span class="w">
+</span><span class="n">PlotQuantitiesSeasons</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">d.seasons</span><span class="p">){</span><span class="w">
+  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="o">:</span><span class="n">ncol</span><span class="p">(</span><span class="n">d.seasons</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">barplot</span><span class="p">(</span><span class="n">d.seasons</span><span class="p">[,</span><span class="w"> </span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rainbow</span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">rownames</span><span class="p">(</span><span class="n">d.seasons</span><span class="p">))),</span><span class="w"> </span><span class="n">names.arg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rownames</span><span class="p">(</span><span class="n">d.seasons</span><span class="p">),</span><span class="w"> </span><span class="n">las</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w">
+            </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">items.seasons</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">cex.main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0.75</span><span class="p">)</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="n">PlotQuantitiesSeasons</span><span class="p">(</span><span class="n">d.seasons</span><span class="p">)</span><span class="w">
+</span><span class="c1"># All of these items were at one point the 3 most popular items in a month</span><span class="w">
+</span><span class="c1"># Note we do not have full data for Fall 2010!!! Only about 3 weeks worth of data.</span><span class="w">
+</span><span class="c1"># Also, Fall 2011 is missing 11 days of data!!!</span><span class="w">
+
+</span><span class="c1"># Reset plotting parameters</span><span class="w">
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">),</span><span class="w"> </span><span class="n">mar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">5</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">0.1</span><span class="p">)</span><span class="w">
+
+
+</span><span class="c1">### Month</span><span class="w">
+</span><span class="c1"># Get the month, day, year</span><span class="w">
+</span><span class="n">Date</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">str_extract</span><span class="p">(</span><span class="n">InvoiceDate</span><span class="p">,</span><span class="w"> </span><span class="s2">"\\d{1,2}\\/\\d{1,2}\\/\\d{4}"</span><span class="p">)</span><span class="w">
+</span><span class="c1"># Reformat the dates</span><span class="w">
+</span><span class="n">Date</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.Date</span><span class="p">(</span><span class="n">Date</span><span class="p">,</span><span class="w"> </span><span class="s2">"%m/%d/%Y"</span><span class="p">)</span><span class="w">
+</span><span class="n">Date</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="n">Date</span><span class="p">,</span><span class="w"> </span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"%B %d, %Y"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Getting the month and year</span><span class="w">
+</span><span class="n">mon</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">str_extract</span><span class="p">(</span><span class="n">Date</span><span class="p">,</span><span class="w"> </span><span class="s2">"[A-Z][a-z]+"</span><span class="p">)</span><span class="w">
+</span><span class="n">year</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">str_extract</span><span class="p">(</span><span class="n">Date</span><span class="p">,</span><span class="w"> </span><span class="s2">"(?&lt;=\\,\\s)\\d{4}"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Adding factors containing month and year to the data</span><span class="w">
+</span><span class="n">MonthYear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.factor</span><span class="p">(</span><span class="n">str_c</span><span class="p">(</span><span class="n">mon</span><span class="p">,</span><span class="w"> </span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">sep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">" "</span><span class="p">))</span><span class="w">
+</span><span class="n">online.retail</span><span class="o">$</span><span class="n">MonthYear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">MonthYear</span><span class="w">
+
+</span><span class="c1"># Data split by month and year (big list)</span><span class="w">
+</span><span class="n">online.retail.monthyear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">split</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">MonthYear</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Separating quantities by product and month/year</span><span class="w">
+</span><span class="n">quantities</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">online.retail.monthyear</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">online.retail.monthyear</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="w">
+  </span><span class="c1"># Summing over all quantities to get the total instead of single quantity</span><span class="w">
+  </span><span class="c1"># observations using an lapply.</span><span class="w">
+  </span><span class="n">quantities</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">split</span><span class="p">(</span><span class="n">a</span><span class="o">$</span><span class="n">Quantity</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="o">$</span><span class="n">StockCode</span><span class="p">),</span><span class="w"> </span><span class="n">sum</span><span class="p">)</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">quantities</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">online.retail.monthyear</span><span class="p">)</span><span class="w">
+</span><span class="c1"># Calls can be made by quantities$'(Month Year)'$(StockCode)</span><span class="w">
+
+</span><span class="c1"># Making sure we only compare the same items sold throughout the year</span><span class="w">
+</span><span class="c1"># There is no way around a for loop here since this is a recursive process</span><span class="w">
+</span><span class="n">same.products.monthyear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">intersect</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities</span><span class="p">[[</span><span class="m">1</span><span class="p">]][</span><span class="n">which</span><span class="p">(</span><span class="n">quantities</span><span class="p">[[</span><span class="m">1</span><span class="p">]]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)]),</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">quantities</span><span class="p">[[</span><span class="m">2</span><span class="p">]][</span><span class="n">which</span><span class="p">(</span><span class="n">quantities</span><span class="p">[[</span><span class="m">2</span><span class="p">]]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)]))</span><span class="w">
+</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">3</span><span class="o">:</span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities</span><span class="p">)))</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="n">same.products.monthyear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">intersect</span><span class="p">(</span><span class="n">same.products.monthyear</span><span class="p">,</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">quantities</span><span class="p">[[</span><span class="n">i</span><span class="p">]][</span><span class="n">which</span><span class="p">(</span><span class="n">quantities</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)]))</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c1"># There are 1116 products that net at least 1 sale and was sold every month for the year</span><span class="w">
+
+</span><span class="c1"># Sorting the quantities sold</span><span class="w">
+</span><span class="n">quantities.sorted</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">L</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">quantities</span><span class="p">[[</span><span class="n">i</span><span class="p">]][</span><span class="n">same.products.monthyear</span><span class="p">]</span><span class="w">
+  </span><span class="n">sorted</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">L</span><span class="p">[</span><span class="n">order</span><span class="p">(</span><span class="n">sapply</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="m">1</span><span class="p">],</span><span class="w"> </span><span class="n">simplify</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">),</span><span class="w"> </span><span class="n">decreasing</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">)]</span><span class="w">
+  </span><span class="nf">return</span><span class="p">(</span><span class="n">sorted</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.sorted</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">online.retail.monthyear</span><span class="p">)</span><span class="w">
+
+</span><span class="n">top.quantities.sorted</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">quantities.sorted</span><span class="p">,</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="n">head</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># All top 3 items sold per month over the entire year</span><span class="w">
+</span><span class="n">top.products.monthyear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">union</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">top.quantities.sorted</span><span class="p">[[</span><span class="m">1</span><span class="p">]]),</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">top.quantities.sorted</span><span class="p">[[</span><span class="m">2</span><span class="p">]]))</span><span class="w">
+</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">3</span><span class="o">:</span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities</span><span class="p">)))</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="n">top.products.monthyear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">union</span><span class="p">(</span><span class="n">top.products.monthyear</span><span class="p">,</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">top.quantities.sorted</span><span class="p">[[</span><span class="n">i</span><span class="p">]]))</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="c1"># Finding the quantity sold of each of these items per month</span><span class="w">
+</span><span class="n">quantities.sold.monthyear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">quantities</span><span class="p">[[</span><span class="n">i</span><span class="p">]][</span><span class="n">top.products.monthyear</span><span class="p">]</span><span class="w">
+  </span><span class="nf">return</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.sold.monthyear</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">online.retail.monthyear</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Reordering the months into chronological order</span><span class="w">
+</span><span class="n">month.order</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">3</span><span class="p">,</span><span class="m">6</span><span class="p">,</span><span class="m">5</span><span class="p">,</span><span class="m">9</span><span class="p">,</span><span class="m">1</span><span class="p">,</span><span class="m">10</span><span class="p">,</span><span class="m">8</span><span class="p">,</span><span class="m">7</span><span class="p">,</span><span class="m">2</span><span class="p">,</span><span class="m">13</span><span class="p">,</span><span class="m">12</span><span class="p">,</span><span class="m">11</span><span class="p">,</span><span class="m">4</span><span class="p">)</span><span class="w">
+</span><span class="n">quantities.sold.monthyear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">quantities.sold.monthyear</span><span class="p">[</span><span class="n">month.order</span><span class="p">]</span><span class="w">
+
+</span><span class="c1"># Finding the item descriptions from StockCode</span><span class="w">
+</span><span class="n">items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">top.products.monthyear</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">head</span><span class="p">(</span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">StockCode</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">top.products.monthyear</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="o">$</span><span class="n">Description</span><span class="p">})</span><span class="w">
+
+</span><span class="c1"># Plotting all of this information</span><span class="w">
+</span><span class="n">item.monthyear</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">items</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">d</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="n">quantities.sold.monthyear</span><span class="p">,</span><span class="w"> </span><span class="s1">'[['</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w">
+  </span><span class="nf">return</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">item.monthyear</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">items</span><span class="w">
+
+</span><span class="n">d</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">item.monthyear</span><span class="p">)</span><span class="w">
+
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">),</span><span class="w"> </span><span class="n">mar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">6</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">0.1</span><span class="p">)</span><span class="w">
+</span><span class="n">PlotQuantities</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">d</span><span class="p">){</span><span class="w">
+  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="o">:</span><span class="n">ncol</span><span class="p">(</span><span class="n">d</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">barplot</span><span class="p">(</span><span class="n">d</span><span class="p">[,</span><span class="w"> </span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rainbow</span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">rownames</span><span class="p">(</span><span class="n">d</span><span class="p">))),</span><span class="w"> </span><span class="n">names.arg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rownames</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="w"> </span><span class="n">las</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w">
+            </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">items</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="n">PlotQuantities</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w">
+</span><span class="c1"># All of these items were at one point the 3 most popular items in a month</span><span class="w">
+</span><span class="c1"># Note we do not have full data for December 2011!!! Only 9 days worth of data.</span><span class="w">
+
+</span><span class="c1"># Reset plotting parameters</span><span class="w">
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">),</span><span class="w"> </span><span class="n">mar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">5</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">0.1</span><span class="p">)</span><span class="w">
+
+
+
+</span><span class="c1">################################################################################</span><span class="w">
+</span><span class="c1"># Which products are the most profitable for this company? What about least profitable?</span><span class="w">
+
+</span><span class="c1"># Split the data frame by products</span><span class="w">
+</span><span class="c1"># Note the abnormalities in Description including 'amazon' and 'refund', so instead</span><span class="w">
+</span><span class="c1"># we use the StockCode to identify products</span><span class="w">
+</span><span class="n">online.retail.products</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">split</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">StockCode</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Total sales from each item. Note that some of them are adjusting bad debt and</span><span class="w">
+</span><span class="c1"># Amazon fees, bank charges, discounts, etc.</span><span class="w">
+</span><span class="n">total.profit</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">online.retail.products</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">total.profit</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">sum</span><span class="p">(</span><span class="n">online.retail.products</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="o">$</span><span class="n">Quantity</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">online.retail.products</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="o">$</span><span class="n">UnitPrice</span><span class="p">)</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">total.profit</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+
+</span><span class="c1"># Which products made more than $50,000</span><span class="w">
+</span><span class="n">max.profit.ind</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">which</span><span class="p">(</span><span class="n">total.profit</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">50000</span><span class="p">)</span><span class="w">
+
+</span><span class="n">max.profit.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">max.profit.ind</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="c1"># Get the product descriptions</span><span class="w">
+  </span><span class="n">products</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="n">online.retail.products</span><span class="p">[</span><span class="n">max.profit.ind</span><span class="p">],</span><span class="w"> </span><span class="s1">'['</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">)[[</span><span class="n">i</span><span class="p">]][</span><span class="m">1</span><span class="p">]</span><span class="w">
+  </span><span class="c1"># Return only one of them</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">products</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="c1"># Corresponding item and profit</span><span class="w">
+</span><span class="n">max.profit.items.df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">Item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max.profit.items</span><span class="p">,</span><span class="w">
+                                  </span><span class="n">Profit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total.profit</span><span class="p">[</span><span class="n">max.profit.ind</span><span class="p">])</span><span class="w">
+
+</span><span class="c1"># Which profits made less than $1 (but more than $0)?...</span><span class="w">
+</span><span class="n">min.profit.ind</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">which</span><span class="p">(</span><span class="n">total.profit</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">total.profit</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w">
+
+</span><span class="n">min.profit.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">min.profit.ind</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="c1"># Get the product descriptions</span><span class="w">
+  </span><span class="n">products</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="n">online.retail.products</span><span class="p">[</span><span class="n">min.profit.ind</span><span class="p">],</span><span class="w"> </span><span class="s1">'['</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">)[[</span><span class="n">i</span><span class="p">]][</span><span class="m">1</span><span class="p">]</span><span class="w">
+  </span><span class="c1"># Return only one of them</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">products</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="n">min.profit.ind</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="n">min.profit.items</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">""</span><span class="p">)]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NA</span><span class="w">
+</span><span class="n">min.profit.ind</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">min.profit.ind</span><span class="p">[</span><span class="o">!</span><span class="nf">is.na</span><span class="p">(</span><span class="n">min.profit.ind</span><span class="p">)]</span><span class="w">
+</span><span class="n">min.profit.items</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="n">min.profit.items</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">""</span><span class="p">)]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NA</span><span class="w"> 
+</span><span class="n">min.profit.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">min.profit.items</span><span class="p">[</span><span class="o">!</span><span class="nf">is.na</span><span class="p">(</span><span class="n">min.profit.items</span><span class="p">)]</span><span class="w">
+</span><span class="c1"># Corresponding item and profit</span><span class="w">
+</span><span class="n">min.profit.items.df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">Item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min.profit.items</span><span class="p">,</span><span class="w">
+                                  </span><span class="n">Profit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total.profit</span><span class="p">[</span><span class="n">min.profit.ind</span><span class="p">])</span><span class="w">
+
+</span><span class="c1"># Which profits made no money ($0)?</span><span class="w">
+</span><span class="n">zero.profit.ind</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">which</span><span class="p">(</span><span class="n">total.profit</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w">
+
+</span><span class="n">zero.profit.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">zero.profit.ind</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="c1"># Get the product descriptions</span><span class="w">
+  </span><span class="n">products</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="n">online.retail.products</span><span class="p">[</span><span class="n">zero.profit.ind</span><span class="p">],</span><span class="w"> </span><span class="s1">'['</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">)[[</span><span class="n">i</span><span class="p">]][</span><span class="m">1</span><span class="p">]</span><span class="w">
+  </span><span class="c1"># Return only one of them</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">products</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="n">zero.profit.items</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="n">zero.profit.items</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">""</span><span class="p">)]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NA</span><span class="w"> 
+</span><span class="n">zero.profit.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">zero.profit.items</span><span class="p">[</span><span class="o">!</span><span class="nf">is.na</span><span class="p">(</span><span class="n">zero.profit.items</span><span class="p">)]</span><span class="w">
+</span><span class="n">zero.profit.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">unique</span><span class="p">(</span><span class="n">zero.profit.items</span><span class="p">)</span><span class="w">
+</span><span class="n">zero.profit.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">str_extract</span><span class="p">(</span><span class="n">zero.profit.items</span><span class="p">,</span><span class="w"> </span><span class="s2">"[A-Z]{2,}[A-Z\\,\\s\\-]+"</span><span class="p">)</span><span class="w">
+</span><span class="n">zero.profit.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">zero.profit.items</span><span class="p">[</span><span class="o">!</span><span class="nf">is.na</span><span class="p">(</span><span class="n">zero.profit.items</span><span class="p">)]</span><span class="w">
+</span><span class="c1"># Corresponding item and profit</span><span class="w">
+</span><span class="n">zero.profit.items.df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">Item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zero.profit.items</span><span class="p">,</span><span class="w">
+                                   </span><span class="n">Profit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Which item generated the most profit/sales/income (that is not postage)?</span><span class="w">
+</span><span class="n">best.profit.ind</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">which</span><span class="p">(</span><span class="n">total.profit</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">164762.19</span><span class="p">)</span><span class="w">
+
+</span><span class="n">best.profit.item</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">best.profit.ind</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="c1"># Get the product descriptions</span><span class="w">
+  </span><span class="n">products</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="n">online.retail.products</span><span class="p">[</span><span class="n">best.profit.ind</span><span class="p">],</span><span class="w"> </span><span class="s1">'['</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">)[[</span><span class="n">i</span><span class="p">]][</span><span class="m">1</span><span class="p">]</span><span class="w">
+  </span><span class="c1"># Return only one of them</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">products</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+
+
+
+</span><span class="c1">################################################################################</span><span class="w">
+</span><span class="c1"># Which products are the most popular in certain countries? Is there a difference in price between countries? How does this affect sales?</span><span class="w">
+
+</span><span class="c1"># Data split by Country</span><span class="w">
+</span><span class="n">online.retail.countries</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">split</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">Country</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Separating quantities by product and country</span><span class="w">
+</span><span class="n">quantities.countries</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">online.retail.countries</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">online.retail.countries</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="w">
+  </span><span class="c1"># Summing over all quantities to get the total instead of single quantity</span><span class="w">
+  </span><span class="c1"># observations using an lapply.</span><span class="w">
+  </span><span class="n">quantities</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">split</span><span class="p">(</span><span class="n">a</span><span class="o">$</span><span class="n">Quantity</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="o">$</span><span class="n">StockCode</span><span class="p">),</span><span class="w"> </span><span class="n">sum</span><span class="p">)</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">quantities</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.countries</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">online.retail.countries</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Sorting the quantities sold</span><span class="w">
+</span><span class="n">quantities.sorted.countries</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">quantities.countries</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">L</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">quantities.countries</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="w">
+  </span><span class="n">sorted</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">L</span><span class="p">[</span><span class="n">order</span><span class="p">(</span><span class="n">sapply</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="m">1</span><span class="p">],</span><span class="w"> </span><span class="n">simplify</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">),</span><span class="w"> </span><span class="n">decreasing</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">)]</span><span class="w">
+  </span><span class="nf">return</span><span class="p">(</span><span class="n">sorted</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.sorted.countries</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">online.retail.countries</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Finding the best seller within each country</span><span class="w">
+</span><span class="n">top.quantities.sorted.countries</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">quantities.sorted.countries</span><span class="p">,</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="n">head</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># Finding the item descriptions from StockCode</span><span class="w">
+</span><span class="n">items.countries</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">top.quantities.sorted.countries</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">head</span><span class="p">(</span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">StockCode</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">top.quantities.sorted.countries</span><span class="p">[[</span><span class="n">i</span><span class="p">]])),</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="o">$</span><span class="n">Description</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+
+</span><span class="c1"># Finding the average unit price of these items</span><span class="w">
+</span><span class="n">items.price</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">top.quantities.sorted.countries</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">filter</span><span class="p">(</span><span class="n">online.retail</span><span class="p">,</span><span class="w"> </span><span class="n">StockCode</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">top.quantities.sorted.countries</span><span class="p">[[</span><span class="n">i</span><span class="p">]]))</span><span class="o">$</span><span class="n">UnitPrice</span><span class="p">)</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+
+</span><span class="c1"># Putting everything together into a data frame</span><span class="w">
+</span><span class="n">items.sold.countries</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">quantity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unlist</span><span class="p">(</span><span class="n">top.quantities.sorted.countries</span><span class="p">),</span><span class="w">
+                                   </span><span class="n">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">items.countries</span><span class="p">,</span><span class="w">
+                                   </span><span class="n">avg.price</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">items.price</span><span class="p">)</span><span class="w">
+</span><span class="n">rownames</span><span class="p">(</span><span class="n">items.sold.countries</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">quantities.sorted.countries</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Finding the duplicate items so we can compare them between countries</span><span class="w">
+</span><span class="n">duplicate.items</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">unique</span><span class="p">(</span><span class="n">items.sold.countries</span><span class="p">[</span><span class="n">duplicated</span><span class="p">(</span><span class="n">items.sold.countries</span><span class="o">$</span><span class="n">item</span><span class="p">),</span><span class="w"> </span><span class="p">]</span><span class="o">$</span><span class="n">item</span><span class="p">)</span><span class="w">
+
+</span><span class="n">items.sold.countries.dup</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">duplicate.items</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">i</span><span class="p">){</span><span class="w">
+  </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">subset</span><span class="p">(</span><span class="n">items.sold.countries</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">duplicate.items</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w">
+  </span><span class="n">return</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span><span class="nf">names</span><span class="p">(</span><span class="n">items.sold.countries.dup</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">duplicate.items</span><span class="w">
+</span><span class="c1"># As it turns out, there is no difference in price between countries</span><span class="w">
+
+</span><span class="c1"># Plotting all of this information</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">ggmap</span><span class="p">)</span><span class="w">
+
+</span><span class="c1">#Using GGPLOT, plot the Base World Map</span><span class="w">
+</span><span class="n">mp</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">mapWorld</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">borders</span><span class="p">(</span><span class="s2">"world"</span><span class="p">,</span><span class="w"> </span><span class="n">colour</span><span class="o">=</span><span class="s2">"gray50"</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span><span class="w"> </span><span class="c1"># create a layer of borders</span><span class="w">
+</span><span class="n">mp</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">   </span><span class="n">mapWorld</span><span class="w">
+
+</span><span class="c1"># Get the country names</span><span class="w">
+</span><span class="n">country.names</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">unique</span><span class="p">(</span><span class="n">Country</span><span class="p">)</span><span class="w">
+</span><span class="n">country.names</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="n">country.names</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"Unspecified"</span><span class="p">)]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NA</span><span class="w">
+</span><span class="n">country.names</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="n">country.names</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"European Community"</span><span class="p">)]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NA</span><span class="w">
+</span><span class="n">country.names</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">as.character</span><span class="p">(</span><span class="n">na.omit</span><span class="p">(</span><span class="n">country.names</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># Get the country locations (lat and lon)</span><span class="w">
+</span><span class="n">country.locations</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">geocode</span><span class="p">(</span><span class="n">country.names</span><span class="p">)</span><span class="w">
+</span><span class="n">country.locations</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="n">country.names</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"Brazil"</span><span class="p">),</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">geocode</span><span class="p">(</span><span class="s2">"Brasilia, Federal District, Brazil"</span><span class="p">)</span><span class="w">
+</span><span class="n">country.locations</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="n">country.names</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"RSA"</span><span class="p">),</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">geocode</span><span class="p">(</span><span class="s2">"South Africa"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Quantity = size</span><span class="w">
+</span><span class="c1"># avg price = color</span><span class="w">
+
+</span><span class="n">items.sold.countries.plot</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">items.sold.countries</span><span class="p">[</span><span class="o">-</span><span class="nf">c</span><span class="p">(</span><span class="m">33</span><span class="p">,</span><span class="w"> </span><span class="m">36</span><span class="p">),</span><span class="w"> </span><span class="p">]</span><span class="w">
+</span><span class="n">mp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">geom_point</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">items.sold.countries.plot</span><span class="p">,</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">country.locations</span><span class="o">$</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">country.locations</span><span class="o">$</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">avg.price</span><span class="p">,</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">quantity</span><span class="p">))</span><span class="w">
+</span></code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

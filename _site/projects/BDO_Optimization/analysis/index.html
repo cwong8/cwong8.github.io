@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Black Desert Online Worker Optimization</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="using-scraped-data">Using scraped data</h1>
+<p>Now we can analyze.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Import packages
+</span><span class="kn">import</span> <span class="nn">MySQLdb</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="c1"># Create connection to MySQL
+</span><span class="n">conn</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="o">=</span> <span class="s">"localhost"</span><span class="p">,</span>
+                  <span class="n">user</span><span class="o">=</span><span class="s">"yourusername"</span><span class="p">,</span>
+                  <span class="n">passwd</span><span class="o">=</span><span class="s">"yourpassword"</span><span class="p">,</span>
+                  <span class="n">db</span><span class="o">=</span><span class="s">"bdodae"</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_rows</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="c1"># Table 'node' that we obtained from web scraping bdodae.com
+</span><span class="n">node</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">'SELECT * FROM node'</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+<span class="n">node</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>NODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>AREA</th>
+      <th>TYPE</th>
+      <th>REGION_MOD_PERCENT</th>
+      <th>CONNECTIONS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine</td>
+      <td>2</td>
+      <td>Mediah</td>
+      <td>Worker Node</td>
+      <td>0.0</td>
+      <td>Abandoned Iron Mine Saunil District, Abandoned...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine Entrance</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Highland Junction, Alumn Rock Valley</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Abandoned Iron Mine Rhutum District</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Abandoned Iron Mine, Abun</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>356</th>
+      <td>357</td>
+      <td>Yalt Canyon</td>
+      <td>1</td>
+      <td>Valencia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Shakatu, Gahaz Bandit's Lair</td>
+    </tr>
+    <tr>
+      <th>357</th>
+      <td>358</td>
+      <td>Yianaros's Field</td>
+      <td>1</td>
+      <td>Kamasylvia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Western Valtarra Mountains</td>
+    </tr>
+    <tr>
+      <th>358</th>
+      <td>359</td>
+      <td>Zagam Island</td>
+      <td>1</td>
+      <td>Margoria</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Nada Island</td>
+    </tr>
+  </tbody>
+</table>
+<p>359 rows × 7 columns</p>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Table 'subnode' that we obtained from web scraping bdodae.com
+</span><span class="n">subnode</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">'SELECT * FROM subnode'</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+<span class="n">subnode</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>SUBNODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>BASE_WORKLOAD</th>
+      <th>CURRENT_WORKLOAD</th>
+      <th>ITEM1</th>
+      <th>ITEM2</th>
+      <th>ITEM3</th>
+      <th>ITEM4</th>
+      <th>YIELD1</th>
+      <th>YIELD2</th>
+      <th>YIELD3</th>
+      <th>YIELD4</th>
+      <th>DISTANCE1</th>
+      <th>DISTANCE2</th>
+      <th>DISTANCE3</th>
+      <th>CITY1</th>
+      <th>CITY2</th>
+      <th>CITY3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine - Mining.1</td>
+      <td>3</td>
+      <td>200</td>
+      <td>250</td>
+      <td>Zinc Ore</td>
+      <td>Powder Of Time</td>
+      <td>Platinum Ore</td>
+      <td>None</td>
+      <td>7.86</td>
+      <td>1.86</td>
+      <td>0.95</td>
+      <td>NaN</td>
+      <td>1113</td>
+      <td>2063</td>
+      <td>NaN</td>
+      <td>Altinova</td>
+      <td>Tarif</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine - Mining.2</td>
+      <td>3</td>
+      <td>500</td>
+      <td>100</td>
+      <td>Iron Ore</td>
+      <td>Powder Of Darkness</td>
+      <td>Rough Black Crystal</td>
+      <td>None</td>
+      <td>10.53</td>
+      <td>1.80</td>
+      <td>1.08</td>
+      <td>NaN</td>
+      <td>1113</td>
+      <td>2063</td>
+      <td>NaN</td>
+      <td>Altinova</td>
+      <td>Tarif</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Ahto Farm - Farming.1</td>
+      <td>2</td>
+      <td>200</td>
+      <td>100</td>
+      <td>Cotton</td>
+      <td>Cotton Yarn</td>
+      <td>None</td>
+      <td>None</td>
+      <td>12.53</td>
+      <td>0.85</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>702</td>
+      <td>2000</td>
+      <td>2325.0</td>
+      <td>Tarif</td>
+      <td>Heidel</td>
+      <td>Altinova</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>169</th>
+      <td>170</td>
+      <td>Weenie Cabin - Gathering.1</td>
+      <td>2</td>
+      <td>140</td>
+      <td>140</td>
+      <td>Volcanic Umbrella Mushroom</td>
+      <td>Green Pendulous Mushroom</td>
+      <td>None</td>
+      <td>None</td>
+      <td>7.70</td>
+      <td>6.90</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1608</td>
+      <td>3025</td>
+      <td>6005.0</td>
+      <td>Grana</td>
+      <td>Old Wisdom Tree</td>
+      <td>Trent</td>
+    </tr>
+    <tr>
+      <th>170</th>
+      <td>171</td>
+      <td>Weita Island - Fish Drying Yard.1</td>
+      <td>1</td>
+      <td>2400</td>
+      <td>1200</td>
+      <td>Dried Surfperch</td>
+      <td>Dried Bluefish</td>
+      <td>Dried Maomao</td>
+      <td>Dried Nibbler</td>
+      <td>3.60</td>
+      <td>1.80</td>
+      <td>0.90</td>
+      <td>0.08</td>
+      <td>1620</td>
+      <td>3291</td>
+      <td>3340.0</td>
+      <td>Iliya Island</td>
+      <td>Velia</td>
+      <td>Olvia</td>
+    </tr>
+    <tr>
+      <th>171</th>
+      <td>172</td>
+      <td>Wolf Hills - Lumbering.1</td>
+      <td>1</td>
+      <td>150</td>
+      <td>100</td>
+      <td>Ash Timber</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>4.43</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>340</td>
+      <td>1902</td>
+      <td>NaN</td>
+      <td>Olvia</td>
+      <td>Velia</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+<p>172 rows × 19 columns</p>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Get minimum distance from all 3 distance columns
+</span><span class="n">min_col</span> <span class="o">=</span> <span class="n">subnode</span><span class="p">[[</span><span class="s">"DISTANCE1"</span><span class="p">,</span> <span class="s">"DISTANCE2"</span><span class="p">,</span> <span class="s">"DISTANCE3"</span><span class="p">]]</span><span class="o">.</span><span class="n">idxmin</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Get corresponding closest city from minimum distance
+</span><span class="n">min_city</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">min_dist</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">min_col</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">min_col</span><span class="p">))):</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">d'</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">min_city</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subnode</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:][</span><span class="s">"CITY"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)])</span>
+    <span class="n">min_dist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subnode</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:][</span><span class="n">x</span><span class="p">])</span>
+
+<span class="c1"># New columns that we will join onto 'node'
+</span><span class="n">subnode</span><span class="p">[</span><span class="s">"MIN_DIST"</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_dist</span>
+<span class="n">subnode</span><span class="p">[</span><span class="s">"MIN_CITY"</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_city</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Take the names from 'subnode' and cut off the ending to obtain the main node name
+</span><span class="n">subnode</span><span class="p">[</span><span class="s">"NODE_NAME"</span><span class="p">]</span> <span class="o">=</span> <span class="n">subnode</span><span class="p">[</span><span class="s">"NAME"</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">subnode</span><span class="p">[</span><span class="s">"NODE_NAME"</span><span class="p">],</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">subnode</span><span class="p">)[</span><span class="mi">0</span><span class="p">])):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">' - '</span><span class="p">,</span> <span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">subnode</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s">"NODE_NAME"</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Left-joining onto node to include distance and city information for worker nodes
+</span><span class="n">node_dist</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">subnode</span><span class="p">[[</span><span class="s">"NODE_NAME"</span><span class="p">,</span> <span class="s">"MIN_DIST"</span><span class="p">,</span> <span class="s">"MIN_CITY"</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s">"NODE_NAME"</span><span class="p">),</span> <span class="n">how</span> <span class="o">=</span> <span class="s">"left"</span><span class="p">,</span> <span class="n">left_on</span> <span class="o">=</span> <span class="s">"NAME"</span><span class="p">,</span> <span class="n">right_on</span> <span class="o">=</span> <span class="s">"NODE_NAME"</span><span class="p">)</span>
+<span class="n">node_dist</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>NODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>AREA</th>
+      <th>TYPE</th>
+      <th>REGION_MOD_PERCENT</th>
+      <th>CONNECTIONS</th>
+      <th>NODE_NAME</th>
+      <th>MIN_DIST</th>
+      <th>MIN_CITY</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine</td>
+      <td>2</td>
+      <td>Mediah</td>
+      <td>Worker Node</td>
+      <td>0.0</td>
+      <td>Abandoned Iron Mine Saunil District, Abandoned...</td>
+      <td>Abandoned Iron Mine</td>
+      <td>1113.0</td>
+      <td>Altinova</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine Entrance</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Highland Junction, Alumn Rock Valley</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Abandoned Iron Mine Rhutum District</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Abandoned Iron Mine, Abun</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>356</th>
+      <td>357</td>
+      <td>Yalt Canyon</td>
+      <td>1</td>
+      <td>Valencia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Shakatu, Gahaz Bandit's Lair</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>357</th>
+      <td>358</td>
+      <td>Yianaros's Field</td>
+      <td>1</td>
+      <td>Kamasylvia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Western Valtarra Mountains</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>358</th>
+      <td>359</td>
+      <td>Zagam Island</td>
+      <td>1</td>
+      <td>Margoria</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Nada Island</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>359 rows × 10 columns</p>
+</div>
+
+<h1 id="igraph">igraph</h1>
+<p>Visualizing our node system.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Import packages
+</span><span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">igraph</span>
+
+<span class="c1"># Create graph
+</span><span class="n">g</span> <span class="o">=</span> <span class="n">igraph</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+<span class="c1"># Generates unnamed vertices for graph
+</span><span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">node</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Generates edges for graph
+</span><span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s">"NAME"</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">cp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node_dist</span><span class="p">[</span><span class="s">"NAME"</span><span class="p">],</span> <span class="n">node_dist</span><span class="p">[</span><span class="s">"CONNECTIONS"</span><span class="p">],</span> <span class="n">node_dist</span><span class="p">[</span><span class="s">"CP"</span><span class="p">]):</span>
+    <span class="c1"># Splits the connections from 'node' into parts
+</span>    <span class="n">conn</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">', '</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">n_conn</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+    <span class="c1"># Adds edges between main node and its connections
+</span>    <span class="n">g</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n_conn</span><span class="p">),</span> <span class="n">conn</span><span class="p">))</span>
+
+<span class="c1"># Adding vertex attributes
+</span><span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s">"NAME"</span><span class="p">]</span>
+<span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"area"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s">"AREA"</span><span class="p">]</span>
+<span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"type"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s">"TYPE"</span><span class="p">]</span>
+<span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s">"CP"</span><span class="p">]</span>
+<span class="c1"># Checking to see if our graph has the correct number of vertices and edges
+</span><span class="n">igraph</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>IGRAPH UN-T 359 886 -- 
++ attr: area (v), cp (v), name (v), type (v)
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Import cairo to display igraph
+</span><span class="kn">import</span> <span class="nn">cairo</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">layout_kamada_kawai</span><span class="p">()</span>
+
+<span class="c1"># Dictionaries defining visual styling for the graph
+</span><span class="n">size_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">"Connection Node"</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="s">"Town Node"</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s">"Worker Node"</span><span class="p">:</span> <span class="mi">7</span><span class="p">}</span>
+<span class="n">shape_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">"Connection Node"</span> <span class="p">:</span> <span class="s">"rectangle"</span><span class="p">,</span> <span class="s">"Town Node"</span> <span class="p">:</span> <span class="s">"triangle-up"</span><span class="p">,</span> <span class="s">"Worker Node"</span> <span class="p">:</span> <span class="s">"circle"</span><span class="p">}</span>
+<span class="n">color_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">"Balenos"</span> <span class="p">:</span> <span class="n">igraph</span><span class="o">.</span><span class="n">RainbowPalette</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"AREA"</span><span class="p">])))[</span><span class="mi">0</span><span class="p">],</span>
+              <span class="s">"Calpheon"</span> <span class="p">:</span> <span class="n">igraph</span><span class="o">.</span><span class="n">RainbowPalette</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"AREA"</span><span class="p">])))[</span><span class="mi">1</span><span class="p">],</span>
+              <span class="s">"Kamasylvia"</span> <span class="p">:</span> <span class="n">igraph</span><span class="o">.</span><span class="n">RainbowPalette</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"AREA"</span><span class="p">])))[</span><span class="mi">2</span><span class="p">],</span>
+              <span class="s">"Margoria"</span> <span class="p">:</span> <span class="n">igraph</span><span class="o">.</span><span class="n">RainbowPalette</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"AREA"</span><span class="p">])))[</span><span class="mi">3</span><span class="p">],</span>
+              <span class="s">"Mediah"</span> <span class="p">:</span> <span class="n">igraph</span><span class="o">.</span><span class="n">RainbowPalette</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"AREA"</span><span class="p">])))[</span><span class="mi">4</span><span class="p">],</span>
+              <span class="s">"Serendia"</span> <span class="p">:</span> <span class="n">igraph</span><span class="o">.</span><span class="n">RainbowPalette</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"AREA"</span><span class="p">])))[</span><span class="mi">5</span><span class="p">],</span>
+              <span class="s">"Valencia"</span> <span class="p">:</span> <span class="n">igraph</span><span class="o">.</span><span class="n">RainbowPalette</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"AREA"</span><span class="p">])))[</span><span class="mi">6</span><span class="p">]}</span>
+<span class="n">label_size_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">"Connection Node"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s">"Town Node"</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span> <span class="s">"Worker Node"</span><span class="p">:</span> <span class="mi">8</span><span class="p">}</span>
+<span class="n">label_dist_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">"Connection Node"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">"Town Node"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"Worker Node"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+
+<span class="c1"># Configure visual styling and plot
+</span><span class="n">visual_style</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"vertex_size"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">size_dict</span><span class="p">[</span><span class="n">type_</span><span class="p">]</span> <span class="k">for</span> <span class="n">type_</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"type"</span><span class="p">]]</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"vertex_shape"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">shape_dict</span><span class="p">[</span><span class="n">type_</span><span class="p">]</span> <span class="k">for</span> <span class="n">type_</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"type"</span><span class="p">]]</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"vertex_color"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">color_dict</span><span class="p">[</span><span class="n">area</span><span class="p">]</span> <span class="k">for</span> <span class="n">area</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"area"</span><span class="p">]]</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"vertex_label"</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"name"</span><span class="p">]</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"vertex_label_size"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">label_size_dict</span><span class="p">[</span><span class="n">type_</span><span class="p">]</span> <span class="k">for</span> <span class="n">type_</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"type"</span><span class="p">]]</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"vertex_label_dist"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">label_dist_dict</span><span class="p">[</span><span class="n">type_</span><span class="p">]</span> <span class="k">for</span> <span class="n">type_</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s">"type"</span><span class="p">]]</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"edge_curved"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"layout"</span><span class="p">]</span> <span class="o">=</span> <span class="n">layout</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"bbox"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+<span class="n">visual_style</span><span class="p">[</span><span class="s">"margin"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="c1">### Plot without saving
+</span><span class="n">igraph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="o">**</span><span class="n">visual_style</span><span class="p">)</span>
+
+<span class="c1">### Saves to file "node_map.png"
+# igraph.plot(g, "node_map.png", **visual_style)
+</span></code></pre></div></div>
+
+<p><img src="figures/output_10_0.svg" alt="svg" /></p>
+
+<h1 id="calculate-value-of-each-subnode">Calculate value of each subnode</h1>
+<p>Using the worker mechanics explained by <a href="https://blackdesertanalytics.netlify.com/miscellaneous/workers/">Black Desert Analytics</a> I can determine a value for each subnode given some worker.</p>
+
+<ul>
+  <li>Work Speed and Work Load
+    <ul>
+      <li>Work loads for nodes work is what most players will call ticks. Your ticks are calculated by doing Workload/Workspeed and then rounded UP to the nearest whole number (4.1=5). Each tick takes 10 minutes (5 minutes for crates).</li>
+    </ul>
+  </li>
+  <li>Movement Speed and Distance
+    <ul>
+      <li>This is simply determined by (distance/movement speed) $\times$ 2 $\times$ Seconds. The reason for the x2 is the worker needs to travel to the node and then travel back to his home base to deposit what he gathered.</li>
+      <li>The final cycle time is simply these two formulas added up.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Thus, the total time taken for a worker to finish one cycle is given by:
+<script type="math/tex">Time (seconds) = \left(\left\lceil \frac{Workload}{Workspeed} \right\rceil \times 600 seconds\right) + \left(\frac{Distance}{Movement Speed} \times 2 seconds\right)</script>
+<img src="figures/eqn1.png" alt="png" /></p>
+
+<p>For crates we have:
+<script type="math/tex">\left(\left\lceil \frac{Workload}{Workspeed} \right\rceil \times 300 seconds\right) + \left(\frac{Distance}{Movement Speed} \times 2 seconds\right)</script>
+<img src="figures/eqn2.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Import packages
+</span><span class="kn">import</span> <span class="nn">MySQLdb</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="c1"># Create connection to MySQL
+</span><span class="n">conn</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="o">=</span> <span class="s">"localhost"</span><span class="p">,</span>
+                  <span class="n">user</span><span class="o">=</span><span class="s">"yourusername"</span><span class="p">,</span>
+                  <span class="n">passwd</span><span class="o">=</span><span class="s">"yourpassword"</span><span class="p">,</span>
+                  <span class="n">db</span><span class="o">=</span><span class="s">"bdodae"</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_rows</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="c1"># Table 'node' that we obtained from web scraping bdodae.com
+</span><span class="n">node</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">'SELECT * FROM node'</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+
+<span class="c1"># Table 'subnode' that we obtained from web scraping bdodae.com
+</span><span class="n">subnode</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">'SELECT * FROM subnode'</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+
+<span class="c1"># Table 'prices' that we obtained from web scraping bdodae.com
+</span><span class="n">prices</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">'SELECT * FROM prices'</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Worker dictionary containing 4 types of workers
+# Workers except Default are base artisan-level workers
+</span><span class="n">worker_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">'Default'</span> <span class="p">:</span> <span class="p">{</span><span class="s">'Name'</span> <span class="p">:</span> <span class="s">'Default'</span><span class="p">,</span> <span class="s">'Workspeed'</span> <span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s">'Movespeed'</span> <span class="p">:</span> <span class="mf">4.25</span><span class="p">,</span> <span class="s">'Stamina'</span> <span class="p">:</span> <span class="mi">23</span><span class="p">},</span>
+               <span class="s">'Goblin'</span> <span class="p">:</span> <span class="p">{</span><span class="s">'Name'</span> <span class="p">:</span> <span class="s">'Goblin'</span><span class="p">,</span> <span class="s">'Workspeed'</span> <span class="p">:</span> <span class="mi">150</span><span class="p">,</span> <span class="s">'Movespeed'</span> <span class="p">:</span> <span class="mf">7.5</span><span class="p">,</span> <span class="s">'Stamina'</span> <span class="p">:</span> <span class="mi">15</span><span class="p">},</span>
+               <span class="s">'Human'</span> <span class="p">:</span> <span class="p">{</span><span class="s">'Name'</span> <span class="p">:</span> <span class="s">'Human'</span><span class="p">,</span> <span class="s">'Workspeed'</span> <span class="p">:</span> <span class="mi">105</span><span class="p">,</span> <span class="s">'Movespeed'</span> <span class="p">:</span> <span class="mf">4.5</span><span class="p">,</span> <span class="s">'Stamina'</span> <span class="p">:</span> <span class="mi">23</span><span class="p">},</span>
+               <span class="s">'Giant'</span> <span class="p">:</span> <span class="p">{</span><span class="s">'Name'</span> <span class="p">:</span> <span class="s">'Giant'</span><span class="p">,</span> <span class="s">'Workspeed'</span> <span class="p">:</span> <span class="mi">95</span><span class="p">,</span> <span class="s">'Movespeed'</span> <span class="p">:</span> <span class="mf">3.75</span><span class="p">,</span> <span class="s">'Stamina'</span> <span class="p">:</span> <span class="mi">35</span><span class="p">}}</span>
+
+<span class="c1"># Calculate worker profits/gains for each node and put it in the subnode dataframe
+</span><span class="n">items</span> <span class="o">=</span> <span class="n">subnode</span><span class="p">[[</span><span class="s">"ITEM1"</span><span class="p">,</span> <span class="s">"ITEM2"</span><span class="p">,</span> <span class="s">"ITEM3"</span><span class="p">,</span> <span class="s">"ITEM4"</span><span class="p">]]</span>
+<span class="n">yields</span> <span class="o">=</span> <span class="n">subnode</span><span class="p">[[</span><span class="s">"YIELD1"</span><span class="p">,</span> <span class="s">"YIELD2"</span><span class="p">,</span> <span class="s">"YIELD3"</span><span class="p">,</span> <span class="s">"YIELD4"</span><span class="p">]]</span>
+<span class="n">total_profits_user_avg_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">total_profits_rec_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">subnode</span><span class="p">)):</span>
+    <span class="n">workload</span> <span class="o">=</span> <span class="n">subnode</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:][</span><span class="s">"CURRENT_WORKLOAD"</span><span class="p">]</span>
+    <span class="n">total_profits_user_avg</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">total_profits_rec</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">yield_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">items</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">yields</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]):</span>
+        <span class="c1"># If the item and yield exists (i.e. is not None)
+</span>        <span class="k">if</span><span class="p">(</span><span class="n">item</span> <span class="ow">and</span> <span class="n">yield_</span><span class="p">):</span>
+            <span class="n">user_item_price</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prices</span><span class="p">[</span><span class="n">prices</span><span class="p">[</span><span class="s">"ITEM"</span><span class="p">]</span> <span class="o">==</span> <span class="n">item</span><span class="p">][</span><span class="s">"USER_AVERAGE"</span><span class="p">])</span>
+            <span class="n">recent_item_price</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prices</span><span class="p">[</span><span class="n">prices</span><span class="p">[</span><span class="s">"ITEM"</span><span class="p">]</span> <span class="o">==</span> <span class="n">item</span><span class="p">][</span><span class="s">"RECENT_VALUE"</span><span class="p">])</span>
+            <span class="n">total_profits_user_avg</span> <span class="o">+=</span> <span class="n">yield_</span> <span class="o">*</span> <span class="n">user_item_price</span>
+            <span class="n">total_profits_rec</span> <span class="o">+=</span> <span class="n">yield_</span> <span class="o">*</span> <span class="n">recent_item_price</span>
+    <span class="n">total_profits_user_avg_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_profits_user_avg</span><span class="p">)</span>
+    <span class="n">total_profits_rec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_profits_rec</span><span class="p">)</span>
+
+<span class="c1"># Profits generated per worker cycle
+# We want to standardize this to profit per hour
+</span><span class="n">profit</span> <span class="o">=</span> <span class="n">subnode</span><span class="p">[[</span><span class="s">"SUBNODE_ID"</span><span class="p">,</span> <span class="s">"NAME"</span><span class="p">,</span> <span class="s">"CP"</span><span class="p">,</span> <span class="s">"BASE_WORKLOAD"</span><span class="p">,</span> <span class="s">"CURRENT_WORKLOAD"</span><span class="p">,</span> <span class="s">"MIN_DIST"</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">profit</span><span class="p">[</span><span class="s">"PROFITS_USER_AVG"</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_profits_user_avg_list</span>
+<span class="n">profit</span><span class="p">[</span><span class="s">"PROFITS_REC"</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_profits_rec_list</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calculate per hour income for each worker
+# Pass arguments as worker_profit(**worker_dict['WORKER'])
+</span><span class="k">def</span> <span class="nf">get_cycle_time</span><span class="p">(</span><span class="n">Workload</span><span class="p">,</span> <span class="n">Workspeed</span><span class="p">,</span> <span class="n">Distance</span><span class="p">,</span> <span class="n">Movespeed</span><span class="p">):</span>
+    <span class="c1"># Return time in minutes
+</span>    <span class="k">return</span><span class="p">(((</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">Workload</span> <span class="o">/</span> <span class="n">Workspeed</span><span class="p">)</span> <span class="o">*</span> <span class="mi">600</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">Distance</span> <span class="o">/</span> <span class="n">Movespeed</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">hourly_profit_dict</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="c1"># Calculates hourly profit for all subnodes for one worker
+</span><span class="k">def</span> <span class="nf">get_hourly_profit</span><span class="p">(</span><span class="n">Name</span><span class="p">,</span> <span class="n">Workspeed</span><span class="p">,</span> <span class="n">Movespeed</span><span class="p">,</span> <span class="n">Stamina</span><span class="p">):</span>
+    <span class="n">hourly_profit_user_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">hourly_profit_rec_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">workload</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">recent</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">profit</span><span class="p">[</span><span class="s">"CURRENT_WORKLOAD"</span><span class="p">],</span>
+                                                <span class="n">profit</span><span class="p">[</span><span class="s">"MIN_DIST"</span><span class="p">],</span>
+                                                <span class="n">profit</span><span class="p">[</span><span class="s">"PROFITS_USER_AVG"</span><span class="p">],</span>
+                                                <span class="n">profit</span><span class="p">[</span><span class="s">"PROFITS_REC"</span><span class="p">]):</span>
+        <span class="c1"># Cycle time in minutes
+</span>        <span class="n">cycle_time</span> <span class="o">=</span> <span class="n">get_cycle_time</span><span class="p">(</span><span class="n">workload</span><span class="p">,</span> <span class="n">Workspeed</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">Movespeed</span><span class="p">)</span>
+        <span class="n">cycles_per_hour</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">/</span> <span class="n">cycle_time</span>
+        <span class="n">hourly_profit_user</span> <span class="o">=</span> <span class="n">cycles_per_hour</span> <span class="o">*</span> <span class="n">user</span>
+        <span class="n">hourly_profit_rec</span> <span class="o">=</span> <span class="n">cycles_per_hour</span> <span class="o">*</span> <span class="n">recent</span>
+        <span class="n">hourly_profit_user_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hourly_profit_user</span><span class="p">)</span>
+        <span class="n">hourly_profit_rec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hourly_profit_rec</span><span class="p">)</span>
+    <span class="n">hourly_profit_dict</span><span class="p">[</span><span class="n">Name</span> <span class="o">+</span> <span class="s">'_hourly_profit_user'</span><span class="p">]</span> <span class="o">=</span> <span class="n">hourly_profit_user_list</span>
+    <span class="n">hourly_profit_dict</span><span class="p">[</span><span class="n">Name</span> <span class="o">+</span> <span class="s">'_hourly_profit_rec'</span><span class="p">]</span> <span class="o">=</span> <span class="n">hourly_profit_rec_list</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Loop that gets hourly profit for all workers
+</span><span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">worker_dict</span><span class="p">:</span>
+    <span class="n">get_hourly_profit</span><span class="p">(</span><span class="o">**</span><span class="n">worker_dict</span><span class="p">[</span><span class="n">worker</span><span class="p">])</span>
+
+<span class="c1"># Writes our dictionary with worker profits into our 'profit' dataframe
+</span><span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">hourly_profit_dict</span><span class="p">:</span>
+    <span class="n">profit</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">hourly_profit_dict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h1 id="using-plotnine-and-ggplot">Using plotnine and ggplot</h1>
+<p>Similar to R’s ggplot2</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">from</span> <span class="nn">plotnine</span> <span class="kn">import</span> <span class="o">*</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s">'ignore'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">profit</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>SUBNODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>BASE_WORKLOAD</th>
+      <th>CURRENT_WORKLOAD</th>
+      <th>MIN_DIST</th>
+      <th>PROFITS_USER_AVG</th>
+      <th>PROFITS_REC</th>
+      <th>Default_hourly_profit_user</th>
+      <th>Default_hourly_profit_rec</th>
+      <th>Goblin_hourly_profit_user</th>
+      <th>Goblin_hourly_profit_rec</th>
+      <th>Human_hourly_profit_user</th>
+      <th>Human_hourly_profit_rec</th>
+      <th>Giant_hourly_profit_user</th>
+      <th>Giant_hourly_profit_rec</th>
+      <th>TYPE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine - Mining.1</td>
+      <td>3</td>
+      <td>200</td>
+      <td>250</td>
+      <td>1113</td>
+      <td>13732.70</td>
+      <td>16304.87</td>
+      <td>21274.839004</td>
+      <td>25259.671021</td>
+      <td>33028.941742</td>
+      <td>39215.347408</td>
+      <td>21544.619407</td>
+      <td>25579.981987</td>
+      <td>20654.127674</td>
+      <td>24522.698864</td>
+      <td>Mining</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine - Mining.2</td>
+      <td>3</td>
+      <td>500</td>
+      <td>100</td>
+      <td>1113</td>
+      <td>12188.25</td>
+      <td>14125.41</td>
+      <td>39045.273241</td>
+      <td>45250.999372</td>
+      <td>48926.962533</td>
+      <td>56703.251561</td>
+      <td>40083.160780</td>
+      <td>46453.845311</td>
+      <td>24463.481267</td>
+      <td>28351.625781</td>
+      <td>Mining</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Ahto Farm - Farming.1</td>
+      <td>2</td>
+      <td>200</td>
+      <td>100</td>
+      <td>702</td>
+      <td>11028.27</td>
+      <td>13413.30</td>
+      <td>42673.882398</td>
+      <td>51902.754173</td>
+      <td>50434.161585</td>
+      <td>61341.310976</td>
+      <td>43532.644737</td>
+      <td>52947.236842</td>
+      <td>25217.080793</td>
+      <td>30670.655488</td>
+      <td>Farming</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>169</th>
+      <td>170</td>
+      <td>Weenie Cabin - Gathering.1</td>
+      <td>2</td>
+      <td>140</td>
+      <td>140</td>
+      <td>1608</td>
+      <td>9022.60</td>
+      <td>11337.80</td>
+      <td>16600.021645</td>
+      <td>20859.588745</td>
+      <td>31572.083981</td>
+      <td>39673.483670</td>
+      <td>16964.498607</td>
+      <td>21317.590529</td>
+      <td>15786.041991</td>
+      <td>19836.741835</td>
+      <td>Gathering</td>
+    </tr>
+    <tr>
+      <th>170</th>
+      <td>171</td>
+      <td>Weita Island - Fish Drying Yard.1</td>
+      <td>1</td>
+      <td>2400</td>
+      <td>1200</td>
+      <td>1620</td>
+      <td>14364.32</td>
+      <td>15288.86</td>
+      <td>6494.506383</td>
+      <td>6912.516489</td>
+      <td>9883.706422</td>
+      <td>10519.857798</td>
+      <td>6529.236364</td>
+      <td>6949.481818</td>
+      <td>5968.554017</td>
+      <td>6352.711911</td>
+      <td>Fish</td>
+    </tr>
+    <tr>
+      <th>171</th>
+      <td>172</td>
+      <td>Wolf Hills - Lumbering.1</td>
+      <td>1</td>
+      <td>150</td>
+      <td>100</td>
+      <td>340</td>
+      <td>2387.77</td>
+      <td>2613.70</td>
+      <td>11310.489474</td>
+      <td>12380.684211</td>
+      <td>12445.905405</td>
+      <td>13623.532819</td>
+      <td>11444.341420</td>
+      <td>12527.201183</td>
+      <td>6222.952703</td>
+      <td>6811.766409</td>
+      <td>Lumbering</td>
+    </tr>
+  </tbody>
+</table>
+<p>172 rows × 17 columns</p>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Get subnode type from its name
+</span><span class="n">type_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">profit</span><span class="p">[</span><span class="s">'NAME'</span><span class="p">]:</span>
+    <span class="n">type_</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">' - '</span><span class="p">,</span> <span class="n">name</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">type_</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">w+'</span><span class="p">,</span> <span class="n">type_</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">type_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">type_</span><span class="p">)</span>
+    
+<span class="n">profit</span><span class="p">[</span><span class="s">'TYPE'</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_list</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Density plot of subnode cycle profits
+</span><span class="n">profit_cycle</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">profit</span><span class="p">[[</span><span class="s">"PROFITS_USER_AVG"</span><span class="p">,</span> <span class="s">"PROFITS_REC"</span><span class="p">,</span> <span class="s">"TYPE"</span><span class="p">]],</span> <span class="n">id_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s">'TYPE'</span><span class="p">])</span>
+<span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">profit_cycle</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="s">'value'</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s">'variable'</span><span class="p">))</span>
+      <span class="o">+</span> <span class="n">geom_density</span><span class="p">())</span>
+</code></pre></div></div>
+
+<p><img src="figures/output_22_0.png" alt="png" /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;ggplot: (-9223371918799307355)&gt;
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Comparison of subnode cycle profits vs CP cost for different types of subnode materials
+</span><span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">profit</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s">'CP'</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s">'PROFITS_USER_AVG'</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s">'factor(TYPE)'</span><span class="p">))</span>
+<span class="o">+</span> <span class="n">geom_point</span><span class="p">()</span>
+<span class="o">+</span> <span class="n">stat_smooth</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s">'lm'</span><span class="p">)</span>
+<span class="o">+</span> <span class="n">facet_wrap</span><span class="p">(</span><span class="s">'~TYPE'</span><span class="p">))</span>
+<span class="c1"># We see there is a general increasing trend: the more CP the subnode costs, the greater the profit
+# For Excavation the sample size is too small, and Fish is a special case with only 1CP subnode costs
+</span></code></pre></div></div>
+
+<p><img src="figures/output_23_0.png" alt="png" /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;ggplot: (118055225103)&gt;
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Density plot of hourly profit for each worker type
+</span><span class="n">profit_hourly</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">profit</span><span class="p">[[</span><span class="s">"Default_hourly_profit_user"</span><span class="p">,</span> <span class="s">"Goblin_hourly_profit_user"</span><span class="p">,</span>
+                                <span class="s">"Human_hourly_profit_user"</span><span class="p">,</span> <span class="s">"Giant_hourly_profit_user"</span><span class="p">,</span> <span class="s">"TYPE"</span><span class="p">]],</span> <span class="n">id_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s">'TYPE'</span><span class="p">])</span>
+<span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">profit_hourly</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="s">'value'</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s">'variable'</span><span class="p">))</span>
+      <span class="o">+</span> <span class="n">geom_density</span><span class="p">())</span>
+<span class="c1"># Giants make the least per hour and goblins make the most, as expected
+</span></code></pre></div></div>
+
+<p><img src="figures/output_24_0.png" alt="png" /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;ggplot: (-9223371918799641333)&gt;
+</code></pre></div></div>
+
+<h3 id="working-in-worker-stamina-for-extended-periods-of-time">Working in worker stamina for extended periods of time</h3>
+<p>One point of worker stamina is consumed per cycle of work completed.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calculate per hour income for each worker
+# Pass arguments as worker_profit(**worker_dict['WORKER'])
+</span><span class="k">def</span> <span class="nf">get_cycle_time</span><span class="p">(</span><span class="n">Workload</span><span class="p">,</span> <span class="n">Workspeed</span><span class="p">,</span> <span class="n">Distance</span><span class="p">,</span> <span class="n">Movespeed</span><span class="p">):</span>
+    <span class="c1"># Return time in minutes
+</span>    <span class="k">return</span><span class="p">(((</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">Workload</span> <span class="o">/</span> <span class="n">Workspeed</span><span class="p">)</span> <span class="o">*</span> <span class="mi">600</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">Distance</span> <span class="o">/</span> <span class="n">Movespeed</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calculate stamina usage
+</span><span class="n">worker_exhaust_dict</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">def</span> <span class="nf">get_worker_exhaust</span><span class="p">(</span><span class="n">Name</span><span class="p">,</span> <span class="n">Workspeed</span><span class="p">,</span> <span class="n">Movespeed</span><span class="p">,</span> <span class="n">Stamina</span><span class="p">):</span>
+    <span class="n">worker_exhaust_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">workload</span><span class="p">,</span> <span class="n">distance</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">profit</span><span class="p">[</span><span class="s">"CURRENT_WORKLOAD"</span><span class="p">],</span> <span class="n">profit</span><span class="p">[</span><span class="s">"MIN_DIST"</span><span class="p">]):</span>
+        <span class="c1"># Cycle time in minutes
+</span>        <span class="n">cycle_time</span> <span class="o">=</span> <span class="n">get_cycle_time</span><span class="p">(</span><span class="n">workload</span><span class="p">,</span> <span class="n">Workspeed</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">Movespeed</span><span class="p">)</span>
+        <span class="c1"># Time until zero stamina in minutes
+</span>        <span class="n">zero_stamina_time</span> <span class="o">=</span> <span class="n">cycle_time</span> <span class="o">*</span> <span class="n">Stamina</span>
+        <span class="n">zero_stamina_time_hr</span> <span class="o">=</span> <span class="n">zero_stamina_time</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="n">worker_exhaust_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zero_stamina_time_hr</span><span class="p">)</span>
+    <span class="n">worker_exhaust_dict</span><span class="p">[</span><span class="n">Name</span> <span class="o">+</span> <span class="s">'_zero_stam'</span><span class="p">]</span> <span class="o">=</span> <span class="n">worker_exhaust_list</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Loop that gets stamina usage for all workers
+</span><span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">worker_dict</span><span class="p">:</span>
+    <span class="n">get_worker_exhaust</span><span class="p">(</span><span class="o">**</span><span class="n">worker_dict</span><span class="p">[</span><span class="n">worker</span><span class="p">])</span>
+
+<span class="c1"># Writes our dictionary with worker profits into our 'profit' dataframe
+</span><span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">worker_exhaust_dict</span><span class="p">:</span>
+    <span class="n">profit</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">worker_exhaust_dict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">profit</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>SUBNODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>BASE_WORKLOAD</th>
+      <th>CURRENT_WORKLOAD</th>
+      <th>MIN_DIST</th>
+      <th>PROFITS_USER_AVG</th>
+      <th>PROFITS_REC</th>
+      <th>Default_hourly_profit_user</th>
+      <th>Default_hourly_profit_rec</th>
+      <th>Goblin_hourly_profit_user</th>
+      <th>Goblin_hourly_profit_rec</th>
+      <th>Human_hourly_profit_user</th>
+      <th>Human_hourly_profit_rec</th>
+      <th>Giant_hourly_profit_user</th>
+      <th>Giant_hourly_profit_rec</th>
+      <th>Default_zero_stam</th>
+      <th>Goblin_zero_stam</th>
+      <th>Human_zero_stam</th>
+      <th>Giant_zero_stam</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine - Mining.1</td>
+      <td>3</td>
+      <td>200</td>
+      <td>250</td>
+      <td>1113</td>
+      <td>13732.70</td>
+      <td>16304.87</td>
+      <td>21274.839004</td>
+      <td>25259.671021</td>
+      <td>33028.941742</td>
+      <td>39215.347408</td>
+      <td>21544.619407</td>
+      <td>25579.981987</td>
+      <td>20654.127674</td>
+      <td>24522.698864</td>
+      <td>14.846275</td>
+      <td>6.236667</td>
+      <td>14.660370</td>
+      <td>23.271111</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine - Mining.2</td>
+      <td>3</td>
+      <td>500</td>
+      <td>100</td>
+      <td>1113</td>
+      <td>12188.25</td>
+      <td>14125.41</td>
+      <td>39045.273241</td>
+      <td>45250.999372</td>
+      <td>48926.962533</td>
+      <td>56703.251561</td>
+      <td>40083.160780</td>
+      <td>46453.845311</td>
+      <td>24463.481267</td>
+      <td>28351.625781</td>
+      <td>7.179608</td>
+      <td>3.736667</td>
+      <td>6.993704</td>
+      <td>17.437778</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Ahto Farm - Farming.1</td>
+      <td>2</td>
+      <td>200</td>
+      <td>100</td>
+      <td>702</td>
+      <td>11028.27</td>
+      <td>13413.30</td>
+      <td>42673.882398</td>
+      <td>51902.754173</td>
+      <td>50434.161585</td>
+      <td>61341.310976</td>
+      <td>43532.644737</td>
+      <td>52947.236842</td>
+      <td>25217.080793</td>
+      <td>30670.655488</td>
+      <td>5.943922</td>
+      <td>3.280000</td>
+      <td>5.826667</td>
+      <td>15.306667</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>169</th>
+      <td>170</td>
+      <td>Weenie Cabin - Gathering.1</td>
+      <td>2</td>
+      <td>140</td>
+      <td>140</td>
+      <td>1608</td>
+      <td>9022.60</td>
+      <td>11337.80</td>
+      <td>16600.021645</td>
+      <td>20859.588745</td>
+      <td>31572.083981</td>
+      <td>39673.483670</td>
+      <td>16964.498607</td>
+      <td>21317.590529</td>
+      <td>15786.041991</td>
+      <td>19836.741835</td>
+      <td>12.501176</td>
+      <td>4.286667</td>
+      <td>12.232593</td>
+      <td>20.004444</td>
+    </tr>
+    <tr>
+      <th>170</th>
+      <td>171</td>
+      <td>Weita Island - Fish Drying Yard.1</td>
+      <td>1</td>
+      <td>2400</td>
+      <td>1200</td>
+      <td>1620</td>
+      <td>14364.32</td>
+      <td>15288.86</td>
+      <td>6494.506383</td>
+      <td>6912.516489</td>
+      <td>9883.706422</td>
+      <td>10519.857798</td>
+      <td>6529.236364</td>
+      <td>6949.481818</td>
+      <td>5968.554017</td>
+      <td>6352.711911</td>
+      <td>50.870588</td>
+      <td>21.800000</td>
+      <td>50.600000</td>
+      <td>84.233333</td>
+    </tr>
+    <tr>
+      <th>171</th>
+      <td>172</td>
+      <td>Wolf Hills - Lumbering.1</td>
+      <td>1</td>
+      <td>150</td>
+      <td>100</td>
+      <td>340</td>
+      <td>2387.77</td>
+      <td>2613.70</td>
+      <td>11310.489474</td>
+      <td>12380.684211</td>
+      <td>12445.905405</td>
+      <td>13623.532819</td>
+      <td>11444.341420</td>
+      <td>12527.201183</td>
+      <td>6222.952703</td>
+      <td>6811.766409</td>
+      <td>4.855556</td>
+      <td>2.877778</td>
+      <td>4.798765</td>
+      <td>13.429630</td>
+    </tr>
+  </tbody>
+</table>
+<p>172 rows × 20 columns</p>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Density plot of time until exhaustion (0 stamina) for each worker type
+</span><span class="n">profit_stamina</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">profit</span><span class="p">[[</span><span class="s">"Default_zero_stam"</span><span class="p">,</span> <span class="s">"Goblin_zero_stam"</span><span class="p">,</span>
+                                <span class="s">"Human_zero_stam"</span><span class="p">,</span> <span class="s">"Giant_zero_stam"</span><span class="p">,</span> <span class="s">"TYPE"</span><span class="p">]],</span> <span class="n">id_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s">'TYPE'</span><span class="p">])</span>
+<span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">profit_stamina</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="s">'value'</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s">'variable'</span><span class="p">))</span>
+      <span class="o">+</span> <span class="n">geom_density</span><span class="p">())</span>
+</code></pre></div></div>
+
+<p><img src="figures/output_30_0.png" alt="png" /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;ggplot: (118053225357)&gt;
+</code></pre></div></div>
+
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

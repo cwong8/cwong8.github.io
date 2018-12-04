@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Does coronary heart disease depend on age?</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="introduction">Introduction</h1>
+
+<p>Coronary heart disease is a disease in which plaque builds up inside the coronary arteries which supply oxygen-rich blood to the heart. As plaque continues to build up, the lack of blood flow to the heart can lead to heart attacks and heart failure. While there is no cure for coronary heart disease, there are treatments to help reduce and limit the build up of plaque in the coronary arteries. The goal of this report is to find if age is a significant factor in determining whether someone has coronary heart disease or not.</p>
+
+<h1 id="material-and-methods">Material and Methods</h1>
+
+<p>The data is taken from: <a href="https://www.umass.edu/statdata/statdata/stat-logistic.html">https://www.umass.edu/statdata/statdata/stat-logistic.html</a></p>
+
+<p>A description from the website follows: The goal of this study is explore the relationship between age and the presence or absence of CHD in this study population.</p>
+
+<p>Attribute Information:
+The data consists of 100 observations of two variables: Age and Coronary Heart Disease (CHD) which are my explanatory and response variables respectively. To analyze the data we use simple logistic regression which is appropriate because Age is a continuous explanatory variable (although it is measured on a discrete scale) and Coronary Heart Disease is a binary response.</p>
+
+<h1 id="results">Results</h1>
+
+<p>To start the analysis, we fit a simple logistic regression model to our data:</p>
+
+<script type="math/tex; mode=display">logit(\\pi\_i) = log(\\frac{\\pi\_i}{1-\\pi\_i}) = -5.3094534 + 0.1109211x\_i</script>
+
+<p>A plot of the model and observed data is given below: <img src="chd_age_files/figure-markdown_github/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /></p>
+
+<p>The Wald test for testing <em>H</em><sub>0</sub> : <em>β</em><sub>1</sub> = 0 vs. <em>H</em><sub><em>a</em></sub> : <em>β</em><sub>1</sub> ≠ 0 is given below:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>##               Estimate Std. Error   z value     Pr(&gt;|z|)
+## (Intercept) -5.3094534 1.13365365 -4.683488 2.820338e-06
+## AGE          0.1109211 0.02405982  4.610224 4.022356e-06
+</code></pre></div></div>
+
+<p>We see that $z_W = \frac{\hat{\beta_1} - 0}{SE(\beta_1)} = \frac{0.11092}{0.02406} = 4.610$ with corresponding p-value = 4.02 × 10<sup>−6</sup>. Since our p-value &lt; <em>α</em> = 0.05, we reject <em>H</em><sub>0</sub> and conclude that the slope (<em>β</em><sub>1</sub>) is nonzero.</p>
+
+<p>We find our estimated odds ratio $e^{\hat{\beta_1}} = e^{0.11092} = 1.117306$. The odds ratio can be interpreted as for every increase in one year of a person’s age, we expect to see a 11.7306% increase in the odds of them having coronary heart disease. Going further, we can obtain the confidence interval for the odds ratio:
+So, we are 95% confident that the true odds ratio lies between [1.065839, 1.171257]. We are 95% confident that there is a 6.5839% to 17.1257% increase in the odds of someone having coronary heart disease for every additional year increase to their age.</p>
+
+<p>The maximum slope of our (fitted) probability curve above is 0.0277303 which occurs when Age = 47.8669194. That is, the probability of having coronary heart disease increases at most by 2.7730286% which occurs at an age of 47.8669194 years.</p>
+
+<p>We now perform a goodness of fit test for our logistic model using two methods: likelihood ratio and the Hosmer and Lemeshow test.</p>
+
+<p>For the likelihood ratio test, we compare our full model <em>l<strong>o</strong>g<strong>i</strong>t</em>(<em>π</em><sub><em>i</em></sub>)=<em>β</em><sub>0</sub> + <em>β</em><sub>1</sub><em>x</em><sub><em>i</em></sub> with the reduced model <em>l<strong>o</strong>g<strong>i</strong>t</em>(<em>π</em><sub><em>i</em></sub>)=<em>β</em><sub>0</sub>. The resulting deviance −2<em>l<strong>o</strong>g**Λ</em> = 107.3530927 is distributed <em>χ</em><sub>1</sub>. The resulting p-value is calculated to be 0 (because it is less than machine precision <em>ϵ</em> = 10<sup>−16</sup>). Thus, we conclude that our full model is a better fit than the reduced model.</p>
+
+<p>For the Hosmer and Lemeshow test, we find</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## 
+##  Hosmer and Lemeshow goodness of fit (GOF) test
+## 
+## data:  CHD, fitted(model)
+## X-squared = 2.2243, df = 8, p-value = 0.9734
+</code></pre></div></div>
+
+<p>Since our p-value is large, we conclude that the fit of our model is pretty good.</p>
+
+<p>Next, we perform residual diagnostics for our model using studentized Pearson residuals $\hat{r}_{p, i} = \frac{r_i}{\sqrt{1-h_i}}$ which are close to standard normal. Below is a plot of the studentized Pearson residuals against Age: <img src="chd_age_files/figure-markdown_github/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /></p>
+
+<p>We notice that there are some residuals not in the range of [-2, 2] and they correspond to these observations:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>##    AGE CHD
+## 5   25   1
+## 16  30   1
+## 23  34   1
+## 97  64   0
+</code></pre></div></div>
+
+<p>These are the outliers in our data, but before we consider removing them, we check to see if they are influential observations. Recall that an observation is influential if $h_i &gt; \frac{2p}{n}$. The <em>h</em><sub><em>i</em></sub> values for these observations are given below</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>##          5         16         23         97 
+## 0.02128102 0.02188050 0.02042241 0.02963014
+</code></pre></div></div>
+
+<p>Notice that none of these values are greater than $\frac{2p}{n} = \frac{4}{100} = 0.04$. Thus, none of these outliers are influential observations and we do not remove them.</p>
+
+<h1 id="conclusion-and-discussion">Conclusion and Discussion</h1>
+
+<p>In summary, our model is
+<script type="math/tex">logit(\\pi\_i) = log(\\frac{\\pi\_i}{1-\\pi\_i}) = -5.3094534 + 0.1109211x\_i</script>
+ and we have found that age is significant in determining whether someone has coronary heart disease or not.</p>
+
+<p>We are 95% confident that there is a 6.5839% to 17.1257% increase in the odds of someone having coronary heart disease for every additional year increase to their age. Also, the probability of having coronary heart disease increases at most by 2.7730286% which occurs at an age of 47.8669194 years. In addition, while there are outliers in our data, they are not influential points indicating that our model still fits the data well.</p>
+
+<p>Of course, this project does not give a definitive answer of whether age is the only factor in determining if someone has coronary heart disease, but it does show that it is significant. There are lots of other variables that could be considered when determining whether someone has coronary heart disease or not including diet, exercise, genetics, etc., but our analysis focuses only on age.</p>
+
+<h1 id="code-appendix">Code Appendix</h1>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">setwd</span><span class="p">(</span><span class="s2">"C:/Users/Christopher/Desktop/STA 138/Project 2"</span><span class="p">)</span><span class="w">
+</span><span class="n">chdage</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">read.table</span><span class="p">(</span><span class="s2">"C:/Users/Christopher/Desktop/STA 138/Project 2/chdage.dat"</span><span class="p">,</span><span class="w">
+                     </span><span class="n">header</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">,</span><span class="w"> </span><span class="n">quote</span><span class="o">=</span><span class="s2">"\""</span><span class="p">)</span><span class="w">
+</span><span class="c1"># Remove ID column</span><span class="w">
+</span><span class="n">chdage</span><span class="o">$</span><span class="n">ID</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="kc">NULL</span><span class="w">
+</span><span class="n">attach</span><span class="p">(</span><span class="n">chdage</span><span class="p">)</span><span class="w">
+
+</span><span class="n">model</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">glm</span><span class="p">(</span><span class="n">CHD</span><span class="o">~</span><span class="n">AGE</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">chdage</span><span class="p">,</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">binomial</span><span class="p">(</span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logit</span><span class="p">))</span><span class="w">
+</span><span class="n">b</span><span class="m">0</span><span class="o">=</span><span class="n">coef</span><span class="p">(</span><span class="n">model</span><span class="p">)[</span><span class="m">1</span><span class="p">]</span><span class="w">       </span><span class="c1"># extract the estimate of intercept #</span><span class="w">
+</span><span class="n">b</span><span class="m">1</span><span class="o">=</span><span class="n">coef</span><span class="p">(</span><span class="n">model</span><span class="p">)[</span><span class="m">2</span><span class="p">]</span><span class="w">       </span><span class="c1"># extract the estimate of slope #</span><span class="w">
+
+</span><span class="c1"># define the estimated probability function #</span><span class="w">
+</span><span class="n">estprob</span><span class="o">=</span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">){</span><span class="w">    
+  </span><span class="n">z</span><span class="o">=</span><span class="nf">exp</span><span class="p">(</span><span class="n">b</span><span class="m">0</span><span class="o">+</span><span class="n">b</span><span class="m">1</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="m">1</span><span class="o">+</span><span class="nf">exp</span><span class="p">(</span><span class="n">b</span><span class="m">0</span><span class="o">+</span><span class="n">b</span><span class="m">1</span><span class="o">*</span><span class="n">x</span><span class="p">))</span><span class="w">
+  </span><span class="nf">return</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="n">chdage.table</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">table</span><span class="p">(</span><span class="n">chdage</span><span class="p">)</span><span class="w">
+</span><span class="c1"># calculate the sample proportion at observed Age #</span><span class="w">
+</span><span class="n">prop_raw</span><span class="o">=</span><span class="n">chdage.table</span><span class="p">[,</span><span class="w"> </span><span class="m">2</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">chdage.table</span><span class="p">[,</span><span class="w"> </span><span class="m">2</span><span class="p">]</span><span class="o">+</span><span class="n">chdage.table</span><span class="p">[,</span><span class="w"> </span><span class="m">1</span><span class="p">])</span><span class="w">    
+
+</span><span class="c1"># plot of observed (black), fitted (solid line)</span><span class="w">
+</span><span class="n">curve</span><span class="p">(</span><span class="n">estprob</span><span class="p">,</span><span class="n">from</span><span class="o">=</span><span class="m">20</span><span class="p">,</span><span class="n">to</span><span class="o">=</span><span class="m">69</span><span class="p">,</span><span class="n">xlim</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="m">18</span><span class="p">,</span><span class="m">71</span><span class="p">),</span><span class="n">ylim</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="m">1</span><span class="p">),</span><span class="w">
+      </span><span class="n">ylab</span><span class="o">=</span><span class="s2">"Probability of Coronary Heart Disease"</span><span class="p">,</span><span class="n">xlab</span><span class="o">=</span><span class="s2">"Age"</span><span class="p">)</span><span class="w">       
+</span><span class="n">points</span><span class="p">(</span><span class="n">unique</span><span class="p">(</span><span class="n">chdage</span><span class="o">$</span><span class="n">AGE</span><span class="p">),</span><span class="w"> </span><span class="n">prop_raw</span><span class="p">,</span><span class="w"> </span><span class="n">pch</span><span class="o">=</span><span class="m">19</span><span class="p">)</span><span class="w">
+</span><span class="n">legend</span><span class="p">(</span><span class="s1">'topleft'</span><span class="p">,</span><span class="w"> </span><span class="n">legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"Fitted"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Observed"</span><span class="p">),</span><span class="w"> </span><span class="n">lty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="kc">NA</span><span class="p">),</span><span class="w"> </span><span class="n">pch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="kc">NA</span><span class="p">,</span><span class="w"> </span><span class="m">19</span><span class="p">))</span><span class="w">
+
+</span><span class="n">summary</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">$</span><span class="n">coefficients</span><span class="w">
+
+</span><span class="c1"># Odds ratio</span><span class="w">
+</span><span class="n">odds</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="n">b</span><span class="m">1</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># CI for odds ratio</span><span class="w">
+</span><span class="n">odds.CI</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="nf">exp</span><span class="p">(</span><span class="m">0.11092-1.96</span><span class="o">*</span><span class="m">0.02406</span><span class="p">),</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="m">0.11092+1.96</span><span class="o">*</span><span class="m">0.02406</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># Maximum of slope and where it occurs</span><span class="w">
+</span><span class="n">b</span><span class="m">1</span><span class="o">/</span><span class="m">4</span><span class="w">
+</span><span class="o">-</span><span class="n">b</span><span class="m">0</span><span class="o">/</span><span class="n">b</span><span class="m">1</span><span class="w">
+
+</span><span class="n">library</span><span class="p">(</span><span class="n">ResourceSelection</span><span class="p">)</span><span class="w">                                      
+</span><span class="n">hoslem.test</span><span class="p">(</span><span class="n">CHD</span><span class="p">,</span><span class="w"> </span><span class="n">fitted</span><span class="p">(</span><span class="n">model</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># standardized Pearson residuals #</span><span class="w">
+</span><span class="n">pear.stdresid</span><span class="o">=</span><span class="n">resid</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">type</span><span class="o">=</span><span class="s2">"pearson"</span><span class="p">)</span><span class="o">/</span><span class="nf">sqrt</span><span class="p">(</span><span class="m">1</span><span class="o">-</span><span class="n">lm.influence</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">$</span><span class="n">hat</span><span class="p">)</span><span class="w">                 
+</span><span class="c1"># plot of standardized Pearson residuals against Age #</span><span class="w">
+</span><span class="n">plot</span><span class="p">(</span><span class="n">chdage</span><span class="o">$</span><span class="n">AGE</span><span class="p">,</span><span class="n">pear.stdresid</span><span class="p">,</span><span class="n">pch</span><span class="o">=</span><span class="m">19</span><span class="p">,</span><span class="n">xlab</span><span class="o">=</span><span class="s2">"Age"</span><span class="p">,</span><span class="n">ylab</span><span class="o">=</span><span class="s2">"standardized Pearson residuals"</span><span class="p">)</span><span class="w">  
+</span><span class="n">abline</span><span class="p">(</span><span class="n">h</span><span class="o">=</span><span class="m">0</span><span class="p">)</span><span class="w">
+
+</span><span class="n">chdage</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="nf">abs</span><span class="p">(</span><span class="n">pear.stdresid</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">2</span><span class="p">),</span><span class="w"> </span><span class="p">]</span><span class="w">
+</span><span class="n">h</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lm.influence</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">$</span><span class="n">hat</span><span class="w">
+</span><span class="n">h</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="nf">abs</span><span class="p">(</span><span class="n">pear.stdresid</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">2</span><span class="p">)]</span><span class="w">
+</span></code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

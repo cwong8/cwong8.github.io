@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Chicago (2002 film)</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      \newpage
+
+```{r global_options, include = FALSE}
+knitr::opts_chunk$set(fig.height = 5, fig.align = 'center',
+                      echo = FALSE, message = FALSE)
+```
+
+```{r}
+setwd("C:/Users/Christopher Wong/Desktop/Projects/STA 137/Midterm")
+source("trndseas.R")
+source("C:/Users/Christopher Wong/Desktop/Projects/STA 137/Midterm/aicc.R")
+library(MASS)
+
+chicago <- read.delim("C:/Users/Christopher Wong/Desktop/Projects/STA 137/Midterm/chicago.txt", header=FALSE)
+names(chicago) <- c("Average receipts per theater", "Date")
+chicago1 <- chicago
+```
+
+# Introduction
+Our data file \textbf{chicago.txt} contains two columns, one containing the daily average receipts per theater for the movie \textit{Chicago} and the other dates from January 3, 2003 to April 18, 2003. In total, we have 106 observations, one for each day. Our data is a time series because it is a set of observations recorded at specific times. In our case, we have a descrete-time time series because we record one observation per day (daily). Time series modeling can allow us to predict/forecast long-term trends after removing the presence of seasonal components.
+
+# The Data
+Let's take a look at our plotted data:
+```{r}
+plot.ts(chicago$`Average receipts per theater`, ylab = "Average receipts per theater",
+        main = "Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+```
+We notice that there is some kind of seasonality in our data because we have a very sharp increase and decrease in average receipts per theater approximately every 7 days (or a week). Oscillations with fixed periods clue us into the fact that there is seasonality in our data. After doing a bit of research online, we find that \textit{Chicago} was released on December 27, 2002 and our data started to be collected about a week after launch (January 3, 2003). Hence, we expect to see a gradual decrease in average receipts per theater the longer the movie has been out. This is confirmed when we look at our time series plot and see that the general trend is decreasing as time increases. Since there is both trend and seasonality present in our data, we will model our data with a smooth part for trend, a seasonal part for seasonality, and the rough part will be determined later. Our model will be as follows:
+\[
+Y_t = m_t + s_t + X_t \qquad t = 1,...,106
+\]
+where $Y_t$ is our observed data (average receipts per theater), $m_t$ is our trend, $s_t$ is our seasonality, and $X_t$ is our rough part.
+
+# The Data and Transformations
+Here is our plotted data again:
+```{r}
+plot.ts(chicago$`Average receipts per theater`, ylab = "Average receipts per theater",
+        main = "Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+```
+where t = 1 corresponds to January 3, 2003 and t = 106 corresponds to April 18, 2003.
+
+We plot a few common Box-Cox transformations for $\lambda$ = -2, -1, 0, 1, 2
+```{r}
+transformPlots <- function(data){
+  par(mfrow = c(2, 2))
+  plot.ts(data^-2, main = expression(""*lambda*" = -2"))
+  plot.ts(data^-1, main = expression(""*lambda*" = -1"))
+  plot.ts(data^1, main = expression(""*lambda*" = 1"))
+  plot.ts(data^2, main = expression(""*lambda*" = 2"))
+  par(mfrow = c(1, 1))
+  plot.ts(log(data), main = expression(""*lambda*" = 0"))
+}
+transformPlots(chicago$`Average receipts per theater`)
+```
+We see that for $\lambda$ = 0, i.e. the (natural) log transform, the fluctuations in our data seem to be almost the same over time unlike the other transformations above. Thus, we will choose to work with our log-transformed data from here on out. Also, we can verify that while this is not the absolute best transformation, it is very reasonable. We use the \textbf{boxcox} function from the \textbf{MASS} library and find that $\lambda$ = -0.1010101 is the absolute best transformation. The plot of the log-likelihood vs $\lambda$ given below also includes a 95% confidence interval for $\lambda$ and clearly $\lambda = 0$ is in that interval which makes it a very reasonable transformation.
+```{r}
+boxcox(chicago$`Average receipts per theater`~1)
+```
+
+# Trend and Seasonality
+```{r}
+chicago$`Average receipts per theater` = log(chicago$`Average receipts per theater`)
+mod <- trndseas(chicago$`Average receipts per theater`, degtrnd = 4, seas = 7)
+plot.ts(chicago$`Average receipts per theater`,
+        main = "log Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(mod$fit, type = 'l', col = 'red')
+legend("topright", legend = c("Observed data", "Fitted smooth"), col = c("black", "red"), lty = 1)
+```
+After tinkering around with a few values, we find that a degree 4 polynomial model fits the trend very well, so we choose to go with a degree 4 polynomial model. We also find that a weekly (7 day) seasonality period matches up very well with our oscillations in our data. Our fitted model turns out to be
+\[
+Y_t^{'} = \beta_0 + \beta_1t + \beta_2t^2 + \beta_3t^3 + \beta_4t^4 + \beta_5I_{t, 1} + \beta_6I_{t, 2} + \beta_7I_{t, 3} + \beta_8I_{t, 4} + \beta_9I_{t, 5} + \beta_{10}I_{t, 6} + X_t
+\]
+where $\beta_0 = `r mod$coef[1]`$, $\beta_1 = `r mod$coef[2]`$, $\beta_2 = `r mod$coef[3]`$, $\beta_3 = `r mod$coef[4]`$, $\beta_4 = `r mod$coef[5]`$, $\beta_5 = `r mod$coef[6]`$, $\beta_6 = `r mod$coef[7]`$, $\beta_7 = `r mod$coef[8]`$, $\beta_8 = `r mod$coef[9]`$, $\beta_9 = `r mod$coef[10]`$, $\beta_{10} = `r mod$coef[11]`$.
+
+# Plots of the trend, seasonal component, rough
+```{r}
+plot.ts(mod$trend, main = "Trend of average receipts per theater", ylab = "Average receipts per theater")
+plot.ts(mod$season, main = "Seasonality of average receipts per theater", ylab = "Average receipts per theater")
+rough <- chicago$`Average receipts per theater` - mod$fit
+plot.ts(rough, main = "Rough of Average receipts per theater", ylab = "Average receipts per theater")
+```
+
+# Diagnostics for the Rough
+```{r}
+plot.ts(rough, main = "Rough of Average receipts per theater", ylab = "Average receipts per theater")
+```
+We see that the rough looks centered around 0 and has equal variance for the most part except for the one outlier at t = 18.
+
+```{r}
+par(mfrow = c(1, 2))
+qqnorm(rough)
+qqline(rough)
+hist(rough)
+par(mfrow = c(1, 1))
+```
+The assumption of normality is satisfied because the all of our points except the the last one lie on the qqline and the histogram looks normal except for the one outlier at the end.
+
+```{r}
+Box.test(chicago$`Average receipts per theater`, lag = 10, type = "Ljung-Box")
+```
+Since our p-value $\approx$ 0 < 0.05, we reject the assumption of independence for our data. It is safe to say at this point that we have a stationary sequence.
+
+```{r}
+acf(rough)
+pacf(rough)
+```
+Our ACF and PACF plots look consistent with what we would expect from an AR(1) model which we will expand on in the next section.
+
+# Obtaining an appropriate AR(p) model
+```{r}
+AR.Fitter <- function(data, p = 5){
+  Result <- sapply(0:p, function(i){
+    fit <- arima(data, order = c(i, 0, 0))
+    return(list(fit, aicc(fit)))
+  })
+  return(Result)
+}
+models <- AR.Fitter(rough)
+```
+From the previous section, the ACF plot gradually tails off to 0, kind of oscillating around it for a while. On the other hand, the PACF plot cuts off after lag 1 (for the most part) which is consistent with an AR(1) model. Below is a table for the AICC values for different AR(p) models:
+\begin{tabular}{|r|c|c|c|c|c|c|}
+  \hline
+  p & 0 & 1 & 2 & 3 & 4 & 5\\
+  \hline
+  ACF & `r models[2, 1]` & `r models[2, 2]` & `r models[2, 3]` & `r models[2, 4]` & `r models[2, 5]` & `r models[2, 6]`\\
+  \hline
+\end{tabular}
+
+```{r}
+fit <- arima(rough, order = c(1, 0, 0))
+acf(fit$residuals, main = "AR(1) fit residuals")
+pacf(fit$residuals, main = "AR(1) fit residuals")
+```
+Looking at the ACF and PACF plots of our AR(1) model residuals, we can safely say that the residuals are white noise since all of them lie within the 95% confidence interval (for the most part). We can also perform a Box-Ljung test to show that they are indeed independent:
+
+```{r}
+Box.test(fit$residuals, lag = 10, type = "Ljung-Box")
+```
+
+# Predicting the last 7 days
+\textbf{I have had different sources tell me conflicting instructions on this part, but I will say that using the first 99 observations is the better option.}
+
+## With the first 99 observations
+```{r}
+n <- 99
+h <- 7
+mod0 <- trndseas(chicago$`Average receipts per theater`[1:n], degtrnd = 4, seas = 7)
+m.fit <- mod0$trend
+s.fit <- rep(mod0$season, length.out = n)
+smooth.fit <- mod0$fit
+deg <- 4
+coef = mod0$coef[1:(deg+1)]
+time = (n+(1:h))/n
+predmat = matrix(rep(time,deg)^rep(1:deg,each=h),nrow=h,byrow=F)
+predmat = cbind(rep(1,h),predmat)
+
+rough0 <- chicago$`Average receipts per theater`[1:n] - mod0$fit
+fit0 <- arima(rough0, order = c(1, 0, 0))
+
+m.fc = predmat %*% coef
+s.fc = rep(mod0$season,length.out=n+h)
+s.fc = s.fc[-(1:n)]
+fcast = predict(fit0,n.ahead=h)
+x.fc = fcast$pred
+y.fc = m.fc + s.fc + x.fc
+
+plot.ts(chicago$`Average receipts per theater`[1:n],xlim=c(0,n+h), ylim = c(4, 9),
+        ylab = "Average receipts per theater",
+        main = "log Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(x=n+1:h, y=y.fc, col='purple',type='b',pch=19)
+points(x=n+1:h, y=chicago$`Average receipts per theater`[100:106], col = "red", type = "l")
+legend("topright", legend = c("Observed data", "Fitted smooth"), col = c("red", "purple"), lty = 1, pch = c(NA, 19))
+y.fc
+a1 <- exp(y.fc)
+plot.ts(chicago1$`Average receipts per theater`[1:n],xlim=c(0,n+h),
+        ylab = "Average receipts per theater",
+        main = "Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(x=n+1:h, y=a1, col='purple',type='b',pch=19)
+points(x=n+1:h, y=chicago1$`Average receipts per theater`[100:106], col = "red", type = "l")
+legend("topright", legend = c("Observed data", "Fitted smooth"), col = c("red", "purple"), lty = 1, pch = c(NA, 19))
+```
+
+## With the best model using ALL observations
+```{r}
+m.fit1 <- mod$trend
+s.fit1 <- rep(mod$season, length.out = n)
+smooth.fit1 <- mod$fit
+deg <- 4
+coef1 = mod$coef[1:(deg+1)]
+time = (n+(1:h))/n
+predmat1 = matrix(rep(time,deg)^rep(1:deg,each=h),nrow=h,byrow=F)
+predmat1 = cbind(rep(1,h),predmat1)
+
+m.fc1 = predmat1 %*% coef1
+s.fc1 = rep(mod$season,length.out=n+h)
+s.fc1 = s.fc1[-(1:n)]
+fcast1 = predict(fit,n.ahead=h)
+x.fc1 = fcast1$pred
+y.fc1 = m.fc1 + s.fc1 + x.fc1
+
+plot.ts(chicago$`Average receipts per theater`,xlim=c(0,n+h), ylim = c(4, 9),
+        ylab = "Average receipts per theater",
+        main = "log Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(x=n+1:h, y=y.fc, col='purple',type='b',pch=19)
+legend("topright", legend = c("Observed data", "Fitted smooth"), col = c("black", "purple"), lty = 1, pch = c(NA, 19))
+y.fc1
+a2 <- exp(y.fc1)
+plot.ts(chicago1$`Average receipts per theater`,xlim=c(0,n+h),
+        ylab = "Average receipts per theater",
+        main = "Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(x=n+1:h, y=a2, col='purple',type='b',pch=19)
+legend("topright", legend = c("Observed data", "Fitted smooth"), col = c("black", "purple"), lty = 1, pch = c(NA, 19))
+```
+
+# Final model
+Our final model turns out to be
+\[
+Y_t^{'} = \beta_0 + \beta_1t + \beta_2t^2 + \beta_3t^3 + \beta_4t^4 + \beta_5I_{t, 1} + \beta_6I_{t, 2} + \beta_7I_{t, 3} + \beta_8I_{t, 4} + \beta_9I_{t, 5} + \beta_{10}I_{t, 6} + \beta_{11} + \beta_{12}X_{t-1} + \epsilon_t
+\]
+where $\beta_0 = `r mod$coef[1]`$, $\beta_1 = `r mod$coef[2]`$, $\beta_2 = `r mod$coef[3]`$, $\beta_3 = `r mod$coef[4]`$, $\beta_4 = `r mod$coef[5]`$, $\beta_5 = `r mod$coef[6]`$, $\beta_6 = `r mod$coef[7]`$, $\beta_7 = `r mod$coef[8]`$, $\beta_8 = `r mod$coef[9]`$, $\beta_9 = `r mod$coef[10]`$, $\beta_{10} = `r mod$coef[11]`$, $\beta_{11} = \mu(1-\phi)$, $\beta_{12} = \phi$.
+
+A simpler description would be that we model our trend with a degree 4 polynomial, our seasonality (which has period 7) with 6 indicator variables, and our rough by an AR(1) model.
+
+Also, our model is not perfect. There are ways to improve, e.g. using loess to model the trend instead of a polynomial.
+
+Doing some background research, we found that January 3, 2003 was actually a Friday which may explain why average receipts per theater increases every week (7 day period) after that and peaks on a Saturday before slowing down Sunday and dropping off on the weekdays. We also expect the trend to be decreasing because movies usually have an initial boom upon release and gradually earns less as more and more people have gone to see it already. So, by the time it has been over 105 days (15 weeks), we expect the movie to be earning very little.
+
+# Code Appendix
+```{r, echo = TRUE, eval = FALSE}
+setwd("C:/Users/Christopher/Desktop/STA 137/Midterm")
+source("trndseas.R")
+source("C:/Users/Christopher/Desktop/STA 137/Homework 4/aicc.R")
+library(MASS)
+
+chicago <- read.delim("C:/Users/Christopher/Desktop/STA 137/Midterm/chicago.txt", header=FALSE)
+names(chicago) <- c("Average receipts per theater", "Date")
+chicago1 <- chicago
+
+# The Data
+plot.ts(chicago$`Average receipts per theater`, ylab = "Average receipts per theater",
+        main = "Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+
+# The Data and Transformations
+plot.ts(chicago$`Average receipts per theater`, ylab = "Average receipts per theater",
+        main = "Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+transformPlots <- function(data){
+  par(mfrow = c(2, 2))
+  plot.ts(data^-2, main = expression(""*lambda*" = -2"))
+  plot.ts(data^-1, main = expression(""*lambda*" = -1"))
+  plot.ts(data^1, main = expression(""*lambda*" = 1"))
+  plot.ts(data^2, main = expression(""*lambda*" = 2"))
+  par(mfrow = c(1, 1))
+  plot.ts(log(data), main = expression(""*lambda*" = 0"))
+}
+transformPlots(chicago$`Average receipts per theater`)
+boxcox(chicago$`Average receipts per theater`~1)
+
+# Trend and Seasonality
+chicago$`Average receipts per theater` = log(chicago$`Average receipts per theater`)
+mod <- trndseas(chicago$`Average receipts per theater`, degtrnd = 4, seas = 7)
+plot.ts(chicago$`Average receipts per theater`,
+        main = "log Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(mod$fit, type = 'l', col = 'red')
+legend("topright", legend = c("Observed data", "Fitted smooth"), col = c("black", "red"), lty = 1)
+
+# Plots of the trend, seasonal component, rough
+plot.ts(mod$trend, main = "Trend of average receipts per theater", ylab = "Average receipts per theater")
+plot.ts(mod$season, main = "Seasonality of average receipts per theater", ylab = "Average receipts per theater")
+rough <- chicago$`Average receipts per theater` - mod$fit
+plot.ts(rough, main = "Rough of Average receipts per theater", ylab = "Average receipts per theater")
+
+# Diagnostics for the Rough
+plot.ts(rough, main = "Rough of Average receipts per theater", ylab = "Average receipts per theater")
+par(mfrow = c(1, 2))
+qqnorm(rough)
+qqline(rough)
+hist(rough)
+par(mfrow = c(1, 1))
+Box.test(chicago$`Average receipts per theater`, lag = 10, type = "Ljung-Box")
+acf(rough)
+pacf(rough)
+
+# Obtaining an appropriate AR(p) model
+AR.Fitter <- function(data, p = 5){
+  Result <- sapply(0:p, function(i){
+    fit <- arima(data, order = c(i, 0, 0))
+    return(list(fit, aicc(fit)))
+  })
+  return(Result)
+}
+models <- AR.Fitter(rough)
+fit <- arima(rough, order = c(1, 0, 0))
+acf(fit$residuals, main = "AR(1) fit residuals")
+pacf(fit$residuals, main = "AR(1) fit residuals")
+Box.test(fit$residuals, lag = 10, type = "Ljung-Box")
+
+## With the first 99 observations
+n <- 99
+h <- 7
+mod0 <- trndseas(chicago$`Average receipts per theater`[1:n], degtrnd = 4, seas = 7)
+m.fit <- mod0$trend
+s.fit <- rep(mod0$season, length.out = n)
+smooth.fit <- mod0$fit
+deg <- 4
+coef = mod0$coef[1:(deg+1)]
+time = (n+(1:h))/n
+predmat = matrix(rep(time,deg)^rep(1:deg,each=h),nrow=h,byrow=F)
+predmat = cbind(rep(1,h),predmat)
+
+rough0 <- chicago$`Average receipts per theater`[1:n] - mod0$fit
+fit0 <- arima(rough0, order = c(1, 0, 0))
+
+m.fc = predmat %*% coef
+s.fc = rep(mod0$season,length.out=n+h)
+s.fc = s.fc[-(1:n)]
+fcast = predict(fit0,n.ahead=h)
+x.fc = fcast$pred
+y.fc = m.fc + s.fc + x.fc
+
+plot.ts(chicago$`Average receipts per theater`[1:n],xlim=c(0,n+h), ylim = c(4, 9),
+        ylab = "Average receipts per theater",
+        main = "log Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(x=n+1:h, y=y.fc, col='purple',type='b',pch=19)
+points(x=n+1:h, y=chicago$`Average receipts per theater`[100:106], col = "red", type = "l")
+legend("topright", legend = c("Observed data", "Fitted smooth"),
+       col = c("red", "purple"), lty = 1, pch = c(NA, 19))
+y.fc
+a1 <- exp(y.fc)
+plot.ts(chicago1$`Average receipts per theater`[1:n],xlim=c(0,n+h),
+        ylab = "Average receipts per theater",
+        main = "Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(x=n+1:h, y=a1, col='purple',type='b',pch=19)
+points(x=n+1:h, y=chicago1$`Average receipts per theater`[100:106], col = "red", type = "l")
+legend("topright", legend = c("Observed data", "Fitted smooth"),
+       col = c("red", "purple"), lty = 1, pch = c(NA, 19))
+
+## With the best model using ALL observations
+m.fit1 <- mod$trend
+s.fit1 <- rep(mod$season, length.out = n)
+smooth.fit1 <- mod$fit
+deg <- 4
+coef1 = mod$coef[1:(deg+1)]
+time = (n+(1:h))/n
+predmat1 = matrix(rep(time,deg)^rep(1:deg,each=h),nrow=h,byrow=F)
+predmat1 = cbind(rep(1,h),predmat1)
+
+m.fc1 = predmat1 %*% coef1
+s.fc1 = rep(mod$season,length.out=n+h)
+s.fc1 = s.fc1[-(1:n)]
+fcast1 = predict(fit,n.ahead=h)
+x.fc1 = fcast1$pred
+y.fc1 = m.fc1 + s.fc1 + x.fc1
+
+plot.ts(chicago$`Average receipts per theater`,xlim=c(0,n+h), ylim = c(4, 9),
+        ylab = "Average receipts per theater",
+        main = "log Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(x=n+1:h, y=y.fc, col='purple',type='b',pch=19)
+legend("topright", legend = c("Observed data", "Fitted smooth"),
+       col = c("black", "purple"), lty = 1, pch = c(NA, 19))
+y.fc1
+a2 <- exp(y.fc1)
+plot.ts(chicago1$`Average receipts per theater`,xlim=c(0,n+h),
+        ylab = "Average receipts per theater",
+        main = "Avg receipts per theater for Chicago (Jan 3, 2003 to Apr 18, 2003")
+points(x=n+1:h, y=a2, col='purple',type='b',pch=19)
+legend("topright", legend = c("Observed data", "Fitted smooth"),
+       col = c("black", "purple"), lty = 1, pch = c(NA, 19))
+```
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

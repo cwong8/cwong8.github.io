@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Black Desert Online Worker Optimization</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="web-scraping">Web Scraping</h1>
+<p>I web scraped the website <a href="https://www.bdodae.com/">bdodae.com</a> for data to use for my project. Since I am optimizing profits I need item values and information about the nodes.</p>
+
+<h3 id="tools-of-choice">Tools of choice</h3>
+<ul>
+  <li>Python because I want to learn another language for data analysis (having used R throughout college)</li>
+  <li>Selenium because <a href="https://www.bdodae.com/">bdodae.com</a> is written in JavaScript as opposed to HTML. This means that the website is dynamic and has to be loaded before web scraping.</li>
+  <li>BeautifulSoup to parse the webpage once it is loaded in Selenium.</li>
+  <li>MySQLdb because I want to save the scraped information to a MySQL database that I can pull information from later.</li>
+</ul>
+
+<h1 id="scraping-item-values">Scraping item values</h1>
+<p><a href="https://www.bdodae.com/nodes/index.php?page=items">Item page</a></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Import packages
+</span><span class="kn">from</span> <span class="nn">selenium</span> <span class="kn">import</span> <span class="n">webdriver</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.common.keys</span> <span class="kn">import</span> <span class="n">Keys</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.common.by</span> <span class="kn">import</span> <span class="n">By</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.support.ui</span> <span class="kn">import</span> <span class="n">WebDriverWait</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.support</span> <span class="kn">import</span> <span class="n">expected_conditions</span> <span class="k">as</span> <span class="n">EC</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.support.ui</span> <span class="kn">import</span> <span class="n">Select</span>
+<span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="c1"># Server Connection to MySQL:
+</span><span class="kn">import</span> <span class="nn">MySQLdb</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="o">=</span> <span class="s">"localhost"</span><span class="p">,</span>
+                  <span class="n">user</span><span class="o">=</span><span class="s">"yourusername"</span><span class="p">,</span>
+                  <span class="n">passwd</span><span class="o">=</span><span class="s">"yourpassword"</span><span class="p">,</span>
+                  <span class="n">db</span><span class="o">=</span><span class="s">"bdodae"</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+<span class="c1"># Create table for prices
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS PRICES (
+    ITEM_ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    ITEM CHAR(50) NOT NULL,
+    USER_AVERAGE INT,
+    RECENT_VALUE INT,
+    VENDOR_SELL INT,
+    VENDOR_BUY INT DEFAULT NULL)
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+
+<span class="c1"># Scraping item values
+</span><span class="n">url</span> <span class="o">=</span> <span class="s">"https://www.bdodae.com/nodes/index.php?page=items"</span>
+
+<span class="c1"># Create a new Firefox session and go to the URL above
+</span><span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Firefox</span><span class="p">()</span>
+<span class="n">driver</span><span class="o">.</span><span class="n">implicitly_wait</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+<span class="c1"># Not mandatory
+#driver.maximize_window()
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Initial page scrape
+</span><span class="n">soup_values</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">driver</span><span class="o">.</span><span class="n">page_source</span><span class="p">,</span> <span class="s">'lxml'</span><span class="p">)</span>
+
+<span class="c1"># Getting item names
+</span><span class="n">items_soup</span> <span class="o">=</span> <span class="n">soup_values</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s">'a'</span><span class="p">,</span> <span class="n">class_</span> <span class="o">=</span> <span class="s">"item_popup"</span><span class="p">)</span>
+
+<span class="c1"># Initialize empty list we are going to append item names to
+</span><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items_soup</span><span class="p">:</span>
+    <span class="n">item_name</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+    <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item_name</span><span class="p">)</span>
+
+<span class="c1"># Define a function to clean the text/values
+</span><span class="k">def</span> <span class="nf">clean_values</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
+        <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">"(</span><span class="err">\</span><span class="s">d+)"</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get_text</span><span class="p">())</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="c1"># Add NULL to vendor_buy if it does not have one
+</span>        <span class="n">values</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    
+<span class="c1"># Find the value buttons to click on
+</span><span class="n">value_buttons</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_elements_by_class_name</span><span class="p">(</span><span class="s">'value_button'</span><span class="p">)</span>
+<span class="n">wait</span> <span class="o">=</span> <span class="n">WebDriverWait</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Big loop that:
+# 1.) Clicks on the values boxes to open up the hidden table
+# 2.) Scrapes the page, including the now revealed hidden table
+# 3.) Finds the values in the hidden table and cleans it
+# 4.) Writes the item name and corresponding values into a MySQL database
+# 5.) Waits until the hidden table is actually visible before we click off of it to close it
+# 6.) Repeats steps 1-5 for all items/rows on the page
+</span><span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">button</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">value_buttons</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">))):</span>
+    <span class="c1"># Click on value box to open hidden table
+</span>    <span class="n">button</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+    <span class="c1"># If it clicks too fast, it'll throw an error since the table will cover other values
+</span>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Now we scrape the hidden table
+</span>    <span class="n">soup_values</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">driver</span><span class="o">.</span><span class="n">page_source</span><span class="p">,</span> <span class="s">'lxml'</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">soup_values</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s">'div'</span><span class="p">,</span> <span class="n">class_</span> <span class="o">=</span> <span class="s">"value_extra value_extra_on"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s">'div'</span><span class="p">,</span> <span class="n">class_</span> <span class="o">=</span> <span class="s">"value_option"</span><span class="p">)</span>
+    <span class="c1"># Clean the values output
+</span>    <span class="n">clean_values</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">values_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">+</span> <span class="n">values</span>
+    <span class="c1"># Safety check for when our code stops or does not find the values
+</span>    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values_list</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">5</span><span class="p">):</span> 
+        <span class="k">print</span><span class="p">(</span><span class="s">"ERROR missing values"</span><span class="p">)</span> 
+        <span class="k">print</span><span class="p">(</span><span class="n">values_list</span><span class="p">)</span>
+        <span class="k">break</span>
+    <span class="c1"># Input data into database
+</span>    <span class="k">try</span><span class="p">:</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s">"""
+        INSERT INTO prices (item, user_average, recent_value, vendor_buy, vendor_sell)
+        VALUES (</span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s)
+        """</span><span class="p">,</span> <span class="n">values_list</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+    <span class="c1"># Wait until hidden table pops up
+</span>    <span class="c1"># If one of the values in the table is a duplicate, then the CSS selector has a 3 instead of 2 at the end
+</span>    <span class="c1"># Weird, but it's just how it is
+</span>    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values_list</span><span class="p">))</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values_list</span><span class="p">))</span> <span class="o">==</span> <span class="mi">4</span><span class="p">):</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">wait</span><span class="o">.</span><span class="n">until</span><span class="p">(</span><span class="n">EC</span><span class="o">.</span><span class="n">visibility_of_element_located</span><span class="p">((</span><span class="n">By</span><span class="o">.</span><span class="n">CSS_SELECTOR</span><span class="p">,</span> <span class="s">"tr.search:nth-child("</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s">") &gt; td:nth-child(2) &gt; div:nth-child(1) &gt; div:nth-child(3)"</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">wait</span><span class="o">.</span><span class="n">until</span><span class="p">(</span><span class="n">EC</span><span class="o">.</span><span class="n">visibility_of_element_located</span><span class="p">((</span><span class="n">By</span><span class="o">.</span><span class="n">CSS_SELECTOR</span><span class="p">,</span> <span class="s">"tr.search:nth-child("</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s">") &gt; td:nth-child(2) &gt; div:nth-child(1) &gt; div:nth-child(2)"</span><span class="p">)))</span>
+    <span class="c1"># Click off the values box to close the hidden table
+</span>    <span class="n">off_button</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element_by_css_selector</span><span class="p">(</span><span class="s">"tr.search:nth-child("</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s">") &gt; td:nth-child(3)"</span><span class="p">)</span>
+    <span class="n">off_button</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+    <span class="c1"># As of 10/24/2018 reset_actions() does NOT clear locally in Firefox
+</span>    <span class="c1"># So there will be lots of extra random clicking if you run this in Firefox
+</span>    <span class="c1">#action.move_to_element_with_offset(button, -5, 0).click().perform()
+</span>    <span class="c1">#action.reset_actions()
+</span>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_rows</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="c1"># Table 'prices' that we obtained from web scraping bdodae.com
+</span><span class="n">prices</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">'SELECT * FROM prices'</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+<span class="n">prices</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>ITEM_ID</th>
+      <th>ITEM</th>
+      <th>USER_AVERAGE</th>
+      <th>RECENT_VALUE</th>
+      <th>VENDOR_SELL</th>
+      <th>VENDOR_BUY</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Acacia Sap</td>
+      <td>387</td>
+      <td>662</td>
+      <td>70</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Acacia Timber</td>
+      <td>874</td>
+      <td>907</td>
+      <td>105</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Aloe</td>
+      <td>212</td>
+      <td>174</td>
+      <td>40</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>198</th>
+      <td>199</td>
+      <td>White Umbrella Mushroom</td>
+      <td>273</td>
+      <td>531</td>
+      <td>46</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>199</th>
+      <td>200</td>
+      <td>Withered Leaf</td>
+      <td>110</td>
+      <td>110</td>
+      <td>110</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>200</th>
+      <td>201</td>
+      <td>Zinc Ore</td>
+      <td>1016</td>
+      <td>1058</td>
+      <td>90</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>201 rows × 6 columns</p>
+</div>
+
+<h1 id="scraping-node-data">Scraping node data</h1>
+<p><a href="https://www.bdodae.com/nodes/">Node page</a></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Import packages
+</span><span class="kn">from</span> <span class="nn">selenium</span> <span class="kn">import</span> <span class="n">webdriver</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.common.keys</span> <span class="kn">import</span> <span class="n">Keys</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.common.by</span> <span class="kn">import</span> <span class="n">By</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.support.ui</span> <span class="kn">import</span> <span class="n">WebDriverWait</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.support</span> <span class="kn">import</span> <span class="n">expected_conditions</span> <span class="k">as</span> <span class="n">EC</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.common.action_chains</span> <span class="kn">import</span> <span class="n">ActionChains</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.support.ui</span> <span class="kn">import</span> <span class="n">Select</span>
+<span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="c1"># Launch URL
+</span><span class="n">url</span> <span class="o">=</span> <span class="s">"https://www.bdodae.com/"</span>
+
+<span class="c1"># Create a new Firefox session
+</span><span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Firefox</span><span class="p">()</span>
+<span class="n">driver</span><span class="o">.</span><span class="n">implicitly_wait</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+<span class="n">python_button</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element_by_id</span><span class="p">(</span><span class="s">"nodes_nav"</span><span class="p">)</span>
+<span class="n">python_button</span><span class="o">.</span><span class="n">click</span><span class="p">()</span> <span class="c1"># Click node link
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Storing page source in a variable
+</span><span class="n">soup_level1</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">driver</span><span class="o">.</span><span class="n">page_source</span><span class="p">,</span> <span class="s">'lxml'</span><span class="p">)</span>
+
+<span class="c1"># Grab all page links to nodes
+</span><span class="n">links</span> <span class="o">=</span> <span class="n">soup_level1</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s">'a'</span><span class="p">,</span> <span class="p">{</span><span class="s">'href'</span> <span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">"^index</span><span class="err">\</span><span class="s">.php</span><span class="err">\</span><span class="s">?node"</span><span class="p">),</span> <span class="s">'class'</span> <span class="p">:</span> <span class="bp">False</span><span class="p">})</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Server Connection to MySQL:
+</span><span class="kn">import</span> <span class="nn">MySQLdb</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="o">=</span> <span class="s">"localhost"</span><span class="p">,</span>
+                  <span class="n">user</span><span class="o">=</span><span class="s">"yourusername"</span><span class="p">,</span>
+                  <span class="n">passwd</span><span class="o">=</span><span class="s">"yourpassword"</span><span class="p">,</span>
+                  <span class="n">db</span><span class="o">=</span><span class="s">"bdodae"</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+<span class="c1"># Create table for nodes
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS NODE (
+    NODE_ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    NAME CHAR(50) NOT NULL,
+    CP INT DEFAULT 0,
+    AREA CHAR(50),
+    TYPE CHAR(50),
+    REGION_MOD_PERCENT FLOAT DEFAULT NULL,
+    CONNECTIONS CHAR(255))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+<span class="c1"># Create table for subnodes
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS SUBNODE (
+    SUBNODE_ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    NAME CHAR(50) NOT NULL,
+    CP INT DEFAULT 0,
+    BASE_WORKLOAD INT DEFAULT NULL,
+    CURRENT_WORKLOAD INT DEFAULT NULL,
+    ITEM1 CHAR(50) DEFAULT NULL,
+    ITEM2 CHAR(50) DEFAULT NULL,
+    ITEM3 CHAR(50) DEFAULT NULL,
+    ITEM4 CHAR(50) DEFAULT NULL,
+    YIELD1 FLOAT DEFAULT NULL,
+    YIELD2 FLOAT DEFAULT NULL,
+    YIELD3 FLOAT DEFAULT NULL,
+    YIELD4 FLOAT DEFAULT NULL,
+    DISTANCE1 INT DEFAULT 0,
+    DISTANCE2 INT DEFAULT NULL,
+    DISTANCE3 INT DEFAULT NULL,
+    CITY1 CHAR(50),
+    CITY2 CHAR(50) DEFAULT NULL,
+    CITY3 CHAR(50) DEFAULT NULL)
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Go through every node page
+</span><span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+    <span class="c1"># Get node link
+</span>    <span class="n">link</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+    
+    <span class="c1"># Click on link
+</span>    <span class="n">python_button</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element_by_link_text</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+    <span class="n">python_button</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+    
+    <span class="c1"># soup_level 2 contains the page source for the node clicked on
+</span>    <span class="n">soup_level2</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">driver</span><span class="o">.</span><span class="n">page_source</span><span class="p">,</span> <span class="s">'lxml'</span><span class="p">)</span>
+    
+    <span class="c1"># General node info
+</span>    <span class="n">node_title</span> <span class="o">=</span> <span class="n">soup_level2</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">'n_title_link'</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+    <span class="n">node_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">s(?=</span><span class="err">\</span><span class="s">dCP)'</span><span class="p">,</span> <span class="n">node_title</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">node_cp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">s(?=</span><span class="err">\</span><span class="s">dCP)'</span><span class="p">,</span> <span class="n">node_title</span><span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">node_area</span> <span class="o">=</span> <span class="n">soup_level2</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">'n_area'</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+    <span class="n">node_type</span> <span class="o">=</span> <span class="n">soup_level2</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">'n_type'</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+    <span class="n">node_connections</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'Connected: '</span><span class="p">,</span> <span class="n">soup_level2</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">'n_connected'</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">())[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># Check if region modifier exists
+</span>    <span class="k">if</span> <span class="p">(</span><span class="n">soup_level2</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">'n_region'</span><span class="p">)):</span>
+        <span class="n">node_region_mod</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">d'</span><span class="p">,</span> <span class="n">soup_level2</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">'n_region'</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">())</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_region_mod</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c1"># Combine info into one variable
+</span>    <span class="n">node_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_name</span><span class="p">,</span>
+                 <span class="n">node_cp</span><span class="p">,</span>
+                 <span class="n">node_area</span><span class="p">,</span>
+                 <span class="n">node_type</span><span class="p">,</span>
+                 <span class="n">node_region_mod</span><span class="p">,</span>
+                 <span class="n">node_connections</span><span class="p">]</span>
+
+    <span class="c1"># Insert into MySQL database 'node'
+</span>    <span class="k">try</span><span class="p">:</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s">"""
+        INSERT INTO node (name, cp, area, type, region_mod_percent, connections)
+        VALUES (</span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s)
+        """</span><span class="p">,</span> <span class="n">node_list</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        
+    
+    <span class="c1"># Get subnode information if it exists
+</span>    <span class="c1"># Otherwise this part does nothing
+</span>    <span class="n">node_subnode_subtype</span> <span class="o">=</span> <span class="n">soup_level2</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">'s_subtype'</span><span class="p">)</span>
+    <span class="n">node_subnode_workload</span> <span class="o">=</span> <span class="n">soup_level2</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">'s_workload'</span><span class="p">)</span>
+    <span class="n">node_subnode_tables</span> <span class="o">=</span> <span class="n">soup_level2</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s">'table'</span><span class="p">,</span> <span class="n">class_</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">"^(?!worker_select_)"</span><span class="p">))</span>
+    <span class="c1"># Check if there are subnode tables
+</span>    <span class="k">if</span> <span class="n">node_subnode_tables</span><span class="p">:</span>
+        <span class="n">node_subnode_tables</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_html</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">node_subnode_tables</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="n">header</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">node_subnode_name</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">node_subnode_cp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">base_workload</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current_workload</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">text</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node_subnode_subtype</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">node_subnode_subtype</span><span class="p">))):</span>
+        <span class="n">node_subnode_name</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_name</span> <span class="o">+</span> <span class="s">" - "</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">s(?=</span><span class="err">\</span><span class="s">dCP)'</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">get_text</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">"."</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">node_subnode_cp</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">s(?=</span><span class="err">\</span><span class="s">dCP)'</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">get_text</span><span class="p">())[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="c1"># Workload information should come in pairs: base and current workload
+</span>        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">node_subnode_workload</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">base_workload</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">d+'</span><span class="p">,</span> <span class="n">node_subnode_workload</span><span class="p">[(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get_text</span><span class="p">())</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+            <span class="n">current_workload</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">'</span><span class="err">\</span><span class="s">d+'</span><span class="p">,</span> <span class="n">node_subnode_workload</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get_text</span><span class="p">())</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+        <span class="c1"># Subnode tables should come in pairs: one containing items and yields, other containing distances and cities
+</span>        <span class="c1"># Also add None until list is the correct length
+</span>        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">node_subnode_tables</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">node_subnode_item</span> <span class="o">=</span> <span class="n">node_subnode_tables</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">][</span><span class="s">"Item"</span><span class="p">]</span>
+            <span class="n">node_subnode_item_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">node_subnode_item</span><span class="p">:</span>
+                <span class="n">node_subnode_item_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_subnode_item_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">node_subnode_item_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+            <span class="n">node_subnode_yield</span> <span class="o">=</span> <span class="n">node_subnode_tables</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">][</span><span class="s">"Avg"</span><span class="p">]</span>
+            <span class="n">node_subnode_yield_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">yields</span> <span class="ow">in</span> <span class="n">node_subnode_yield</span><span class="p">:</span>
+                <span class="n">node_subnode_yield_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yields</span><span class="p">)</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_subnode_yield_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">node_subnode_yield_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+            <span class="n">node_distance</span> <span class="o">=</span> <span class="n">node_subnode_tables</span><span class="p">[(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="s">"Range"</span><span class="p">]</span>
+            <span class="n">node_distance_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">distance</span> <span class="ow">in</span> <span class="n">node_distance</span><span class="p">:</span>
+                <span class="n">node_distance_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_distance_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">node_distance_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+            <span class="n">node_city</span> <span class="o">=</span> <span class="n">node_subnode_tables</span><span class="p">[(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="s">"City"</span><span class="p">]</span>
+            <span class="n">node_city_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">city</span> <span class="ow">in</span> <span class="n">node_city</span><span class="p">:</span>
+                <span class="n">node_city_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">city</span><span class="p">)</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_city_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">node_city_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+
+            <span class="c1"># Combine info into one variable
+</span>            <span class="n">subnode_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_subnode_name</span><span class="p">,</span>
+                            <span class="n">node_subnode_cp</span><span class="p">,</span>
+                            <span class="n">base_workload</span><span class="p">,</span>
+                            <span class="n">current_workload</span><span class="p">,</span>
+                            <span class="n">node_subnode_item_list</span><span class="p">,</span>
+                            <span class="n">node_subnode_yield_list</span><span class="p">,</span>
+                            <span class="n">node_distance_list</span><span class="p">,</span>
+                            <span class="n">node_city_list</span><span class="p">]</span>
+            <span class="n">subnode_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">subnode_list</span><span class="p">))</span>
+
+            <span class="c1"># Insert into MySQL database 'subnode'
+</span>            <span class="k">try</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                <span class="s">"""
+                INSERT INTO subnode (name, cp, base_workload, current_workload,
+                                  item1, item2, item3, item4, yield1, yield2, yield3, yield4,
+                                  distance1, distance2, distance3, city1, city2, city3)
+                VALUES (</span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s)
+                """</span><span class="p">,</span> <span class="n">subnode_list</span><span class="p">)</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+                
+        
+    <span class="c1"># Back it up
+</span>    <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s">"window.history.go(-1)"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Post-processing cleaning
+</span><span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="s">"""
+UPDATE node
+    SET connections = 'North Kaia Ferry, Catfishman Camp, Calpheon Castle'
+    WHERE node_id = 69;
+"""</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_rows</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="c1"># Table 'node' that we obtained from web scraping bdodae.com
+</span><span class="n">node</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">'SELECT * FROM node'</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+<span class="n">node</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>NODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>AREA</th>
+      <th>TYPE</th>
+      <th>REGION_MOD_PERCENT</th>
+      <th>CONNECTIONS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine</td>
+      <td>2</td>
+      <td>Mediah</td>
+      <td>Worker Node</td>
+      <td>0.0</td>
+      <td>Abandoned Iron Mine Saunil District, Abandoned...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine Entrance</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Highland Junction, Alumn Rock Valley</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Abandoned Iron Mine Rhutum District</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Abandoned Iron Mine, Abun</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>356</th>
+      <td>357</td>
+      <td>Yalt Canyon</td>
+      <td>1</td>
+      <td>Valencia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Shakatu, Gahaz Bandit's Lair</td>
+    </tr>
+    <tr>
+      <th>357</th>
+      <td>358</td>
+      <td>Yianaros's Field</td>
+      <td>1</td>
+      <td>Kamasylvia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Western Valtarra Mountains</td>
+    </tr>
+    <tr>
+      <th>358</th>
+      <td>359</td>
+      <td>Zagam Island</td>
+      <td>1</td>
+      <td>Margoria</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Nada Island</td>
+    </tr>
+  </tbody>
+</table>
+<p>359 rows × 7 columns</p>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Table 'subnode' that we obtained from web scraping bdodae.com
+</span><span class="n">subnode</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">'SELECT * FROM subnode'</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+<span class="n">subnode</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>SUBNODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>BASE_WORKLOAD</th>
+      <th>CURRENT_WORKLOAD</th>
+      <th>ITEM1</th>
+      <th>ITEM2</th>
+      <th>ITEM3</th>
+      <th>ITEM4</th>
+      <th>YIELD1</th>
+      <th>YIELD2</th>
+      <th>YIELD3</th>
+      <th>YIELD4</th>
+      <th>DISTANCE1</th>
+      <th>DISTANCE2</th>
+      <th>DISTANCE3</th>
+      <th>CITY1</th>
+      <th>CITY2</th>
+      <th>CITY3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine - Mining.1</td>
+      <td>3</td>
+      <td>200</td>
+      <td>250</td>
+      <td>Zinc Ore</td>
+      <td>Powder Of Time</td>
+      <td>Platinum Ore</td>
+      <td>None</td>
+      <td>7.86</td>
+      <td>1.86</td>
+      <td>0.95</td>
+      <td>NaN</td>
+      <td>1113</td>
+      <td>2063</td>
+      <td>NaN</td>
+      <td>Altinova</td>
+      <td>Tarif</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine - Mining.2</td>
+      <td>3</td>
+      <td>500</td>
+      <td>100</td>
+      <td>Iron Ore</td>
+      <td>Powder Of Darkness</td>
+      <td>Rough Black Crystal</td>
+      <td>None</td>
+      <td>10.53</td>
+      <td>1.80</td>
+      <td>1.08</td>
+      <td>NaN</td>
+      <td>1113</td>
+      <td>2063</td>
+      <td>NaN</td>
+      <td>Altinova</td>
+      <td>Tarif</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Ahto Farm - Farming.1</td>
+      <td>2</td>
+      <td>200</td>
+      <td>100</td>
+      <td>Cotton</td>
+      <td>Cotton Yarn</td>
+      <td>None</td>
+      <td>None</td>
+      <td>12.53</td>
+      <td>0.85</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>702</td>
+      <td>2000</td>
+      <td>2325.0</td>
+      <td>Tarif</td>
+      <td>Heidel</td>
+      <td>Altinova</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>169</th>
+      <td>170</td>
+      <td>Weenie Cabin - Gathering.1</td>
+      <td>2</td>
+      <td>140</td>
+      <td>140</td>
+      <td>Volcanic Umbrella Mushroom</td>
+      <td>Green Pendulous Mushroom</td>
+      <td>None</td>
+      <td>None</td>
+      <td>7.70</td>
+      <td>6.90</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1608</td>
+      <td>3025</td>
+      <td>6005.0</td>
+      <td>Grana</td>
+      <td>Old Wisdom Tree</td>
+      <td>Trent</td>
+    </tr>
+    <tr>
+      <th>170</th>
+      <td>171</td>
+      <td>Weita Island - Fish Drying Yard.1</td>
+      <td>1</td>
+      <td>2400</td>
+      <td>1200</td>
+      <td>Dried Surfperch</td>
+      <td>Dried Bluefish</td>
+      <td>Dried Maomao</td>
+      <td>Dried Nibbler</td>
+      <td>3.60</td>
+      <td>1.80</td>
+      <td>0.90</td>
+      <td>0.08</td>
+      <td>1620</td>
+      <td>3291</td>
+      <td>3340.0</td>
+      <td>Iliya Island</td>
+      <td>Velia</td>
+      <td>Olvia</td>
+    </tr>
+    <tr>
+      <th>171</th>
+      <td>172</td>
+      <td>Wolf Hills - Lumbering.1</td>
+      <td>1</td>
+      <td>150</td>
+      <td>100</td>
+      <td>Ash Timber</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>4.43</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>340</td>
+      <td>1902</td>
+      <td>NaN</td>
+      <td>Olvia</td>
+      <td>Velia</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+<p>172 rows × 19 columns</p>
+</div>
+
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

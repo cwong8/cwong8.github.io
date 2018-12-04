@@ -1,0 +1,239 @@
+```{r global_options, include = FALSE}
+knitr::opts_chunk$set(fig.height = 4, fig.align = 'center',
+                      echo = FALSE, message = FALSE)
+```
+
+# Introduction
+Depression is a brain disorder characterized by persistently depressed mood or loss of interest in activities, causing significant impairement in daily life. It affects how an individual feels, thinks, and behaves and can lead to emotional and physical problems. Depression is not something that can be "snapped out" of. Instead, it may be treated with medication and counseling.
+
+
+```{r}
+setwd("C:/Users/Christopher Wong/Desktop/Projects/STA 138/Final Project")
+
+# DAV:
+#   Diagnosis of depression in any visit during one year of care.
+#   0 =  Not diagnosed
+#   1 = Diagnosed
+# PCS:
+#   Physical component of SF-36 measuring health status of the patient.
+# MCS:
+#   Mental component of SF-36 measuring health status of the patient 
+# BECK:
+#   The Beck depression score.
+# PGEND:
+#   Patient gender
+#   0 = Female
+#   1 = Male 
+# AGE:
+#   Patient's age in years.
+# EDUCAT:
+#   Number of years of formal schooling.
+
+depression <- read.table("final.dat", header = TRUE)
+attach(depression)
+```
+
+# Material and Methods
+
+The data can be found on the course website: http://www.stat.ucdavis.edu/~azari/sta138/final.dat
+
+Attribute Information:
+\begin{tabular}{ll}
+  \textbf{DAV:} & Diagnosis of depression in any visit during one year of care.\\
+  & 0 = Not diagnosed\\
+  & 1 = Diagnosed\\
+  \textbf{PCS:} & Physical component of SF-36 measuring health status of the patient.\\
+  \textbf{MCS:} & Mental component of SF-36 measuring health status of the patient.\\
+  \textbf{BECK:} & The Beck depression score.\\
+  \textbf{PGEND:} & Patient gender\\
+  & 0 = Female\\
+  & 1 = Male\\
+  \textbf{AGE:} & Patient's age in years.\\
+  \textbf{EDUCAT:} & Number of years of formal schooling.\\
+\end{tabular}
+
+The data consists of 400 observations of these variables. \textbf{DAV} is the response variable and the remaining variables are explanatory variables.
+
+To analyze the data we use multiple logistic regression which is appropriate because DAV is a binary response and PCS, MCS, BECK, AGE, and EDUCAT are continuous explanatory variables with PGEND being a binary response variable.
+
+# Results
+
+To start the analysis, we fit a multiple logistic regression model to our data using all variables:
+```{r}
+model <- glm(dav~., data = depression, family = binomial(link = logit))
+```
+\begin{align*}
+  logit(\pi) = log(odds(\pi)) = log(\frac{\pi}{1-\pi}) = `r model$coefficients[1]` & `r model$coefficients[2]`(PCS)\\ & `r model$coefficients[3]`(MCS)\\ &+ `r model$coefficients[4]`(BECK)\\ & `r model$coefficients[5]`(PGEND)\\ &+ `r model$coefficients[6]`(AGE)\\ &+ `r model$coefficients[7]`(EDUCAT)
+\end{align*}
+where $\pi$ = probability that the patient has been diagnosed with depression in any visit during one year of care.
+
+Checking the coefficients, we see that PCS and AGE may be insignificant based on their p-values from the Wald test. Recall that the Wald test tests hypotheses $H_0: \beta_k = 0$ vs. $H_A: \beta_k \neq 0$ using the Wald statistic $z_W = \frac{\hat{\beta_k} - 0}{SE(\beta_k)}$ which is distributed standard normal.
+```{r}
+summary(model)$coefficients
+```
+
+So, our naively fitted full model may not be the best model of this data. We use the \textbf{step} function from the \textbf{stats} package to perform forward selection and backward elimination stepwise procedures. These procedures minimize AIC in each step. Both procedures fit the same model which is the reduced model with MCS, EDUCAT, BECK, PGEND, and AGE as explanatory variables.
+
+Thus, our actual model is:
+```{r}
+nothing <- glm(dav~1, data = depression, family = binomial(link = logit))
+full <- glm(dav~., data = depression, family = binomial(link = logit))
+
+forwards <- step(nothing, scope = list(lower = formula(nothing), upper = formula(full)), direction = "forward", trace = FALSE)
+
+backwards <- step(full, scope = list(lower = formula(nothing), upper = formula(full)), direction = "backward", trace = FALSE)
+
+# Forwards and backwards stepwise lead to the same model, minimizing AIC
+final.model <- forwards
+```
+\begin{align*}
+  logit(\pi) = log(odds(\pi)) = log(\frac{\pi}{1-\pi}) = `r final.model$coefficients[1]` & `r final.model$coefficients[2]`(MCS)\\ &+ `r final.model$coefficients[3]`(EDUCAT)\\ &+ `r final.model$coefficients[4]`(BECK)\\ & `r final.model$coefficients[5]`(PGEND)\\ &+ `r final.model$coefficients[6]`(AGE)
+\end{align*}
+where $\pi$ = probability that the patient has been diagnosed with depression in any visit during one year of care.
+
+The estimated conditional odds ratios can be interpreted by fixing all other variables and looking at $e^{\beta_k}$. The corresponding confidence intervals for the conditional odds ratios are given by $\left[e^{\beta_k-1.96SE(\beta_k)}, e^{\beta_k+1.96SE(\beta_k)}\right]$.
+```{r}
+# Odds ratios and CIs for odds ratios
+est.coef <- coef(final.model)
+est.coef.se <- summary(final.model)$coefficients[, "Std. Error"]
+
+odds <- exp(est.coef[-which(names(est.coef) == "(Intercept)")])
+
+odds.CI <- data.frame(lower = exp(est.coef[-which(names(est.coef) == "(Intercept)")]-1.96*est.coef.se[-which(names(est.coef) == "(Intercept)")]),
+      upper = exp(est.coef[-which(names(est.coef) == "(Intercept)")]+1.96*est.coef.se[-which(names(est.coef) == "(Intercept)")]))
+```
+The conditional odds ratios and their confidence intervals are given below:
+```{r}
+odds
+odds.CI
+```
+For example, fixing the other explanatory variables, the conditional odds ratio for MCS can be interpreted as for every unit increase in a patient's mental component of SF-36, we expect to see a $`r (1-odds[1])*100`$% decrease in the odds of them being diagnosed with depression. Going further, we are 95% confident that the true conditional odds ratio for MCS lies in the confidence interval [`r odds.CI[1,1]`, `r odds.CI[1,2]`]. We are 95% confident that there is a `r ((1-odds.CI[1,])*100)[1,2]`% to `r ((1-odds.CI[1,])*100)[1,1]`% decrease in the odds of a patient being diagnosed with depression for every unit increase in their MCS.
+
+For this data, we choose not to use a likelihood ratio test for goodness of fit because we have n = 400 independent observations each with different values for the explanatory variables. This means that $n_i = 1$ for all $i$ leading to the deviance only depending on the reduced model and thus is not a good measure of fit.
+
+Instead, we use a Hosmer-Lemeshow test for goodness of fit and find that
+```{r, warning = FALSE}
+# Hosmer-Lemeshow test for goodness of fit
+library(ResourceSelection)                                      
+hoslem.test(dav, fitted(final.model))
+```
+Since our p-value = 0.5556, we conclude that the fit of our model is good.
+
+
+Next, we perform residual diagnostics for our model using studentized Pearson residuals $\hat{r}_{p, i} = \frac{r_i}{\sqrt{1-h_i}}$ which are close to standard normal. We notice that there are some studentized Pearson residuals not in the range of [-2, 2] which correspond to outliers in our data.
+```{r}
+# standardized Pearson residuals #
+pear.stdresid=resid(final.model,type="pearson")/sqrt(1-lm.influence(final.model)$hat)                 
+
+# Outliers
+outlier.pear.stdresid <- pear.stdresid[which(abs(pear.stdresid) > 2)]
+h <- lm.influence(model)$hat
+outlier.hat <- h[which(abs(pear.stdresid) > 2)]
+outliers.df <- data.frame(cbind(depression[which(abs(pear.stdresid) > 2), ],
+                                outlier.pear.stdresid,
+                                outlier.hat))
+names(outliers.df)[8] <- "Pearson stdresid"
+outliers.df
+```
+
+Before we consider removing these outliers in our data, we check to see if they are influential observations. Recall that an observation is influential if $h_i > \frac{2p}{n}$. The $h_i$ values for these observations are given above.
+
+```{r}
+# Influential observations
+n <- nrow(depression)
+p <- length(final.model$coefficients)
+influential.bound <- 2*p/n
+
+# None of the outliers are influential observations
+# outlier.hat > influential.bound
+```
+
+Notice that none of these values are greater than $\frac{2p}{n} = \frac{`r 2*p`}{`r n`} = `r influential.bound`$. Thus, none of these outliers are influential observations and we do not remove them.
+
+# Conclusion and Discussion
+
+In summary, our model is
+\begin{align*}
+  logit(\pi) = log(odds(\pi)) = log(\frac{\pi}{1-\pi}) = `r final.model$coefficients[1]` & `r final.model$coefficients[2]`(MCS)\\ &+ `r final.model$coefficients[3]`(EDUCAT)\\ &+ `r final.model$coefficients[4]`(BECK)\\ & `r final.model$coefficients[5]`(PGEND)\\ &+ `r final.model$coefficients[6]`(AGE)
+\end{align*}
+and we have found that MCS, years of education, Beck depression score, gender, and age is significant in determining whether a patient is diagnosed with depression or not.
+
+For our conditional odds ratios, we find that as MCS increases, the odds of a patient being diagnosed with depression decreases. As years of education increases, the odds of a patient being diagnosed with depression increases. Similarly, as a patient's Beck score increases, the odds of them being diagnosed with depression increases. Gender also plays a role in whether a patient is diagnosed with depression with men having lower odds than women. Age is a tossup in that the odds of a patient being diagnosed with depression can either increase or decrease as age increases. This is indicative that while age plays a small role in the odds of a patient being diagnosed with depression (we estimate a `r (odds[5]-1)*100`% increase in odds for every additional year), it may not be significant at a 95% confidence level.
+
+Of course, this project does not give a definitive answer of whether these are the only factors in determining if a patient has depression, but it does show that they are significant. Depression is very complex and it is unknown exactly what causes depression. There are many other variables that can be considered when diagnosing a patient with depression or not.
+
+\newpage
+
+# Code Appendix
+```{r, echo = TRUE, eval = FALSE}
+setwd("C:/Users/Christopher/Desktop/STA 138/Final Project")
+
+# DAV:
+#   Diagnosis of depression in any visit during one year of care.
+#   0 =  Not diagnosed
+#   1 = Diagnosed
+# PCS:
+#   Physical component of SF-36 measuring health status of the patient.
+# MCS:
+#   Mental component of SF-36 measuring health status of the patient 
+# BECK:
+#   The Beck depression score.
+# PGEND:
+#   Patient gender
+#   0 = Female
+#   1 = Male 
+# AGE:
+#   Patient's age in years.
+# EDUCAT:
+#   Number of years of formal schooling.
+
+depression <- read.table("final.dat", header = TRUE)
+attach(depression)
+
+model <- glm(dav~., data = depression, family = binomial(link = logit))
+summary(model)$coefficients
+
+nothing <- glm(dav~1, data = depression, family = binomial(link = logit))
+full <- glm(dav~., data = depression, family = binomial(link = logit))
+
+forwards <- step(nothing, scope = list(lower = formula(nothing), upper = formula(full)), direction = "forward", trace = FALSE)
+
+backwards <- step(full, scope = list(lower = formula(nothing), upper = formula(full)), direction = "backward", trace = FALSE)
+
+# Forwards and backwards stepwise lead to the same model, minimizing AIC
+final.model <- forwards
+
+# Odds ratios and CIs for odds ratios
+est.coef <- coef(final.model)
+est.coef.se <- summary(final.model)$coefficients[, "Std. Error"]
+
+odds <- exp(est.coef[-which(names(est.coef) == "(Intercept)")])
+
+odds.CI <- data.frame(lower = exp(est.coef[-which(names(est.coef) == "(Intercept)")]-1.96*est.coef.se[-which(names(est.coef) == "(Intercept)")]),
+      upper = exp(est.coef[-which(names(est.coef) == "(Intercept)")]+1.96*est.coef.se[-which(names(est.coef) == "(Intercept)")]))
+
+# Hosmer-Lemeshow test for goodness of fit
+library(ResourceSelection)                                      
+hoslem.test(dav, fitted(final.model))
+
+# standardized Pearson residuals #
+pear.stdresid=resid(final.model,type="pearson")/sqrt(1-lm.influence(final.model)$hat)                 
+
+# Outliers
+outlier.pear.stdresid <- pear.stdresid[which(abs(pear.stdresid) > 2)]
+h <- lm.influence(model)$hat
+outlier.hat <- h[which(abs(pear.stdresid) > 2)]
+outliers.df <- data.frame(cbind(depression[which(abs(pear.stdresid) > 2), ],
+                                outlier.pear.stdresid,
+                                outlier.hat))
+names(outliers.df)[8] <- "Pearson stdresid"
+outliers.df
+
+# Influential observations
+n <- nrow(depression)
+p <- length(final.model$coefficients)
+influential.bound <- 2*p/n
+
+# None of the outliers are influential observations
+# outlier.hat > influential.bound
+```

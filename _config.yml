@@ -1,0 +1,18 @@
+# Setup
+title:        cwong8.github.io
+tagline:      A personal portfolio
+baseurl:      ""
+paginate:     1
+locale:       "en"
+
+# About/contact
+author:
+  name:       Christopher Wong
+  url:        https://github.com/cwong8
+
+# Gems
+gems:
+  - jekyll-paginate
+
+#Others
+markdown: kramdown
