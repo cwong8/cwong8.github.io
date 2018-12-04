@@ -6,7 +6,7 @@ permalink: /projects/BDO_Optimization/
 
 # Table of contents
 1. [Introduction](#introduction)
-2. [Obtaining the data through web scraping]({{ site.baseurl }}/projects/BDO_Optimization/webscrape/)
+2. [Obtaining the data through web scraping]({{ site.baseurl }}/projects/BDO_Optimization/webscrape)
 3. [Exploratory analysis]({{ site.baseurl }}/projects/BDO_Optimization/analysis/)
 4. [Optimization (in progress)]()
 5. [Information](#information)
