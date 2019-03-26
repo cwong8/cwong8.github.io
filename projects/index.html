@@ -13,15 +13,53 @@ title: {{ site.name }}
 </div> -->
 
 <div id="home">
-  <h1><a href="">Projects</h1>
+  <h1>Projects</h1>
     <ul class="projects">
-      {% for project in site.projects %}
-        <li><a href="{{ site.baseurl }}{{ project.url }}">{{ project.title }}</a></li>
-      {% endfor %}
-  </ul> -->
-<!--   <ul class="project">
-    {% for project in site.projects %}
-      <li><a href="{{ site.baseurl }}{{ project.url }}">{{ project.title }}</a></li>
-    {% endfor %}
-  </ul> -->
+        <li><a href="{{ site.baseurl }}/projects/employees">MySQL Employees Sample Database</a></li>
+        Exploring the MySQL employees sample database to analyze and visualize employee promotions, salaries, and the company budget.
+        <br />
+        Languages: Python for general data analysis and MySQL querying using packages pandas, numpy, scipy.stats, matplotlib, seaborn, MySQLdb. R for statistical testing and modeling (in progress).
+        <br />
+        Software: Tableau Public, MySQL Workbench.
+        <li><a href="{{ site.baseurl }}/projects/warframe_alerts">Warframe alerts</a></li>
+        Visualizing Warframe alerts over a 2 month period using Python to webscrape and Tableau to visualize.
+        <br />
+        Languages: Python for webscraping using packages MySQLdb, BeautifulSoup, requests, re. Software: Tableau Public.
+        <li><a href="{{ site.baseurl }}/projects/BDO_Optimization">Optimization of the worker system in Black Desert Online</a></li>
+        Optimizing the worker system in the MMORPG game Black Desert Online. The game contains a complex system of over 300 nodes that form the world map.
+        <br />
+        Languages: Python for webscraping using packages Selenium, BeautifulSoup, MySQLdb, and data analysis using packages numpy, pandas, re, itertools, igraph, cairo, math, plotnine (ggplot for Python).
+        <li><a href="{{ site.baseurl }}/projects/online_retail">Online Retail of Gifts Over One Year</a></li>
+        Analyzing data of all transactions from a UK-based non-store online retailer which sells unique all-occasion gifts to mainly wholesalers.
+        <br />
+        Languages: R for data analysis using packages dplyr, stringr, ggmap, and custom functions.
+        <li><a href="{{ site.baseurl }}/projects/presidential_approval">Presidential Approval Ratings</a></li>
+        Using non-parametric statistics to analyze presidential approval ratings from 1945 to 1974.
+        <br />
+        Languages: R for data analysis using custom functions.
+        <li><a href="{{ site.baseurl }}/projects/chicago">Chicago (2002 film)</a></li>
+        Time series analysis of movie ticket sales for Chicago (2002 film) from January 3, 2003 to April 18, 2003.
+        <br />
+        Languages: R for time series analysis using packages MASS and forecast.
+        <li><a href="{{ site.baseurl }}/projects/petroleum">Petroleum consumption</a></li>
+        Time series analysis of petroleum consumption (in trillion BTU) by the residential sector in the US (per month) from January 1984 to December 2015.
+        <br />
+        Languages: R for time series analysis using packages MASS and forecast.
+        <li><a href="{{ site.baseurl }}/projects/digit_recognition/Digit_Recognition_cwon.pdf">Digit recognition</a></li>
+        Comparison of two algorithms used for image recognition: a simple algorithm and an algorithm based on singular value decomposition (SVD). Data used was handwritten digits from the United States Postal Service (USPS).
+        <br />
+        Languages: MATLAB, code can be found <a href="{{ site.baseurl }}/projects/digit_recognition/Digit_Recognition_cwon.m">here</a>.
+        <li><a href="{{ site.baseurl }}/projects/ta_eval">Are Teaching Assistants (TAs) evaluated fairly?</a></li>
+        Categorical data analysis on teaching assistant (TA) evaluations.
+        <br />
+        Languages: R for categorical data analysis using the glm (generalized linear model) function.
+        <li><a href="{{ site.baseurl }}/projects/chd_age">Is coronary heart disease dependent on age?</a></li>
+        Logistic regression to determine if age is a significant factor in determining whether someone has coronary heart disease or not.
+        <br />
+        Languages: R for categorical data analysis using package ResourceSelection and the glm function for logistic regression.
+        <li><a href="{{ site.baseurl }}/projects/depression">Diagnosis of depression in primary care</a></li>
+        Multiple logistic regression to determine if factors such as gender, age, education, and SF-36 results determine whether a patient will be diagnosed with depression.
+        <br />
+        Languages: R for categorical data analysis using package ResourceSelection and the glm function for multiple logistic regression.
+  </ul>
 </div>
