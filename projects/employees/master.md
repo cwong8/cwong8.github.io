@@ -8,7 +8,7 @@ permalink: /projects/employees/
 1. [Introduction](#introduction)
 2. [Exploring employee promotions and past employees using MySQL and Python]({{ site.baseurl }}/projects/employees/sql_python/)
 3. [Tableau visualization](#tableau)
-4. [R analysis and modeling (in progress)]({{ site.baseurl }}/projects/employees/R/)
+4. [R analysis and modeling]({{ site.baseurl }}/projects/employees/R/)
 
 ## Introduction <a name="introduction"></a>
 
