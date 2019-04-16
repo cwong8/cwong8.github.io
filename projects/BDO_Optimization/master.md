@@ -9,7 +9,8 @@ permalink: /projects/BDO_Optimization/
 2. [Obtaining the data through web scraping]({{ site.baseurl }}/projects/BDO_Optimization/webscrape/)
 3. [Exploratory analysis]({{ site.baseurl }}/projects/BDO_Optimization/analysis/)
 4. [Optimization (in progress)]({{ site.baseurl }}/projects/BDO_Optimization/optimization/)
-5. [Information](#information)
+5. [Interactive world map (in progress)]({{ site.baseurl }}/projects/BDO_Optimization/map/)
+6. [Information](#information)
 
 ## Introduction <a name="introduction"></a>
 This is a personal project of mine where I attempt to optimize the worker system in the online MMORPG Black Desert Online using Python. This was my first time using Python having used R throughout my college years.
