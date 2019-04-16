@@ -1,0 +1,84 @@
+<head>
+	<link rel="stylesheet" href="leaflet.css" /> 
+	<style>
+		html, body, #map { width:100%; height:100%; margin:0; padding:0; }
+	</style>
+</head>
+<body>
+	<div id="map"></div>
+ 
+	<script src="leaflet.js"></script>
+ 
+	<script>
+		var mapMinZoom = 0;
+		var mapMaxZoom = 6;
+ 
+		var map = L.map('map').setView([0, 0], 0);
+ 
+		var mapBounds = new L.LatLngBounds(
+			map.unproject([0, 16384],mapMaxZoom),
+			map.unproject([16384, 8602],mapMaxZoom));
+ 
+		map.fitBounds(mapBounds);
+ 
+		L.tileLayer('{z}/{x}/{y}.png', {
+			minZoom: 2,
+			maxZoom: 6,
+			attribution: 'Black Desert Resource Map',
+			tms: true,
+			continuousWorld: true,
+			noWarp: true  
+		}).addTo(map);
+
+		var marker = L.marker([0, 0], {
+			draggable: true,
+		}).addTo(map);
+		marker.on('dragend', function(e) {
+			//alert(marker.getLatLng().toString());
+		});
+
+		// Icones
+		var Icone = L.Icon.extend({
+		    options: {
+		        iconSize:     [45, 45],
+				popupAnchor:  [2, -18],
+		    }
+		});
+
+		var Alchemy = new Icone({iconURL: 'img/alchemy.png'}),
+			Camp = new Icone({iconUrl: 'img/camp.png'}),
+			Capital = new Icone({iconUrl: 'img/capital.png'}),
+			City = new Icone({iconUrl: 'img/city.png'}),
+			Connect = new Icone({iconUrl: 'img/connect.png'}),
+			Gateway = new Icone({iconUrl: 'img/gateway.png'}),
+			Hazardous = new Icone({iconUrl: 'img/hazardous.png'}),
+			Ore = new Icone({iconUrl: 'img/ore.png'}),
+			Plant = new Icone({iconUrl: 'img/plant.png'}),
+			Trade = new Icone({iconUrl: 'img/trade.png'}),
+			Tree = new Icone({iconUrl: 'img/tree.png'});
+
+		//Capitales
+		L.marker([-78, -65.1], {icon: Capital}).addTo(map).bindPopup("Heidel");
+		L.marker([-78.4, -123.2], {icon: Capital}).addTo(map).bindPopup("Calpheon");
+		L.marker([-72.4, -72.1], {icon: Capital}).addTo(map).bindPopup("Veila");
+		L.marker([-63.7, 123], {icon: Capital}).addTo(map).bindPopup("Valencia");
+		L.marker([-78.8, -3.4], {icon: Capital}).addTo(map).bindPopup("Altinova");
+
+		//Cities
+		L.marker([-74.8, -142.7], {icon: City}).addTo(map).bindPopup("Epheria");
+		L.marker([-69, -102.8], {icon: City}).addTo(map).bindPopup("Olivia");
+		L.marker([-54.5, -44.8], {icon: City}).addTo(map).bindPopup("Ilya");
+		L.marker([-80.84, -78.39], {icon: City}).addTo(map).bindPopup("Glysh");
+		L.marker([-81.7, -104.76], {icon: City}).addTo(map).bindPopup("Keplan");
+		L.marker([-83.6, -147.5], {icon: City}).addTo(map).bindPopup("Trent");
+		L.marker([-79.5, -31.6], {icon: City}).addTo(map).bindPopup("Tarif");
+		L.marker([-74.3, 39.2], {icon: City}).addTo(map).bindPopup("Magyar");
+		L.marker([-56, 36], {icon: City}).addTo(map).bindPopup("Shakatu");
+		L.marker([-81.4, 133.8], {icon: City}).addTo(map).bindPopup("Mui Kun");
+		L.marker([-49, 112], {icon: City}).addTo(map).bindPopup("Ankando");
+		L.marker([-65.5, 168], {icon: City}).addTo(map).bindPopup("Arequipa");
+
+		//Gateways
+	</script>
+</body>
+</html>
