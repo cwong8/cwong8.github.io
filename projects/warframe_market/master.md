@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Warframe Alerts visualization
+title: Warframe.market API
 permalink: /projects/warframe_market/
 ---
 
