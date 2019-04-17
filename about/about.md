@@ -19,3 +19,4 @@ Things I am working on:
     
 - Learning Javascript
     - Mostly for building dynamic webpages to show off interactive projects such as BDO Optimization.
+
