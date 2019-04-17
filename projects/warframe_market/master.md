@@ -19,6 +19,6 @@ Warframe is a free-to-play cooperative third-person shooter video game developed
 
 Data was taken from the [warframe.market API](https://docs.google.com/document/d/1121cjBNN4BeZdMBGil6Qbuqse-sWpEXPpitQH5fb_Fo/edit) and contains all items traded through the website and in-game.
 
-<center><img src="market_schema.png"></center>
+<center><img src="market_schema.PNG"></center>
 
 [SQL data]({{ site.baseurl }}/projects/warframe_market/warframe_market.sql/)
