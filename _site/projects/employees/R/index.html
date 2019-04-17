@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Employee promotions and past employees</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h2 id="mysql-employees-sample-database">MySQL Employees Sample Database</h2>
+<p>Using the MySQL Employees sample database to practice and learn SQL/MySQL before using Python and R to analyze queried data. Information about the database can be found at <a href="https://dev.mysql.com/doc/employee/en/">https://dev.mysql.com/doc/employee/en/</a>. The database can be downloaded at <a href="https://github.com/datacharmer/test_db">https://github.com/datacharmer/test_db</a>.</p>
+
+<h3 id="tools-used">Tools used</h3>
+<ul>
+  <li>Package dplyr for data manipulation functions such as filter</li>
+  <li>Packages tseries and forecast for time series analysis functions</li>
+  <li>Package MASS for the Box Cox transformation function boxcox</li>
+  <li>Package RMySQL to connect to MySQL database and query</li>
+  <li>Package ResourceSelection for Hosmer-Lemeshow Goodness of Fit Test (i.e. is our logistic regression model a good fit)</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># options(scipen = 999) Toggle scientific notation off</span><span class="w">
+</span><span class="c1"># Import package dplyr for easier data manipulation</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">dplyr</span><span class="p">,</span><span class="w"> </span><span class="n">warn.conflicts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Change working directory</span><span class="w">
+</span><span class="n">setwd</span><span class="p">(</span><span class="s2">"C:/Users/Christopher Wong/Desktop/employees/"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># If you do not want to use read.table, you can use 'fread' from the package data.table which reads large files such as .csv much quicker than read.table.</span><span class="w">
+</span><span class="c1"># Just make sure to convert to dataframe.</span><span class="w">
+</span><span class="c1"># Import employee salary data from .csv file used in Tableau</span><span class="w">
+</span><span class="n">employee_salary</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">read.table</span><span class="p">(</span><span class="s2">"employee_salary.csv"</span><span class="p">,</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">,</span><span class="w"> </span><span class="n">sep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">";"</span><span class="p">)</span><span class="w">
+</span><span class="c1"># Order by emp_no and make YEAR.from_date. a factor</span><span class="w">
+</span><span class="n">employee_salary</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">employee_salary</span><span class="p">[</span><span class="n">order</span><span class="p">(</span><span class="n">employee_salary</span><span class="o">$</span><span class="n">emp_no</span><span class="p">),</span><span class="w"> </span><span class="p">]</span><span class="w">
+</span><span class="n">employee_salary</span><span class="o">$</span><span class="n">YEAR.from_date.</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.factor</span><span class="p">(</span><span class="n">employee_salary</span><span class="o">$</span><span class="n">YEAR.from_date.</span><span class="p">)</span><span class="w">
+</span><span class="c1"># Attach to environment</span><span class="w">
+</span><span class="n">attach</span><span class="p">(</span><span class="n">employee_salary</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="are-there-differences-in-salary-between-departments-what-about-between-titles">Are there differences in salary between departments? What about between titles?</h3>
+
+<p>To test this, we can use a one-way ANOVA test with salary being our dependent variable (“Y”) and departments/titles our independent variable (“X”). To use a one-way ANOVA test, we need to satisfy these assumptions:</p>
+<ol>
+  <li>Residuals are normally distributed (or approximately normally distributed) or the distributions within groups are normally distributed</li>
+  <li>Variances of populations are the same</li>
+  <li>Responses are independent and identically distributed (iid)</li>
+</ol>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Change plot settings</span><span class="w">
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">))</span><span class="w">
+</span><span class="n">par</span><span class="p">(</span><span class="n">mar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">5.1</span><span class="p">,</span><span class="m">1</span><span class="p">,</span><span class="m">1</span><span class="p">,</span><span class="m">1</span><span class="p">))</span><span class="w">
+
+</span><span class="c1">### Plot the distributions of salary within groups dept_name</span><span class="w">
+</span><span class="c1"># Plot salary distribution within department</span><span class="w">
+</span><span class="c1"># NOTE: I did not filter salaries by year because from the Tableau section of this project we see salaries increase at the same rate across years</span><span class="w">
+</span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="n">levels</span><span class="p">(</span><span class="n">dept_name</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">){</span><span class="w">
+  </span><span class="n">plot</span><span class="p">(</span><span class="n">density</span><span class="p">(</span><span class="n">filter</span><span class="p">(</span><span class="n">employee_salary</span><span class="p">,</span><span class="w"> </span><span class="n">dept_name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="o">$</span><span class="n">salary</span><span class="p">),</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="output_5_0.png" alt="png" /></p>
+
+<p>We can clearly see the salaries within departments are NOT normally distributed. Thus, we cannot use a parametric one-way ANOVA test. Instead, we can use its nonparametric counterpart: the Kruskal-Wallis H test.</p>
+
+<p>The Kruskal-Wallis H test checks whether samples originate from the same distribution.</p>
+<ul>
+  <li>$H_0:$ The samples come from identical populations</li>
+  <li>$H_1:$ The samples come from nonidentical populations</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Testing if distributions of salary within departments are identical</span><span class="w">
+</span><span class="n">kruskal.test</span><span class="p">(</span><span class="n">salary</span><span class="o">~</span><span class="n">dept_name</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">employee_salary</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	Kruskal-Wallis rank sum test
+
+data:  salary by dept_name
+Kruskal-Wallis chi-squared = 666220, df = 8, p-value &lt; 2.2e-16
+</code></pre></div></div>
+
+<p>Our p-value is less than machine precision (2.2e-16) which is essentially 0, so we reject the null hypothesis and conclude that our salaries for different departments come from nonidentical populations. Well, this does not tell us anything we could not have seen from the distributions above, so instead let’s use Pairwise Wilcoxon Rank Sum Tests to determine which departments have different distributions.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calculating pairwise comparisons</span><span class="w">
+</span><span class="n">pairwise.wilcox.test</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span><span class="w"> </span><span class="n">dept_name</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">employee_salary</span><span class="p">,</span><span class="w"> </span><span class="n">p.adjust.method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"BH"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	Pairwise comparisons using Wilcoxon rank sum test 
+
+data:  salary and dept_name 
+
+                   Customer Service Development Finance Human Resources
+Development        &lt; 2e-16          -           -       -              
+Finance            &lt; 2e-16          &lt; 2e-16     -       -              
+Human Resources    &lt; 2e-16          &lt; 2e-16     &lt; 2e-16 -              
+Marketing          &lt; 2e-16          &lt; 2e-16     &lt; 2e-16 &lt; 2e-16        
+Production         &lt; 2e-16          9.5e-10     &lt; 2e-16 &lt; 2e-16        
+Quality Management &lt; 2e-16          &lt; 2e-16     &lt; 2e-16 &lt; 2e-16        
+Research           &lt; 2e-16          9.4e-06     &lt; 2e-16 &lt; 2e-16        
+Sales              &lt; 2e-16          &lt; 2e-16     &lt; 2e-16 &lt; 2e-16        
+                   Marketing Production Quality Management Research
+Development        -         -          -                  -       
+Finance            -         -          -                  -       
+Human Resources    -         -          -                  -       
+Marketing          -         -          -                  -       
+Production         &lt; 2e-16   -          -                  -       
+Quality Management &lt; 2e-16   &lt; 2e-16    -                  -       
+Research           &lt; 2e-16   0.67       &lt; 2e-16            -       
+Sales              &lt; 2e-16   &lt; 2e-16    &lt; 2e-16            &lt; 2e-16 
+
+P value adjustment method: BH 
+</code></pre></div></div>
+
+<p>We see that all department pairings EXCEPT Production and Research have significantly different distributions. Let us perform the same analysis using title as a factor now.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Change plot settings</span><span class="w">
+</span><span class="n">par</span><span class="p">(</span><span class="n">mfrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">))</span><span class="w">
+</span><span class="n">par</span><span class="p">(</span><span class="n">mar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">5.1</span><span class="p">,</span><span class="m">1</span><span class="p">,</span><span class="m">1</span><span class="p">,</span><span class="m">1</span><span class="p">))</span><span class="w">
+
+</span><span class="c1">### Plot the distributions of salary within groups 'title'</span><span class="w">
+</span><span class="c1"># Plot salary distribution within titles</span><span class="w">
+</span><span class="c1"># NOTE: I did not filter salaries by year because from the Tableau section of this project we see salaries increase at the same rate across years</span><span class="w">
+</span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sapply</span><span class="p">(</span><span class="n">levels</span><span class="p">(</span><span class="n">title</span><span class="p">),</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">){</span><span class="w">
+  </span><span class="n">plot</span><span class="p">(</span><span class="n">density</span><span class="p">(</span><span class="n">filter</span><span class="p">(</span><span class="n">employee_salary</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="o">$</span><span class="n">salary</span><span class="p">),</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w">
+</span><span class="p">})</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="output_11_0.png" alt="png" /></p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Testing if distributions of salary within title are identical</span><span class="w">
+</span><span class="n">kruskal.test</span><span class="p">(</span><span class="n">salary</span><span class="o">~</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">employee_salary</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	Kruskal-Wallis rank sum test
+
+data:  salary by title
+Kruskal-Wallis chi-squared = 478650, df = 6, p-value &lt; 2.2e-16
+</code></pre></div></div>
+
+<p>Our p-value is less than machine precision (2.2e-16) which is essentially 0, so we reject the null hypothesis and conclude that our salaries for different titles come from nonidentical populations. Well, this does not tell us anything we could not have seen from the distributions above, so instead let’s use Pairwise Wilcoxon Rank Sum Tests to determine which departments have different distributions.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calculating pairwise comparisons</span><span class="w">
+</span><span class="n">pairwise.wilcox.test</span><span class="p">(</span><span class="n">salary</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">employee_salary</span><span class="p">,</span><span class="w"> </span><span class="n">p.adjust.method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"BH"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	Pairwise comparisons using Wilcoxon rank sum test 
+
+data:  salary and title 
+
+                 Assistant Engineer Engineer Manager Senior Engineer
+Engineer         &lt; 2e-16            -        -       -              
+Manager          &lt; 2e-16            &lt; 2e-16  -       -              
+Senior Engineer  &lt; 2e-16            &lt; 2e-16  0.197   -              
+Senior Staff     &lt; 2e-16            &lt; 2e-16  1.5e-08 &lt; 2e-16        
+Staff            &lt; 2e-16            &lt; 2e-16  0.081   &lt; 2e-16        
+Technique Leader &lt; 2e-16            &lt; 2e-16  6.7e-10 &lt; 2e-16        
+                 Senior Staff Staff  
+Engineer         -            -      
+Manager          -            -      
+Senior Engineer  -            -      
+Senior Staff     -            -      
+Staff            &lt; 2e-16      -      
+Technique Leader &lt; 2e-16      &lt; 2e-16
+
+P value adjustment method: BH 
+</code></pre></div></div>
+
+<p>We see that Senior Engineers and Managers have similar salary distributions. This is somewhat expected because senior engineers are valuable assets to a company and thus would be paid similar to other senior roles such as managers.</p>
+
+<p>However, there is one surprising pairing here: Staff and Managers. The test says that their distributions are not significantly different (at $\alpha$ = 0.05). However, we have to consider the sample sizes of our distributions within titles. We have 162 salary data points for managers and hundreds of thousands for other titles. Thus, our test results may not be accurate, and the significance stems from variance within manager salaries.</p>
+
+<h3 id="can-we-predict-the-budget-for-the-year-2002">Can we predict the budget for the year 2002?</h3>
+
+<p><strong>Warning</strong>: This part is extremely boring and nothing interesting came out of the time series analysis. Our model predicts a flat line, indicating that the company has plateaued and growth is stagnant.</p>
+
+<p>Our data for 2002 is incomplete because the sample database cuts off in the middle of the year. This section is a bit lacking because of the way our database was set up. Employee salaries are stored in one year chunks with their yearly salary and the start and end dates. It is possible to partition the data further into monthly salaries, but that may be extrapolation since we would assume monthly salaries are constant for twelve month (i.e. yearly) periods.</p>
+
+<p>Personally I don’t think that partitioning the data further would help because salaries are a set amount for employees throughout the year. It’s not like the company stops paying employees because the seasons changed or anything, and we saw from the MySQL/Python part of this project that employees leaving the company are outnumbered by employees joining the company. Thus, I will analyze salary budgets for this company using years as my data points.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Import time series packages</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">tseries</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Get the yearly salary budgets</span><span class="w">
+</span><span class="n">budgets</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">aggregate</span><span class="p">(</span><span class="n">salary</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">YEAR.from_date.</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">employee_salary</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">)</span><span class="w">
+</span><span class="c1"># Remove 2002 because the data is incomplete</span><span class="w">
+</span><span class="n">budgets</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">budgets</span><span class="p">[</span><span class="o">-</span><span class="n">nrow</span><span class="p">(</span><span class="n">budgets</span><span class="p">),</span><span class="w"> </span><span class="p">]</span><span class="w">
+
+</span><span class="n">plot.ts</span><span class="p">(</span><span class="n">budgets</span><span class="o">$</span><span class="n">salary</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="output_17_0.png" alt="png" /></p>
+
+<p>There is nothing interesting going on in our data at first glance. There is an obvious increasing trend, but there are no fluctuations or obvious seasonality present. Also, since our periods are years, we only have 17 data points.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Test if a transformation is needed to stabilize fluctuations in the data</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">MASS</span><span class="p">,</span><span class="w"> </span><span class="n">warn.conflicts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span><span class="n">a</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">boxcox</span><span class="p">(</span><span class="n">budgets</span><span class="o">$</span><span class="n">salary</span><span class="o">~</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">lambda</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="m">-2</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0.001</span><span class="p">))</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="output_19_0.png" alt="png" /></p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Lambda = 1, do not have to transform. But only slightly better</span><span class="w">
+</span><span class="n">a</span><span class="o">$</span><span class="n">y</span><span class="p">[</span><span class="n">a</span><span class="o">$</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0.5</span><span class="p">]</span><span class="w">
+</span><span class="n">a</span><span class="o">$</span><span class="n">y</span><span class="p">[</span><span class="n">a</span><span class="o">$</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">1</span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<p>-18.0754250127712</p>
+
+<p>-17.9812577605597</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Decompose the time series data</span><span class="w">
+</span><span class="n">decompose</span><span class="p">(</span><span class="n">ts</span><span class="p">(</span><span class="n">budgets</span><span class="o">$</span><span class="n">salary</span><span class="p">,</span><span class="w"> </span><span class="n">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">))</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Error in decompose(ts(budgets$salary, frequency = 1)): time series has no or less than 2 periods
+Traceback:
+
+
+1. decompose(ts(budgets$salary, frequency = 1))
+
+2. stop("time series has no or less than 2 periods")
+</code></pre></div></div>
+
+<p>The decompose function cannot find any components of a time series in our data (trend, seasonal, errors). This is why this section is not interesting.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Fitting an ARIMA model</span><span class="w">
+</span><span class="n">mod</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">auto.arima</span><span class="p">(</span><span class="n">budgets</span><span class="o">$</span><span class="n">salary</span><span class="p">)</span><span class="w">
+</span><span class="n">mod</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Series: budgets$salary 
+ARIMA(0,2,0) 
+
+sigma^2 estimated as 7.978e+16:  log likelihood=-313.17
+AIC=628.34   AICc=628.65   BIC=629.05
+</code></pre></div></div>
+
+<p>We see that our the best ARIMA model for our data has no autoregressive (AR) or moving average (MA) components. That is, our data points are not dependent on previous data points and there is no smoothing required from a moving average since our data has no fluctuations. The auto.arima function fit a second-order differencing model to our data to obtain a stationary time series.</p>
+
+<ul>
+  <li>$y_t^* = y_t - 2y_{t-1} + y_{t-2}$</li>
+</ul>
+
+<p>To put our model into perspective, a white noise model is given by ARIMA(0,0,0) and a random walk is given by ARIMA(0,1,0). With this in mind, we expect our forecast to be a horizontal line.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Forecasting</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">forecast</span><span class="p">)</span><span class="w">
+</span><span class="n">fcast</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">forecast</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span><span class="w">
+</span><span class="n">plot</span><span class="p">(</span><span class="n">fcast</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="output_25_0.png" alt="png" /></p>
+
+<h3 id="modeling-employee-promotions-using-logistic-regression">Modeling employee promotions using logistic regression</h3>
+<p>In the MySQL/Python section of this project, we explored employee promotions visually. Now, we want to try to model them using logistic regression. The variables I chose to model against are gender, dept_name, and title. I leave out days_to_promotion because I created a binary variable promotion_binary based on whether days_to_promotion was a non-null value, and I am using promotion_binary as my response variable.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># options(scipen = 999) Toggle scientific notation off</span><span class="w">
+</span><span class="c1"># Import RMySQL to connect to our database, replace "yourusername" and "yourpassword"</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">RMySQL</span><span class="p">,</span><span class="w"> </span><span class="n">warn.conflicts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span><span class="n">con</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">dbConnect</span><span class="p">(</span><span class="n">dbDriver</span><span class="p">(</span><span class="s2">"MySQL"</span><span class="p">),</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"yourusername"</span><span class="p">,</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"yourpassword"</span><span class="p">,</span><span class="w"> </span><span class="n">dbname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"employees"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Promotions model</span><span class="w">
+</span><span class="n">promotions</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">dbGetQuery</span><span class="p">(</span><span class="n">con</span><span class="p">,</span><span class="w"> </span><span class="s2">"SELECT emp_no, gender, dept_name, title, IF (a.days_to_promotion IS NULL, 0, 1) AS promotion_binary
+FROM
+(SELECT employees.emp_no, employees.gender, departments.dept_name, IF (promotions.hire_title IS NOT NULL, promotions.hire_title, titles.title) AS title, TIMESTAMPDIFF(DAY, promotions.hire_date, promotions.promotion_date) AS days_to_promotion
+FROM employees JOIN dept_emp ON employees.emp_no = dept_emp.emp_no JOIN departments ON dept_emp.dept_no = departments.dept_no JOIN titles ON employees.emp_no = titles.emp_no LEFT JOIN promotions ON employees.emp_no = promotions.emp_no
+GROUP BY employees.emp_no) AS a;"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>We will use stepwise regression to build our logistic regression model.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Empty and full models</span><span class="w">
+</span><span class="n">nothing</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">glm</span><span class="p">(</span><span class="n">promotion_binary</span><span class="o">~</span><span class="m">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">emp_no</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">promotions</span><span class="p">,</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">binomial</span><span class="p">(</span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logit</span><span class="p">))</span><span class="w">
+</span><span class="n">full</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">glm</span><span class="p">(</span><span class="n">promotion_binary</span><span class="o">~</span><span class="n">.</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">emp_no</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">promotions</span><span class="p">,</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">binomial</span><span class="p">(</span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logit</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># Stepwise regression forwards and backwards</span><span class="w">
+</span><span class="n">forwards</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">step</span><span class="p">(</span><span class="n">nothing</span><span class="p">,</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="n">lower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">formula</span><span class="p">(</span><span class="n">nothing</span><span class="p">),</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">formula</span><span class="p">(</span><span class="n">full</span><span class="p">)),</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"forward"</span><span class="p">,</span><span class="w"> </span><span class="n">trace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span><span class="n">backwards</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">step</span><span class="p">(</span><span class="n">full</span><span class="p">,</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="n">lower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">formula</span><span class="p">(</span><span class="n">nothing</span><span class="p">),</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">formula</span><span class="p">(</span><span class="n">full</span><span class="p">)),</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"backward"</span><span class="p">,</span><span class="w"> </span><span class="n">trace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Same model for forwards and backwards stepwise regression</span><span class="w">
+</span><span class="n">final.model</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">forwards</span><span class="w">
+</span><span class="n">final.model</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Call:  glm(formula = promotion_binary ~ title, family = binomial(link = logit), 
+    data = promotions)
+
+Coefficients:
+          (Intercept)          titleEngineer           titleManager  
+             0.465387              -0.009761              13.100679  
+ titleSenior Engineer      titleSenior Staff             titleStaff  
+           -10.775904              -9.043976               0.011662  
+titleTechnique Leader  
+            -9.397864  
+
+Degrees of Freedom: 300023 Total (i.e. Null);  300017 Residual
+Null Deviance:	    414700 
+Residual Deviance: 304500 	AIC: 304500
+</code></pre></div></div>
+
+<p>Our final model uses all titles at the company except Assistant Engineer. This confirms our visual analysis in the MySQL/Python section that gender does not affect an employee’s promotion potential. We also see that departments are the same; an employee’s promotion potential does not depend on their gender, age, or department.</p>
+
+<p>Let’s now interpret our model and conditional odds ratios.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Odds ratios</span><span class="w">
+</span><span class="n">est.coef</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">coef</span><span class="p">(</span><span class="n">final.model</span><span class="p">)</span><span class="w">
+</span><span class="n">est.coef.se</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">summary</span><span class="p">(</span><span class="n">final.model</span><span class="p">)</span><span class="o">$</span><span class="n">coefficients</span><span class="p">[,</span><span class="w"> </span><span class="s2">"Std. Error"</span><span class="p">]</span><span class="w">
+</span><span class="n">odds</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="n">est.coef</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)])</span><span class="w">
+</span><span class="n">odds</span><span class="w">
+</span></code></pre></div></div>
+
+<p>&lt;dl class=dl-horizontal&gt;
+	&lt;dt&gt;titleEngineer&lt;/dt&gt;
+		&lt;dd&gt;0.990286868832037&lt;/dd&gt;
+	&lt;dt&gt;titleSenior Engineer&lt;/dt&gt;
+		&lt;dd&gt;0.0000208970268074274&lt;/dd&gt;
+	&lt;dt&gt;titleSenior Staff&lt;/dt&gt;
+		&lt;dd&gt;0.000118100282453444&lt;/dd&gt;
+	&lt;dt&gt;titleStaff&lt;/dt&gt;
+		&lt;dd&gt;1.01173010640294&lt;/dd&gt;
+	&lt;dt&gt;titleTechnique Leader&lt;/dt&gt;
+		&lt;dd&gt;0.0000829009719687825&lt;/dd&gt;
+&lt;/dl&gt;</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Odds ratio confidence intervals</span><span class="w">
+</span><span class="n">odds.CI</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">lower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="n">est.coef</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)]</span><span class="m">-1.96</span><span class="o">*</span><span class="n">est.coef.se</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)]),</span><span class="w">
+                      </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="n">est.coef</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)]</span><span class="m">+1.96</span><span class="o">*</span><span class="n">est.coef.se</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)]))</span><span class="w">
+</span><span class="n">odds.CI</span><span class="w">
+</span></code></pre></div></div>
+
+<table>
+<thead><tr><th></th>&lt;th scope=col&gt;lower&lt;/th&gt;&lt;th scope=col&gt;upper&lt;/th&gt;</tr></thead>
+<tbody>
+	<tr>&lt;th scope=row&gt;titleEngineer&lt;/th&gt;<td>9.562291e-01</td><td>1.0255576344</td></tr>
+	<tr>&lt;th scope=row&gt;titleSenior Engineer&lt;/th&gt;<td>2.947778e-06</td><td>0.0001481406</td></tr>
+	<tr>&lt;th scope=row&gt;titleSenior Staff&lt;/th&gt;<td>4.912175e-05</td><td>0.0002839409</td></tr>
+	<tr>&lt;th scope=row&gt;titleStaff&lt;/th&gt;<td>9.769579e-01</td><td>1.0477399601</td></tr>
+	<tr>&lt;th scope=row&gt;titleTechnique Leader&lt;/th&gt;<td>2.072290e-05</td><td>0.0003316414</td></tr>
+</tbody>
+</table>
+
+<p>We see an abnormality in one of our odds ratios: Manager. Its odds ratio confidence interval is also extremely large, indicating that something is amiss in our data for employee promotions with the Manager title.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Investigate Manager promotions</span><span class="w">
+</span><span class="n">filter</span><span class="p">(</span><span class="n">promotions</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"Manager"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<table>
+<thead><tr>&lt;th scope=col&gt;emp_no&lt;/th&gt;&lt;th scope=col&gt;gender&lt;/th&gt;&lt;th scope=col&gt;dept_name&lt;/th&gt;&lt;th scope=col&gt;title&lt;/th&gt;&lt;th scope=col&gt;promotion_binary&lt;/th&gt;</tr></thead>
+<tbody>
+	<tr><td>110022            </td><td>M                 </td><td>Marketing         </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110085            </td><td>M                 </td><td>Finance           </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110183            </td><td>F                 </td><td>Human Resources   </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110303            </td><td>F                 </td><td>Production        </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110344            </td><td>F                 </td><td>Production        </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110386            </td><td>M                 </td><td>Production        </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110511            </td><td>M                 </td><td>Development       </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110725            </td><td>F                 </td><td>Quality Management</td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110765            </td><td>F                 </td><td>Quality Management</td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>110800            </td><td>F                 </td><td>Quality Management</td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>111035            </td><td>M                 </td><td>Sales             </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>111400            </td><td>M                 </td><td>Research          </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>111692            </td><td>F                 </td><td>Customer Service  </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>111784            </td><td>F                 </td><td>Customer Service  </td><td>Manager           </td><td>1                 </td></tr>
+	<tr><td>111877            </td><td>F                 </td><td>Customer Service  </td><td>Manager           </td><td>1                 </td></tr>
+</tbody>
+</table>
+
+<p>This is why our Manager variable has such a large odds ratio. All managers in this company have been promoted! On top of that, there are only a handful of managers compared to the number of employees. Thus, we will rerun our model with managers removed.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Taking out managers</span><span class="w">
+</span><span class="n">promotions_no_managers</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="n">promotions</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">"Manager"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Empty and full models</span><span class="w">
+</span><span class="n">nothing</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">glm</span><span class="p">(</span><span class="n">promotion_binary</span><span class="o">~</span><span class="m">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">emp_no</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">promotions_no_managers</span><span class="p">,</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">binomial</span><span class="p">(</span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logit</span><span class="p">))</span><span class="w">
+</span><span class="n">full</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">glm</span><span class="p">(</span><span class="n">promotion_binary</span><span class="o">~</span><span class="n">.</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">emp_no</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">promotions_no_managers</span><span class="p">,</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">binomial</span><span class="p">(</span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logit</span><span class="p">))</span><span class="w">
+
+</span><span class="c1"># Stepwise regression forwards and backwards</span><span class="w">
+</span><span class="n">forwards</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">step</span><span class="p">(</span><span class="n">nothing</span><span class="p">,</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="n">lower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">formula</span><span class="p">(</span><span class="n">nothing</span><span class="p">),</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">formula</span><span class="p">(</span><span class="n">full</span><span class="p">)),</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"forward"</span><span class="p">,</span><span class="w"> </span><span class="n">trace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span><span class="n">backwards</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">step</span><span class="p">(</span><span class="n">full</span><span class="p">,</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="n">lower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">formula</span><span class="p">(</span><span class="n">nothing</span><span class="p">),</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">formula</span><span class="p">(</span><span class="n">full</span><span class="p">)),</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"backward"</span><span class="p">,</span><span class="w"> </span><span class="n">trace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># Same model for forwards and backwards stepwise regression</span><span class="w">
+</span><span class="n">final.model</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">forwards</span><span class="w">
+</span><span class="n">final.model</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Call:  glm(formula = promotion_binary ~ title, family = binomial(link = logit), 
+    data = promotions_no_managers)
+
+Coefficients:
+          (Intercept)          titleEngineer   titleSenior Engineer  
+             0.465387              -0.009761             -10.775904  
+    titleSenior Staff             titleStaff  titleTechnique Leader  
+            -9.043976               0.011662              -9.397864  
+
+Degrees of Freedom: 300008 Total (i.e. Null);  300003 Residual
+Null Deviance:	    414600 
+Residual Deviance: 304500 	AIC: 304500
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Odds ratios</span><span class="w">
+</span><span class="n">est.coef</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">coef</span><span class="p">(</span><span class="n">final.model</span><span class="p">)</span><span class="w">
+</span><span class="n">est.coef.se</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">summary</span><span class="p">(</span><span class="n">final.model</span><span class="p">)</span><span class="o">$</span><span class="n">coefficients</span><span class="p">[,</span><span class="w"> </span><span class="s2">"Std. Error"</span><span class="p">]</span><span class="w">
+</span><span class="n">odds</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="n">est.coef</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)])</span><span class="w">
+</span><span class="n">odds</span><span class="w">
+</span></code></pre></div></div>
+
+<p>&lt;dl class=dl-horizontal&gt;
+	&lt;dt&gt;titleEngineer&lt;/dt&gt;
+		&lt;dd&gt;0.990286868832037&lt;/dd&gt;
+	&lt;dt&gt;titleSenior Engineer&lt;/dt&gt;
+		&lt;dd&gt;0.0000208970268074274&lt;/dd&gt;
+	&lt;dt&gt;titleSenior Staff&lt;/dt&gt;
+		&lt;dd&gt;0.000118100282453444&lt;/dd&gt;
+	&lt;dt&gt;titleStaff&lt;/dt&gt;
+		&lt;dd&gt;1.01173010640294&lt;/dd&gt;
+	&lt;dt&gt;titleTechnique Leader&lt;/dt&gt;
+		&lt;dd&gt;0.0000829009719687825&lt;/dd&gt;
+&lt;/dl&gt;</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Odds ratio confidence intervals</span><span class="w">
+</span><span class="n">odds.CI</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">lower</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="n">est.coef</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)]</span><span class="m">-1.96</span><span class="o">*</span><span class="n">est.coef.se</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)]),</span><span class="w">
+                      </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="n">est.coef</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)]</span><span class="m">+1.96</span><span class="o">*</span><span class="n">est.coef.se</span><span class="p">[</span><span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="nf">names</span><span class="p">(</span><span class="n">est.coef</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"(Intercept)"</span><span class="p">)]))</span><span class="w">
+</span><span class="n">odds.CI</span><span class="w">
+</span></code></pre></div></div>
+
+<table>
+<thead><tr><th></th>&lt;th scope=col&gt;lower&lt;/th&gt;&lt;th scope=col&gt;upper&lt;/th&gt;</tr></thead>
+<tbody>
+	<tr>&lt;th scope=row&gt;titleEngineer&lt;/th&gt;<td>0.956229128088</td><td>1.0255576344  </td></tr>
+	<tr>&lt;th scope=row&gt;titleSenior Engineer&lt;/th&gt;<td>0.000002947778</td><td>0.0001481406  </td></tr>
+	<tr>&lt;th scope=row&gt;titleSenior Staff&lt;/th&gt;<td>0.000049121752</td><td>0.0002839409  </td></tr>
+	<tr>&lt;th scope=row&gt;titleStaff&lt;/th&gt;<td>0.976957878089</td><td>1.0477399601  </td></tr>
+	<tr>&lt;th scope=row&gt;titleTechnique Leader&lt;/th&gt;<td>0.000020722902</td><td>0.0003316414  </td></tr>
+</tbody>
+</table>
+
+<p>We see that the odds ratio confidence intervals for Engineer and Staff both contain 1, so we cannot be confident (at $\alpha$ = 0.05) that having the title of Engineer or Staff improves an employee’s odds of being promoted. However, compared to the other titles, the odds are much better. But this can be explained by logical reasoning: senior positions are not likely to be promoted, being the highest positions in this company.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Checking model fit</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">ResourceSelection</span><span class="p">)</span><span class="w">                                      
+</span><span class="n">hoslem.test</span><span class="p">(</span><span class="n">promotions_no_managers</span><span class="o">$</span><span class="n">promotion_binary</span><span class="p">,</span><span class="w"> </span><span class="n">fitted</span><span class="p">(</span><span class="n">final.model</span><span class="p">))</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	Hosmer and Lemeshow goodness of fit (GOF) test
+
+data:  promotions_no_managers$promotion_binary, fitted(final.model)
+X-squared = 3.1885e-13, df = 8, p-value = 1
+</code></pre></div></div>
+
+<p><strong>Conclusion</strong>: Our analysis gave us some further insights into employee promotions, but we cannot pinpoint exactly what variables are responsible for them. Our data is insufficient for deeper analysis because we cannot see things such as employee performance metrics.</p>
+
+<p>We could probably test employee days at the company as a variable for promotion, but the problem is how we would handle employees who have never been promoted. Do we keep their days_to_promotion as NULL, or insert an extremely large value like 9999 days but that throws off our data. We also used this variable to create a binary promotion variable that we used as our response variable above, and having the variable as a predictor and response simultaneously seems iffy.</p>
+
+<p>However, it is important to note that this is a (relatively) clean sample database which was made to practice on, so we should not expect to perform any complex delves into the data.</p>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

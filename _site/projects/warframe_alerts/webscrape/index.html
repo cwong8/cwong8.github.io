@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Warframe Alerts visualization</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="warframe-alerts-web-scrape">Warframe alerts web scrape</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Server connection to MySQL:
+</span><span class="kn">import</span> <span class="nn">MySQLdb</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="o">=</span> <span class="s">"localhost"</span><span class="p">,</span>
+                  <span class="n">user</span><span class="o">=</span><span class="s">"yourusername"</span><span class="p">,</span>
+                  <span class="n">passwd</span><span class="o">=</span><span class="s">"yourpassword"</span><span class="p">,</span>
+                  <span class="n">db</span><span class="o">=</span><span class="s">"warframe"</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+<span class="c1"># Create table for alerts
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS ALERTS (
+    TIME DATETIME,
+    DESTINATION CHAR(50),
+    DESTINATION_PLANET CHAR(50),
+    CREDITS INT DEFAULT NULL,
+    LOOT_TYPE CHAR(50) DEFAULT NULL,
+    LOOT CHAR(50))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Web scraping
+</span><span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"https://raidtime.net/en/game/tool/warframe/alarm"</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">url</span>
+<span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="s">"lxml"</span><span class="p">)</span>
+
+<span class="c1"># Get max pages
+</span><span class="n">max_pages</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">"</span><span class="err">\</span><span class="s">d+"</span><span class="p">,</span> <span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">"btn btn-default"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s">"title"</span><span class="p">])</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">scrape_page</span><span class="p">(</span><span class="n">soup</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">))):</span>
+        <span class="c1"># Alert time
+</span>        <span class="n">alert_time</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">"warframe-countdown"</span><span class="p">)[</span><span class="s">'data-source'</span><span class="p">]</span>
+        <span class="n">alert_time</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">alert_time</span><span class="p">,</span> <span class="s">"</span><span class="si">%</span><span class="s">Y-</span><span class="si">%</span><span class="s">m-</span><span class="si">%</span><span class="s">dT</span><span class="si">%</span><span class="s">H:</span><span class="si">%</span><span class="s">M:</span><span class="si">%</span><span class="s">S+</span><span class="si">%</span><span class="s">f"</span><span class="p">))</span>
+
+        <span class="c1"># Alert destination
+</span>        <span class="n">destination</span> <span class="o">=</span> <span class="s">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">"alternative"</span><span class="p">)</span><span class="o">.</span><span class="n">stripped_strings</span><span class="p">)</span>
+        <span class="c1"># Split by space followed by ( or ending with )
+</span>        <span class="n">alert_destination</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">' </span><span class="err">\</span><span class="s">(|</span><span class="err">\</span><span class="s">)'</span><span class="p">,</span> <span class="n">destination</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">alert_destination_planet</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">' </span><span class="err">\</span><span class="s">(|</span><span class="err">\</span><span class="s">)'</span><span class="p">,</span> <span class="n">destination</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Check if there is a credit reward
+</span>        <span class="k">if</span> <span class="p">(</span><span class="s">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'td'</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">stripped_strings</span><span class="p">)</span> <span class="o">==</span> <span class="s">"?"</span><span class="p">):</span>
+            <span class="n">alert_credits</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">alert_credits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'td'</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">stripped_strings</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">","</span><span class="p">,</span> <span class="s">""</span><span class="p">))</span>
+
+        <span class="c1"># Check if there is loot
+</span>        <span class="k">if</span> <span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'td'</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">"tag"</span><span class="p">)):</span>
+            <span class="n">alert_loot_type</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'td'</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">"tag"</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">alert_loot_type</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'td'</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">"alternative"</span><span class="p">)):</span>
+            <span class="n">alert_loot</span> <span class="o">=</span> <span class="s">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">tbody</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'tr'</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">'td'</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span> <span class="o">=</span> <span class="s">"alternative"</span><span class="p">)</span><span class="o">.</span><span class="n">stripped_strings</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">alert_loot</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c1"># Insert into MySQL database 'warframe', table 'alerts'
+</span>        <span class="k">try</span><span class="p">:</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s">"""
+            INSERT INTO alerts (time, destination, destination_planet, credits, loot_type, loot)
+            VALUES (</span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s)
+            """</span><span class="p">,</span> <span class="p">[</span><span class="n">alert_time</span><span class="p">,</span> <span class="n">alert_destination</span><span class="p">,</span> <span class="n">alert_destination_planet</span><span class="p">,</span> <span class="n">alert_credits</span><span class="p">,</span> <span class="n">alert_loot_type</span><span class="p">,</span> <span class="n">alert_loot</span><span class="p">])</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+    
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Deletes all rows, FOR TESTING ONLY
+</span><span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"DELETE FROM alerts"</span><span class="p">)</span>
+<span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Loop
+</span><span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_pages</span><span class="p">):</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="s">"/"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="s">"lxml"</span><span class="p">)</span>
+    <span class="n">scrape_page</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span>
+</code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

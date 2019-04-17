@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Black Desert Online Worker Optimization</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Loading environment from analysis notebook
+</span><span class="kn">import</span> <span class="nn">dill</span>
+<span class="n">dill</span><span class="o">.</span><span class="n">load_session</span><span class="p">(</span><span class="s">'BDO_Optimization_env.db'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_rows</span> <span class="o">=</span> <span class="mi">6</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># https://igraph.org/python/doc/igraph.Graph-class.html#shortest_paths_dijkstra
+# https://igraph.org/python/doc/igraph.GraphBase-class.html#get_shortest_paths
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;igraph.Graph at 0x185963f5228&gt;
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>igraph.Vertex(&lt;igraph.Graph object at 0x00000185963F5228&gt;, 0, {'name': 'Abandoned Iron Mine', 'area': 'Mediah', 'type': 'Worker Node', 'cp': 2})
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Takes in list as input (i.e. get_node_id(["Abandoned Iron Mine"]) if you want a single node)
+</span><span class="k">def</span> <span class="nf">get_node_id</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">([</span><span class="n">node</span><span class="p">[</span><span class="n">node</span><span class="p">[</span><span class="s">'NAME'</span><span class="p">]</span> <span class="o">==</span> <span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">name</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">get_node_name</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="s">'NAME'</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">get_total_cp</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="s">'CP'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+</code></pre></div></div>
+
+<h3 id="analyze-with-vs-without-weights-for-shortest-paths">Analyze with vs without weights for shortest paths</h3>
+<ul>
+  <li>Find the differences in profits between these two methods for all nodes</li>
+  <li>Then try out different paths (i.e. paths under a certain length) and compare those</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Dijkstra gives shortest path length
+</span><span class="n">g</span><span class="o">.</span><span class="n">shortest_paths_dijkstra</span><span class="p">(</span><span class="n">get_node_id</span><span class="p">([</span><span class="s">"Abandoned Iron Mine"</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="n">get_node_id</span><span class="p">([</span><span class="s">"Calpheon"</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">g</span><span class="o">.</span><span class="n">shortest_paths_dijkstra</span><span class="p">(</span><span class="n">get_node_id</span><span class="p">([</span><span class="s">"Abandoned Iron Mine"</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="n">get_node_id</span><span class="p">([</span><span class="s">"Calpheon"</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="n">weights</span> <span class="o">=</span> <span class="s">"weight"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[[17.0]]
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get_shortest_paths</span><span class="p">(</span><span class="n">get_node_id</span><span class="p">([</span><span class="s">"Calpheon"</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="n">get_node_id</span><span class="p">([</span><span class="s">"Abandoned Iron Mine"</span><span class="p">])[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">a</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[66, 98, 94, 59, 226, 192, 143, 102, 159, 11, 309, 36, 148, 21, 0]
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">get_node_name</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>array(['Calpheon', 'Dias Farm', 'Delphe Knights Castle', 'Biraghi Den',
+       'Northern Plain Of Serendia', 'Lynch Farm Ruins', 'Heidel',
+       'Eastern Border', 'Kamasylve Temple', 'Ahto Farm',
+       'Stonetail Horse Ranch', 'Asula Highland', 'Highland Junction',
+       'Altinova Entrance', 'Abandoned Iron Mine'], dtype=object)
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">get_total_cp</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>23
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Get all node IDs that edges point to
+</span><span class="n">destinations</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">get_edgelist</span><span class="p">()]</span>
+<span class="n">cp_cost</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:][</span><span class="s">"CP"</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">destinations</span><span class="p">]</span>
+<span class="n">g</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s">"weight"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp_cost</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">attributes</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{'weight': 1}
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">b</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get_shortest_paths</span><span class="p">(</span><span class="n">get_node_id</span><span class="p">([</span><span class="s">"Calpheon"</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="n">get_node_id</span><span class="p">([</span><span class="s">"Abandoned Iron Mine"</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="n">weights</span> <span class="o">=</span> <span class="s">"weight"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">b</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[66, 116, 204, 242, 62, 226, 192, 143, 102, 159, 11, 309, 36, 148, 21, 0]
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">get_node_name</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[66                Calpheon
+ 116       Falres Dirt Farm
+ 204       Marni Farm Ruins
+               ...         
+ 148      Highland Junction
+ 21       Altinova Entrance
+ 0      Abandoned Iron Mine
+ Name: NAME, Length: 16, dtype: object]
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">get_total_cp</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>20
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">node_dist</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>NODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>AREA</th>
+      <th>TYPE</th>
+      <th>REGION_MOD_PERCENT</th>
+      <th>CONNECTIONS</th>
+      <th>NODE_NAME</th>
+      <th>MIN_DIST</th>
+      <th>MIN_CITY</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine</td>
+      <td>2</td>
+      <td>Mediah</td>
+      <td>Worker Node</td>
+      <td>0.0</td>
+      <td>Abandoned Iron Mine Saunil District, Abandoned...</td>
+      <td>Abandoned Iron Mine</td>
+      <td>1113.0</td>
+      <td>Altinova</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine Entrance</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Highland Junction, Alumn Rock Valley</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Abandoned Iron Mine Rhutum District</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Abandoned Iron Mine, Abun</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>356</th>
+      <td>357</td>
+      <td>Yalt Canyon</td>
+      <td>1</td>
+      <td>Valencia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Shakatu, Gahaz Bandit's Lair</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>357</th>
+      <td>358</td>
+      <td>Yianaros's Field</td>
+      <td>1</td>
+      <td>Kamasylvia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Western Valtarra Mountains</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>358</th>
+      <td>359</td>
+      <td>Zagam Island</td>
+      <td>1</td>
+      <td>Margoria</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Nada Island</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>359 rows × 10 columns</p>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">node</span><span class="o">.</span><span class="n">index</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RangeIndex(start=0, stop=359, step=1)
+</code></pre></div></div>
+
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

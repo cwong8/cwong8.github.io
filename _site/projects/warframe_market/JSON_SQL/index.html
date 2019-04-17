@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Warframe.market API scrape</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="schema-design">Schema design</h1>
+<p>We need to design a schema for our database.</p>
+
+<p>We are using the <a href="https://docs.google.com/document/d/1121cjBNN4BeZdMBGil6Qbuqse-sWpEXPpitQH5fb_Fo/edit">Warframe.market API</a>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># MySQL create database - make sure your MySQL bin (...\MySQL\MySQL Server 8.0\bin) is in your %PATH% global environment
+# Then run this in your command prompt: 
+#    mysql -u user -p
+#    CREATE DATABASE warframe_market;
+</span>
+<span class="c1"># Server connection to MySQL:
+</span><span class="kn">import</span> <span class="nn">MySQLdb</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="o">=</span> <span class="s">"localhost"</span><span class="p">,</span>
+                  <span class="n">user</span><span class="o">=</span><span class="s">"root"</span><span class="p">,</span>
+                  <span class="n">passwd</span><span class="o">=</span><span class="s">"4216UGOk!2013R@MS!"</span><span class="p">,</span>
+                  <span class="n">db</span><span class="o">=</span><span class="s">"warframe_market"</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+
+<span class="c1"># Start session
+</span><span class="n">s</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">"Platform"</span><span class="p">:</span><span class="s">"pc"</span><span class="p">,</span> <span class="s">"Language"</span><span class="p">:</span><span class="s">"en"</span><span class="p">})</span>
+
+<span class="c1"># Get all items JSON data from API
+</span><span class="n">items</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"https://api.warframe.market/v1/items"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="c1">### Partial view
+</span><span class="n">items</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"items"</span><span class="p">][</span><span class="s">"en"</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[{'thumb': 'sub_icons/handle_128x128.png',
+  'item_name': 'Scindo Prime Handle',
+  'id': '54a73e65e779893a797fff5d',
+  'url_name': 'scindo_prime_handle'},
+ {'thumb': 'sub_icons/neuroptics_128x128.png',
+  'item_name': 'Ember Prime Neuroptics',
+  'id': '54a73e65e779893a797fff6d',
+  'url_name': 'ember_prime_neuroptics'},
+ {'thumb': 'sub_icons/blueprint_128x128.png',
+  'item_name': 'Loki Prime Blueprint',
+  'id': '54a73e65e779893a797fff7c',
+  'url_name': 'loki_prime_blueprint'},
+ {'thumb': 'sub_icons/chassis_128x128.png',
+  'item_name': 'Ember Prime Chassis',
+  'id': '54a73e65e779893a797fff7e',
+  'url_name': 'ember_prime_chassis'},
+ {'thumb': 'icons/en/thumbs/Hammer_Shot.fb11fe7457d821871f4c92b9acea585e.128x128.png',
+  'item_name': 'Hammer Shot',
+  'id': '54a74454e779892d5e51558d',
+  'url_name': 'hammer_shot'},
+ {'thumb': 'icons/en/thumbs/Seeking_Force.9efcc6f0d43c53ca9a57a65d753de6f3.128x128.png',
+  'item_name': 'Seeking Force',
+  'id': '54a74454e779892d5e51558f',
+  'url_name': 'seeking_force'}]
+</code></pre></div></div>
+
+<h4 id="create-items-table">Create items table</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create 'items' table
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS items (
+    item_id VARCHAR(255) NOT NULL PRIMARY KEY,
+    item_name VARCHAR(255),
+    url_name VARCHAR(255))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+<span class="c1"># Populate table 'items' with item JSON data
+</span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"items"</span><span class="p">][</span><span class="s">"en"</span><span class="p">]:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s">"""
+        INSERT INTO items (item_id, item_name, url_name)
+        VALUES (</span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s)
+        """</span><span class="p">,</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s">"id"</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s">"item_name"</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s">"url_name"</span><span class="p">]])</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>C:\Users\Christopher Wong\Anaconda3\lib\site-packages\ipykernel_launcher.py:9: Warning: (1050, "Table 'items' already exists")
+  if __name__ == '__main__':
+</code></pre></div></div>
+
+<h4 id="now-we-want-to-get-the-item-information-for-each-item">Now we want to get the item information for each item.</h4>
+<p>After a quick manual inspection, we find that different items have different dictionary headers. Thus, we need to find all possible dictionary headers for every item.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Using time.sleep to not flood API requests. Recommend 3 requests per second
+</span><span class="kn">import</span> <span class="nn">time</span>
+
+<span class="c1"># Using set because we want only unique elements
+</span><span class="n">all_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+<span class="c1">############################################################################
+# HEY YO, THIS TAKES LIKE 25 MINUTES TO RUN SO DON'T USE IT MORE THAN ONCE #
+############################################################################
+</span>
+<span class="c1"># Get all dictionary keys from JSON for all items
+</span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"items"</span><span class="p">][</span><span class="s">"en"</span><span class="p">]:</span>
+    <span class="c1"># Url switch-a-roo that goes through all item urls
+</span>    <span class="n">url_name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s">"url_name"</span><span class="p">]</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"https://api.warframe.market/v1/items/"</span> <span class="o">+</span> <span class="n">url_name</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="c1"># Grabs all the dictionary keys from each item page
+</span>    <span class="k">for</span> <span class="n">item_in_set</span> <span class="ow">in</span> <span class="n">req</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"item"</span><span class="p">][</span><span class="s">"items_in_set"</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">item_in_set</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">all_keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    
+    <span class="c1"># I use 2 requests per second max
+</span>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    
+<span class="n">all_keys</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{'de',
+ 'ducats',
+ 'en',
+ 'fr',
+ 'icon',
+ 'icon_format',
+ 'id',
+ 'ko',
+ 'mastery_level',
+ 'mod_max_rank',
+ 'rarity',
+ 'ru',
+ 'set_root',
+ 'sub_icon',
+ 'sv',
+ 'tags',
+ 'thumb',
+ 'trading_tax',
+ 'url_name',
+ 'zh'}
+</code></pre></div></div>
+
+<p>We see that “tags” are a many-to-many relationship with items, as well as “drop” in the “en” header. Thus, we also need to find all tags and drops in our data. We do this so we can use a 3-table design with a bridge table to nicely store our many-to-many relationships.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Using set because we want only unique elements
+</span><span class="n">all_tags</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+<span class="c1">############################################################################
+# HEY YO, THIS TAKES LIKE 25 MINUTES TO RUN SO DON'T USE IT MORE THAN ONCE #
+############################################################################
+</span>
+<span class="c1"># Get all tags
+</span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"items"</span><span class="p">][</span><span class="s">"en"</span><span class="p">]:</span>
+    <span class="c1"># Url switch-a-roo that goes through all item urls
+</span>    <span class="n">url_name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s">"url_name"</span><span class="p">]</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"https://api.warframe.market/v1/items/"</span> <span class="o">+</span> <span class="n">url_name</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="c1"># Grabs all tags from each item page
+</span>    <span class="k">for</span> <span class="n">item_in_set</span> <span class="ow">in</span> <span class="n">req</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"item"</span><span class="p">][</span><span class="s">"items_in_set"</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"tags"</span><span class="p">]:</span>
+            <span class="n">all_tags</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+    
+    <span class="c1"># I use 2 requests per second max
+</span>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    
+<span class="c1">### Partial list
+</span><span class="nb">list</span><span class="p">(</span><span class="n">all_tags</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['shot gun',
+ 'archwing gun',
+ 'k-drive',
+ 'titania',
+ 'gunblade',
+ 'dagger',
+ 'link',
+ 'exilus',
+ 'chassis',
+ 'unique']
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Using set because we want only unique elements
+</span><span class="n">all_drops</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+<span class="c1">############################################################################
+# HEY YO, THIS TAKES LIKE 25 MINUTES TO RUN SO DON'T USE IT MORE THAN ONCE #
+############################################################################
+</span>
+<span class="c1"># Get all drops
+</span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"items"</span><span class="p">][</span><span class="s">"en"</span><span class="p">]:</span>
+    <span class="c1"># Url switch-a-roo that goes through all item urls
+</span>    <span class="n">url_name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s">"url_name"</span><span class="p">]</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"https://api.warframe.market/v1/items/"</span> <span class="o">+</span> <span class="n">url_name</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="c1"># Grabs all drops from each item page
+</span>    <span class="k">for</span> <span class="n">item_in_set</span> <span class="ow">in</span> <span class="n">req</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"item"</span><span class="p">][</span><span class="s">"items_in_set"</span><span class="p">]:</span>
+        <span class="c1"># Check if drop header exists
+</span>        <span class="k">if</span> <span class="s">"drop"</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">drop</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">][</span><span class="s">"drop"</span><span class="p">]:</span>
+                <span class="n">all_drops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">drop</span><span class="p">[</span><span class="s">"name"</span><span class="p">])</span>
+                
+    <span class="c1"># I use 2 requests per second max
+</span>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    
+<span class="c1">### Partial list
+</span><span class="nb">list</span><span class="p">(</span><span class="n">all_drops</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['Captain Vor',
+ 'Neo S2 Common',
+ 'The Grustrag Three',
+ 'Neo N3 Uncommon',
+ 'CorpusSniper Crewman',
+ 'Feyarch Specter',
+ 'Corrupted Butcher',
+ 'Meso V1 Rare',
+ 'Axi L3 Uncommon',
+ 'Dark Sector Defense']
+</code></pre></div></div>
+
+<h4 id="create-tags-and-drops-table-and-the-bridge-tables">Create tags and drops table (and the bridge tables)</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create 'tags' table
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS tags (
+    tag_id INT AUTO_INCREMENT PRIMARY KEY,
+    tag_name VARCHAR(255))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+    
+<span class="c1"># Populate table 'tags' with all tags
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span>
+    <span class="s">"""
+    INSERT INTO tags (tag_name)
+    VALUES (</span><span class="si">%</span><span class="s">s)
+    """</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_tags</span><span class="p">))</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+    
+<span class="c1"># Create 'items_tags' bridge table
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS items_tags (
+    item_id VARCHAR(255),
+    FOREIGN KEY (item_id) REFERENCES items(item_id),
+    tag_id INT,
+    FOREIGN KEY (tag_id) REFERENCES tags(tag_id))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create 'drops' table
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS drops (
+    drop_id INT AUTO_INCREMENT PRIMARY KEY,
+    drop_name VARCHAR(255))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+<span class="c1"># Populate table 'drops' with all drops
+# Unicode "\u2019" is annoying
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">drop</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_drops</span><span class="p">):</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s">"""
+        INSERT INTO drops (drop_name)
+        VALUES (</span><span class="si">%</span><span class="s">s)
+        """</span><span class="p">,</span> <span class="p">[</span><span class="n">drop</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">"</span><span class="se">\u2019</span><span class="s">"</span><span class="p">,</span> <span class="s">"'"</span><span class="p">)])</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+    
+<span class="c1"># Create 'items_drops' bridge table
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS items_drops (
+    item_id VARCHAR(255),
+    FOREIGN KEY (item_id) REFERENCES items(item_id),
+    drop_id INT,
+    FOREIGN KEY (drop_id) REFERENCES drops(drop_id))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h4 id="item-sets">Item sets</h4>
+<p>We see that items are grouped by their item sets. Thus, we want to have a separate table containing all item sets in the game.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Using set because we want only unique elements
+</span><span class="n">all_sets</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+<span class="c1">############################################################################
+# HEY YO, THIS TAKES LIKE 25 MINUTES TO RUN SO DON'T USE IT MORE THAN ONCE #
+############################################################################
+</span>
+<span class="c1"># Get all dictionary keys from JSON for all items
+</span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"items"</span><span class="p">][</span><span class="s">"en"</span><span class="p">]:</span>
+    <span class="c1"># Url switch-a-roo that goes through all item urls
+</span>    <span class="n">url_name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s">"url_name"</span><span class="p">]</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"https://api.warframe.market/v1/items/"</span> <span class="o">+</span> <span class="n">url_name</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="c1"># Grabs sets from each item page if it is part of a set (i.e. more than one item is returned)
+</span>    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">req</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"item"</span><span class="p">][</span><span class="s">"items_in_set"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item_in_set</span> <span class="ow">in</span> <span class="n">req</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"item"</span><span class="p">][</span><span class="s">"items_in_set"</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"set_root"</span><span class="p">]:</span>
+                <span class="n">all_sets</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">][</span><span class="s">"item_name"</span><span class="p">])</span>
+    
+    <span class="c1"># I use 2 requests per second max
+</span>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="c1">### Partial list
+</span><span class="nb">list</span><span class="p">(</span><span class="n">all_sets</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>['Lex Prime Set',
+ 'Scindo Prime Set',
+ 'Ballistica Prime Set',
+ 'Tiberon Prime Set',
+ 'Wolf Sledge Set',
+ 'Akbolto Prime Set',
+ 'Rathbone Set',
+ 'Akstiletto Prime Set',
+ 'Ash Prime Set',
+ 'Venka Prime Set']
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create 'sets' table
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS sets (
+    set_id INT AUTO_INCREMENT PRIMARY KEY,
+    set_name VARCHAR(255))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+    
+<span class="c1"># Populate table 'sets' with all sets
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span>
+    <span class="s">"""
+    INSERT INTO sets (set_name)
+    VALUES (</span><span class="si">%</span><span class="s">s)
+    """</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_sets</span><span class="p">))</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h4 id="item-info">Item info</h4>
+<p>Just a big scraper.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Using time.sleep to not flood API requests. Recommend 3 requests per second
+</span><span class="kn">import</span> <span class="nn">time</span>
+
+
+<span class="c1"># Smart scraper: if an item is a sibling to the requested item then it is already scraped and we skip it
+</span><span class="n">scraped_items</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+<span class="c1"># HTML tag cleaner
+</span><span class="kn">import</span> <span class="nn">re</span>
+<span class="k">def</span> <span class="nf">cleanhtml</span><span class="p">(</span><span class="n">raw_html</span><span class="p">):</span>
+  <span class="n">cleanr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="s">'&lt;.*?&gt;'</span><span class="p">)</span>
+  <span class="n">cleantext</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">cleanr</span><span class="p">,</span> <span class="s">''</span><span class="p">,</span> <span class="n">raw_html</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">cleantext</span>
+
+<span class="c1"># Create 'item_info' table
+</span><span class="k">try</span><span class="p">:</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+    <span class="s">"""
+    CREATE TABLE IF NOT EXISTS item_info (
+    item_id VARCHAR(255) PRIMARY KEY,
+    FOREIGN KEY (item_id) REFERENCES items(item_id),
+    item_name VARCHAR(255),
+    item_description VARCHAR(1000) DEFAULT NULL,
+    item_wiki VARCHAR(255) DEFAULT NULL,
+    rarity VARCHAR(255) DEFAULT NULL,
+    mastery_level INT DEFAULT NULL,
+    trading_tax INT DEFAULT NULL,
+    mod_max_rank INT DEFAULT NULL,
+    ducats INT DEFAULT NULL,
+    set_id INT DEFAULT NULL,
+    FOREIGN KEY (set_id) REFERENCES sets(set_id))
+    """</span><span class="p">)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"items"</span><span class="p">][</span><span class="s">"en"</span><span class="p">]:</span>
+    <span class="c1"># Navigate to item information page
+</span>    <span class="n">url_name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s">"url_name"</span><span class="p">]</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"https://api.warframe.market/v1/items/"</span> <span class="o">+</span> <span class="n">url_name</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    
+    <span class="c1"># If there is more than one item returned, then it is part of a set and we want to find which one
+</span>    <span class="n">set_id</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">req</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"item"</span><span class="p">][</span><span class="s">"items_in_set"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">item_in_set</span> <span class="ow">in</span> <span class="n">req</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"item"</span><span class="p">][</span><span class="s">"items_in_set"</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">item_in_set</span><span class="p">[</span><span class="s">"set_root"</span><span class="p">]):</span>
+                <span class="n">item_set</span> <span class="o">=</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">][</span><span class="s">"item_name"</span><span class="p">]</span>
+                <span class="n">set_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_sql_query</span><span class="p">(</span><span class="s">"""
+                SELECT set_id
+                FROM sets
+                WHERE set_name LIKE </span><span class="si">%</span><span class="s">s
+                """</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">item_set</span><span class="p">])</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    
+    <span class="c1"># Get all item information
+</span>    <span class="k">for</span> <span class="n">item_in_set</span> <span class="ow">in</span> <span class="n">req</span><span class="p">[</span><span class="s">"payload"</span><span class="p">][</span><span class="s">"item"</span><span class="p">][</span><span class="s">"items_in_set"</span><span class="p">]:</span>
+        <span class="c1"># Item ID
+</span>        <span class="n">item_id</span> <span class="o">=</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"id"</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">item_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scraped_items</span><span class="p">:</span>
+            <span class="c1"># Item name
+</span>            <span class="n">item_name</span> <span class="o">=</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">][</span><span class="s">"item_name"</span><span class="p">]</span>
+
+            <span class="c1"># Description
+</span>            <span class="n">item_description</span> <span class="o">=</span> <span class="n">cleanhtml</span><span class="p">(</span><span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">][</span><span class="s">"description"</span><span class="p">])</span>
+
+            <span class="c1"># Wiki link
+</span>            <span class="k">if</span> <span class="s">"wiki_link"</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">]:</span>
+                <span class="n">item_wiki</span> <span class="o">=</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">][</span><span class="s">"wiki_link"</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">item_wiki</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="c1"># Drops (if applicable)
+</span>            <span class="c1"># This populates our bridge table 'items_drops'
+</span>            <span class="k">if</span> <span class="s">"drop"</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">drop</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"en"</span><span class="p">][</span><span class="s">"drop"</span><span class="p">]:</span>
+                    <span class="c1"># Get drop_id from drop_name
+</span>                    <span class="n">drop_id</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql_query</span><span class="p">(</span><span class="s">"""
+                    SELECT drop_id
+                    FROM drops
+                    WHERE drop_name LIKE </span><span class="si">%</span><span class="s">s
+                    """</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">drop</span><span class="p">[</span><span class="s">"name"</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">"</span><span class="se">\u2019</span><span class="s">"</span><span class="p">,</span> <span class="s">"'"</span><span class="p">)])</span>
+
+                    <span class="c1"># Add to 'items_drops'
+</span>                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                        <span class="s">"""
+                        INSERT INTO items_drops (item_id, drop_id)
+                        VALUES (</span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s)
+                        """</span><span class="p">,</span> <span class="p">[</span><span class="n">item_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">drop_id</span><span class="o">.</span><span class="n">values</span><span class="p">)])</span>
+                        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+            <span class="c1"># Tags
+</span>            <span class="c1"># This populates our bridge table 'items_tags'
+</span>            <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"tags"</span><span class="p">]:</span>
+                <span class="c1"># Get tag_id from tag_name
+</span>                <span class="n">tag_id</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql_query</span><span class="p">(</span><span class="s">"""
+                SELECT tag_id
+                FROM tags
+                WHERE tag_name LIKE </span><span class="si">%</span><span class="s">s
+                """</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">tag</span><span class="p">])</span>
+
+                <span class="c1"># Add to 'items_tags'
+</span>                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="s">"""
+                    INSERT INTO items_tags (item_id, tag_id)
+                    VALUES (</span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s)
+                    """</span><span class="p">,</span> <span class="p">[</span><span class="n">item_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">tag_id</span><span class="o">.</span><span class="n">values</span><span class="p">)])</span>
+                    <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+            <span class="c1"># Ducats (if applicable)
+</span>            <span class="k">if</span> <span class="s">"ducats"</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">:</span>
+                <span class="n">ducats</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">item_in_set</span><span class="p">[</span><span class="s">"ducats"</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ducats</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="c1"># Mastery level (if applicable)
+</span>            <span class="k">if</span> <span class="s">"mastery_level"</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">:</span>
+                <span class="n">mastery_level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">item_in_set</span><span class="p">[</span><span class="s">"mastery_level"</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mastery_level</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="c1"># Trading tax (if applicable)
+</span>            <span class="k">if</span> <span class="s">"trading_tax"</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">:</span>
+                <span class="n">trading_tax</span> <span class="o">=</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"trading_tax"</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">trading_tax</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="c1"># Max mod rank (if applicable)
+</span>            <span class="k">if</span> <span class="s">"mod_max_rank"</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">:</span>
+                <span class="n">mod_max_rank</span> <span class="o">=</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"mod_max_rank"</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mod_max_rank</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="c1"># Rarity (if applicable)
+</span>            <span class="k">if</span> <span class="s">"rarity"</span> <span class="ow">in</span> <span class="n">item_in_set</span><span class="p">:</span>
+                <span class="n">rarity</span> <span class="o">=</span> <span class="n">item_in_set</span><span class="p">[</span><span class="s">"rarity"</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rarity</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="c1"># Insert into item_info table
+</span>            <span class="k">try</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                <span class="s">"""
+                INSERT INTO item_info (item_id, item_name, item_description, item_wiki, rarity, mastery_level, trading_tax, mod_max_rank, ducats, set_id)
+                VALUES (</span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s, </span><span class="si">%</span><span class="s">s)
+                """</span><span class="p">,</span> <span class="p">[</span><span class="n">item_id</span><span class="p">,</span> <span class="n">item_name</span><span class="p">,</span> <span class="n">item_description</span><span class="p">,</span> <span class="n">item_wiki</span><span class="p">,</span> <span class="n">rarity</span><span class="p">,</span> <span class="n">mastery_level</span><span class="p">,</span> <span class="n">trading_tax</span><span class="p">,</span> <span class="n">mod_max_rank</span><span class="p">,</span> <span class="n">ducats</span><span class="p">,</span> <span class="n">set_id</span><span class="p">])</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+            <span class="c1"># Smart scraper function
+</span>            <span class="n">scraped_items</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item_id</span><span class="p">)</span>
+  
+    <span class="c1"># 2 requests per second
+</span>    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Save workspace
+</span><span class="k">del</span> <span class="n">conn</span>
+<span class="k">del</span> <span class="n">x</span>
+
+<span class="kn">import</span> <span class="nn">dill</span>
+<span class="c1">#dill.dump_session('market.db') # Save
+#dill.load_session('market.db') # Load
+</span>
+<span class="c1">### https://github.com/WFCD - Warframe community developers
+</span></code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>
