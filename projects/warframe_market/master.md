@@ -21,4 +21,4 @@ Data was taken from the [warframe.market API](https://docs.google.com/document/d
 
 <center><img src="market_schema.PNG"></center>
 
-[SQL data]({{ site.baseurl }}/projects/warframe_market/warframe_market.sql/)
+[SQL data]({{ site.baseurl }}/projects/warframe_market/warframe_market.sql)
