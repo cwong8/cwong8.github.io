@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Warframe Alerts visualization
+title: Warframe.market API
 permalink: /projects/warframe_market/
 ---
 
@@ -21,4 +21,4 @@ Data was taken from the [warframe.market API](https://docs.google.com/document/d
 
 <center><img src="market_schema.png"></center>
 
-[SQL data]({{ site.baseurl }}/projects/warframe_market/warframe_market.sql/)
+[SQL data]({{ site.baseurl }}/projects/warframe_market/warframe_market.sql)

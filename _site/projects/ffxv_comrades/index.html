@@ -27,22 +27,27 @@
       <a href="/about/" class="btn">About</a>
       <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
       <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
-      <h2 class="page-name"><font color="white" size="22">Black Desert Online Worker Optimization</font></h2>
+      <h2 class="page-name"><font color="white" size="22">Final Fantasy XV Comrades Item Optimizer</font></h2>
     </section>
 
     <section class="main-content">
       
-      <p>This part of the project is currently on hold. As it turns out, optimizing paths on a graph with many variables is very difficult. I have tried two different methods so far: recursive ant colony optimization and using Python’s igraph library to find and calculate “reasonable” paths. Calculating paths between 300+ nodes on a weighted graph has a high time complexity which seems to make the last method unfeasible.</p>
+      <h1 id="table-of-contents">Table of contents</h1>
+<ol>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="/projects/ffxv_comrades/Optimization/">Optimization</a></li>
+  <li><a href="#future">Future improvements</a></li>
+</ol>
 
-<p>I plan on learning machine learning to see if those methods will assist in finishing this project.</p>
+<h2 id="introduction-">Introduction <a name="introduction"></a></h2>
 
-<h2 id="recursive-ant-colony-optimization">Recursive ant colony optimization</h2>
+<p>Just a simple linear programming problem I came across while playing Final Fantasy XV Comrades. Uses the PuLP library in Python to minimize experience needed to fulfill weapons’ leveling requirements.</p>
 
-<p>This was my first attempt at optimizing, using a modified version of the ant colony optimization algorithm from <a href="https://github.com/Akavall/AntColonyOptimization">Akavall’s Github</a>. My Python script can be downloaded here: <a href="/projects/BDO_Optimization/optimization/ant_colony_modified.py">ant_colony_modified.py</a></p>
+<h2 id="furture-improvements-">Furture improvements <a name="future"></a></h2>
 
-<h2 id="igraph">igraph</h2>
-
-<p>Second attempt used igraph before I ran into a problem of time complexity. <a href="/projects/BDO_Optimization/optimization/igraph_optimization/">igraph_optimization.md</a></p>
+<li>Creating a dynamic webapp using Javascript.</li>
+<li>Generating a database containing all evolvable weapons.</li>
+<li>Adding options to calculate with Cid buffs.</li>
 
 
       <footer class="site-footer">

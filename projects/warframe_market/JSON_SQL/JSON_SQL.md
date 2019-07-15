@@ -19,8 +19,8 @@ We are using the [Warframe.market API](https://docs.google.com/document/d/1121cj
 # Server connection to MySQL:
 import MySQLdb
 conn = MySQLdb.connect(host= "localhost",
-                  user="root",
-                  passwd="4216UGOk!2013R@MS!",
+                  user="yourusername",
+                  passwd="yourpassword",
                   db="warframe_market")
 
 x = conn.cursor()

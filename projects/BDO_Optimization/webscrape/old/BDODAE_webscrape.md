@@ -1,11 +1,8 @@
 ---
 layout: page
 title: Black Desert Online Worker Optimization
-permalink: /projects/BDO_Optimization/webscrape/
+permalink: /projects/BDO_Optimization/webscrape/old/
 ---
-
-# Schema
-<center><img src="schema.png"></center>
 
 # Web Scraping
 I web scraped the website [bdodae.com](https://www.bdodae.com/) for data to use for my project. Since I am optimizing profits I need item values and information about the nodes.
@@ -39,33 +36,21 @@ import MySQLdb
 conn = MySQLdb.connect(host= "localhost",
                   user="yourusername",
                   passwd="yourpassword",
-                  db="bdodae_new")
+                  db="bdodae")
 
 x = conn.cursor()
-
-# Create table for items
-try:
-    x.execute(
-    """
-    CREATE TABLE IF NOT EXISTS item (
-    item_id INT NOT NULL PRIMARY KEY,
-    name CHAR(50) NOT NULL)
-    """)
-    conn.commit()
-except:
-    conn.rollback()
 
 # Create table for prices
 try:
     x.execute(
     """
-    CREATE TABLE IF NOT EXISTS prices (
-    item_id INT NOT NULL,
-    FOREIGN KEY (item_id) REFERENCES item(item_id),
-    user_average INT,
-    recent_value INT,
-    vendor_sell INT,
-    vendor_buy INT DEFAULT NULL)
+    CREATE TABLE IF NOT EXISTS PRICES (
+    ITEM_ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    ITEM CHAR(50) NOT NULL,
+    USER_AVERAGE INT,
+    RECENT_VALUE INT,
+    VENDOR_SELL INT,
+    VENDOR_BUY INT DEFAULT NULL)
     """)
     conn.commit()
 except:
@@ -140,24 +125,19 @@ for item, button, i in zip(items, value_buttons, range(len(items))):
     try:
         x.execute(
         """
-        INSERT INTO item (item_id, name)
-        VALUES (%s, %s)
-        """, [i] + [values_list[0]])
-        x.execute(
-        """
-        INSERT INTO prices (item_id, user_average, recent_value, vendor_buy, vendor_sell)
+        INSERT INTO prices (item, user_average, recent_value, vendor_buy, vendor_sell)
         VALUES (%s, %s, %s, %s, %s)
-        """, [i] + values_list[1:])
+        """, values_list)
         conn.commit()
     except:
         conn.rollback()
     # Wait until hidden table pops up
     # If one of the values in the table is a duplicate, then the CSS selector has a 3 instead of 2 at the end
     # Weird, but it's just how it is
-    #if (len(set(values_list)) == 3 or len(set(values_list)) == 4):
-    #    element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "tr.search:nth-child(" + str(i+2) + ") > td:nth-child(2) > div:nth-child(1) > div:nth-child(3)")))
-    #else:
-    #    element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "tr.search:nth-child(" + str(i+2) + ") > td:nth-child(2) > div:nth-child(1) > div:nth-child(2)")))
+    if (len(set(values_list)) == 3 or len(set(values_list)) == 4):
+        element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "tr.search:nth-child(" + str(i+2) + ") > td:nth-child(2) > div:nth-child(1) > div:nth-child(3)")))
+    else:
+        element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "tr.search:nth-child(" + str(i+2) + ") > td:nth-child(2) > div:nth-child(1) > div:nth-child(2)")))
     # Click off the values box to close the hidden table
     off_button = driver.find_element_by_css_selector("tr.search:nth-child(" + str(i+2) + ") > td:nth-child(3)")
     off_button.click()
@@ -167,82 +147,6 @@ for item, button, i in zip(items, value_buttons, range(len(items))):
     #action.reset_actions()
     time.sleep(1)
 ```
-
-
-```python
-pd.options.display.max_rows = 6
-# Table 'item' that we obtained from web scraping bdodae.com
-item = pd.read_sql('SELECT * FROM item', con = conn)
-item
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>item_id</th>
-      <th>name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0</td>
-      <td>Acacia Sap</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1</td>
-      <td>Acacia Timber</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2</td>
-      <td>Aloe</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>210</th>
-      <td>210</td>
-      <td>White Umbrella Mushroom</td>
-    </tr>
-    <tr>
-      <th>211</th>
-      <td>211</td>
-      <td>Withered Leaf</td>
-    </tr>
-    <tr>
-      <th>212</th>
-      <td>212</td>
-      <td>Zinc Ore</td>
-    </tr>
-  </tbody>
-</table>
-<p>213 rows × 2 columns</p>
-</div>
-
-
 
 
 ```python
@@ -393,8 +297,6 @@ soup_level1 = BeautifulSoup(driver.page_source, 'lxml')
 links = soup_level1.find_all('a', {'href' : re.compile("^index\.php\?node"), 'class' : False})
 ```
 
-- Rehauled table "subnode". Better database practice using connections tables for many-to-many connections (a subnode can have many items and items can belong to many subnodes; same for cities) and one-to-many connections (an item can have many yields; same for cities can have many distances).
-
 
 ```python
 # Server Connection to MySQL:
@@ -402,7 +304,7 @@ import MySQLdb
 conn = MySQLdb.connect(host= "localhost",
                   user="yourusername",
                   passwd="yourpassword",
-                  db="bdodae_new")
+                  db="bdodae")
 
 x = conn.cursor()
 
@@ -410,14 +312,14 @@ x = conn.cursor()
 try:
     x.execute(
     """
-    CREATE TABLE IF NOT EXISTS node (
-    node_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name CHAR(50) NOT NULL,
-    cp INT DEFAULT 0,
-    area CHAR(50),
-    type CHAR(50),
-    region_mod_percent FLOAT DEFAULT NULL,
-    connections CHAR(255))
+    CREATE TABLE IF NOT EXISTS NODE (
+    NODE_ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    NAME CHAR(50) NOT NULL,
+    CP INT DEFAULT 0,
+    AREA CHAR(50),
+    TYPE CHAR(50),
+    REGION_MOD_PERCENT FLOAT DEFAULT NULL,
+    CONNECTIONS CHAR(255))
     """)
     conn.commit()
 except:
@@ -427,77 +329,31 @@ except:
 try:
     x.execute(
     """
-    CREATE TABLE IF NOT EXISTS subnode (
-    subnode_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name CHAR(50) NOT NULL,
-    cp INT DEFAULT 0,
-    base_workload INT DEFAULT NULL,
-    current_workload INT DEFAULT NULL,
-    node_id INT NOT NULL,
-    FOREIGN KEY (node_id) REFERENCES node(node_id))
-    """)
-    conn.commit()
-except:
-    conn.rollback()
-
-# Create tables for cities
-try:
-    x.execute(
-    """
-    CREATE TABLE IF NOT EXISTS city (
-    city_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name CHAR(50) NOT NULL)
-    """)
-    conn.commit()
-except:
-    conn.rollback()
-
-# Create tables for yields (items) and distances (cities)
-try:
-    x.execute(
-    """
-    CREATE TABLE IF NOT EXISTS yield (
-    yield_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    amount INT DEFAULT NULL,
-    item_id INT NOT NULL,
-    FOREIGN KEY (item_id) REFERENCES item(item_id))
-    """)
-    x.execute(
-    """
-    CREATE TABLE IF NOT EXISTS distance (
-    distance_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    amount INT DEFAULT NULL,
-    city_id INT NOT NULL,
-    FOREIGN KEY (city_id) REFERENCES city(city_id))
-    """)
-    conn.commit()
-except:
-    conn.rollback()
-
-# Create junction tables for subnode/city and subnode/item
-try:
-    x.execute(
-    """
-    CREATE TABLE IF NOT EXISTS subnode_item (
-    subnode_id INT NOT NULL,
-    FOREIGN KEY (subnode_id) REFERENCES subnode(subnode_id),
-    item_id INT NOT NULL,
-    FOREIGN KEY (item_id) REFERENCES item(item_id))
-    """)
-    x.execute(
-    """
-    CREATE TABLE IF NOT EXISTS subnode_city (
-    subnode_id INT NOT NULL,
-    FOREIGN KEY (subnode_id) REFERENCES subnode(subnode_id),
-    city_id INT NOT NULL,
-    FOREIGN KEY (city_id) REFERENCES city(city_id))
+    CREATE TABLE IF NOT EXISTS SUBNODE (
+    SUBNODE_ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    NAME CHAR(50) NOT NULL,
+    CP INT DEFAULT 0,
+    BASE_WORKLOAD INT DEFAULT NULL,
+    CURRENT_WORKLOAD INT DEFAULT NULL,
+    ITEM1 CHAR(50) DEFAULT NULL,
+    ITEM2 CHAR(50) DEFAULT NULL,
+    ITEM3 CHAR(50) DEFAULT NULL,
+    ITEM4 CHAR(50) DEFAULT NULL,
+    YIELD1 FLOAT DEFAULT NULL,
+    YIELD2 FLOAT DEFAULT NULL,
+    YIELD3 FLOAT DEFAULT NULL,
+    YIELD4 FLOAT DEFAULT NULL,
+    DISTANCE1 INT DEFAULT 0,
+    DISTANCE2 INT DEFAULT NULL,
+    DISTANCE3 INT DEFAULT NULL,
+    CITY1 CHAR(50),
+    CITY2 CHAR(50) DEFAULT NULL,
+    CITY3 CHAR(50) DEFAULT NULL)
     """)
     conn.commit()
 except:
     conn.rollback()
 ```
-
-# Master
 
 
 ```python
@@ -544,10 +400,8 @@ for link in links:
         conn.commit()
     except:
         conn.rollback()
+        
     
-    # node_id is the primary key for the node table and foreign key to the subnode table
-    node_id = pd.read_sql("SELECT LAST_INSERT_ID();", con = conn).iloc[0, 0]
-
     # Get subnode information if it exists
     # Otherwise this part does nothing
     node_subnode_subtype = soup_level2.find_all(class_ = 's_subtype')
@@ -566,101 +420,401 @@ for link in links:
         node_subnode_cp = [re.split('\s(?=\dCP)', text.get_text())[1][0]]
         # Workload information should come in pairs: base and current workload
         if (len(node_subnode_workload) % 2) == 0:
-            base_workload = [re.search('\d+', node_subnode_workload[2*i].get_text()).group(0)]
-            current_workload = [re.search('\d+', node_subnode_workload[(2*i)+1].get_text()).group(0)]
-        try:
-            x.execute("""
-            INSERT INTO subnode (name, cp, base_workload, current_workload, node_id)
-            VALUES (%s, %s, %s, %s, %s)
-            """, [node_subnode_name,
-                  node_subnode_cp,
-                  base_workload,
-                  current_workload,
-                  node_id])
-            conn.commit()
-        except:
-            conn.rollback()
-        
-        # subnode_id is the primary key of subnode and foreign keys to subnode_city and subnode_item
-        subnode_id = pd.read_sql("SELECT LAST_INSERT_ID();", con = conn).iloc[0, 0]
-        
+            base_workload = [re.search('\d+', node_subnode_workload[(2*i)-1].get_text()).group(0)]
+            current_workload = [re.search('\d+', node_subnode_workload[2*i].get_text()).group(0)]
         # Subnode tables should come in pairs: one containing items and yields, other containing distances and cities
+        # Also add None until list is the correct length
         if (len(node_subnode_tables) % 2) == 0:
-            # Get all items for a subnode
             node_subnode_item = node_subnode_tables[2*i]["Item"]
-            # Get all item yields for a subnode
+            node_subnode_item_list = []
+            for item in node_subnode_item:
+                node_subnode_item_list.append(item)
+            while len(node_subnode_item_list) < 4:
+                node_subnode_item_list.append(None)
             node_subnode_yield = node_subnode_tables[2*i]["Avg"]
-            for item, yield_ in zip(node_subnode_item, node_subnode_yield):
-                # item_id is a primary key for item and foreign key to subnode_item
-                # yield_id is primary key to yield; item_id is foreign key to item.item_id primary key
-                item_id = pd.read_sql("SELECT item_id FROM item WHERE item.name = %(item)s;", con = conn, params = {"item": item}).iloc[0, 0]
-                try:
-                    x.execute(
-                    """
-                    INSERT INTO subnode_item (subnode_id, item_id)
-                    VALUES (%s, %s)
-                    """, [subnode_id, item_id])
-                    x.execute(
-                    """
-                    INSERT INTO yield (amount, item_id)
-                    VALUES (%s, %s)
-                    """, [yield_, item_id])
-                    conn.commit()
-                except:
-                    conn.rollback()
-            
-            # Get all cities near subnode
-            node_city = node_subnode_tables[(2*i)+1]["City"]
-            # Get all distances of close cities
+            node_subnode_yield_list = []
+            for yields in node_subnode_yield:
+                node_subnode_yield_list.append(yields)
+            while len(node_subnode_yield_list) < 4:
+                node_subnode_yield_list.append(None)
             node_distance = node_subnode_tables[(2*i)+1]["Range"]
-            for city, distance in zip(node_city, node_distance):
-                # If a city is not in the city table, we add it to the table
-                if (pd.read_sql("SELECT city_id FROM city WHERE city.name = %(city)s;", con = conn, params = {"city": city}).empty):
-                    try:
-                        x.execute("""
-                        INSERT INTO city (name)
-                        VALUES (%s)
-                        """, [city])
-                        conn.commit()
-                    except:
-                        conn.rollback()
-                city_id = pd.read_sql("SELECT city_id FROM city WHERE city.name = %(city)s", con = conn, params = {"city": city}).iloc[0, 0]
-                try:
-                    x.execute("""
-                    INSERT INTO subnode_city (subnode_id, city_id)
-                    VALUES (%s, %s)
-                    """, [subnode_id, city_id])
-                    x.execute("""
-                    INSERT INTO distance (amount, city_id)
-                    VALUES (%s, %s)
-                    """, [distance, city_id])
-                    conn.commit()
-                except:
-                    conn.rollback()
+            node_distance_list = []
+            for distance in node_distance:
+                node_distance_list.append(distance)
+            while len(node_distance_list) < 3:
+                node_distance_list.append(None)
+            node_city = node_subnode_tables[(2*i)+1]["City"]
+            node_city_list = []
+            for city in node_city:
+                node_city_list.append(city)
+            while len(node_city_list) < 3:
+                node_city_list.append(None)
+
+            # Combine info into one variable
+            subnode_list = [node_subnode_name,
+                            node_subnode_cp,
+                            base_workload,
+                            current_workload,
+                            node_subnode_item_list,
+                            node_subnode_yield_list,
+                            node_distance_list,
+                            node_city_list]
+            subnode_list = list(chain.from_iterable(subnode_list))
+
+            # Insert into MySQL database 'subnode'
+            try:
+                x.execute(
+                """
+                INSERT INTO subnode (name, cp, base_workload, current_workload,
+                                  item1, item2, item3, item4, yield1, yield2, yield3, yield4,
+                                  distance1, distance2, distance3, city1, city2, city3)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, subnode_list)
+                conn.commit()
+            except:
+                conn.rollback()
+
                 
+        
     # Back it up
     driver.execute_script("window.history.go(-1)")
-
 ```
 
 
 ```python
-# Server Connection to MySQL:
-import MySQLdb
-conn = MySQLdb.connect(host= "localhost",
-                  user="yourusername",
-                  passwd="yourpassword",
-                  db="bdodae_new")
-
-x = conn.cursor()
-
 # Post-processing cleaning
 x.execute(
 """
 UPDATE node
     SET connections = 'North Kaia Ferry, Catfishman Camp, Calpheon Castle'
-    WHERE name = "Calpheon Castle Site";
+    WHERE node_id = 69;
 """
 )
-conn.commit()
 ```
+
+
+```python
+pd.options.display.max_rows = 6
+# Table 'node' that we obtained from web scraping bdodae.com
+node = pd.read_sql('SELECT * FROM node', con = conn)
+node
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>NODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>AREA</th>
+      <th>TYPE</th>
+      <th>REGION_MOD_PERCENT</th>
+      <th>CONNECTIONS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine</td>
+      <td>2</td>
+      <td>Mediah</td>
+      <td>Worker Node</td>
+      <td>0.0</td>
+      <td>Abandoned Iron Mine Saunil District, Abandoned...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine Entrance</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Highland Junction, Alumn Rock Valley</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Abandoned Iron Mine Rhutum District</td>
+      <td>1</td>
+      <td>Mediah</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Abandoned Iron Mine, Abun</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>356</th>
+      <td>357</td>
+      <td>Yalt Canyon</td>
+      <td>1</td>
+      <td>Valencia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Shakatu, Gahaz Bandit's Lair</td>
+    </tr>
+    <tr>
+      <th>357</th>
+      <td>358</td>
+      <td>Yianaros's Field</td>
+      <td>1</td>
+      <td>Kamasylvia</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Western Valtarra Mountains</td>
+    </tr>
+    <tr>
+      <th>358</th>
+      <td>359</td>
+      <td>Zagam Island</td>
+      <td>1</td>
+      <td>Margoria</td>
+      <td>Connection Node</td>
+      <td>NaN</td>
+      <td>Nada Island</td>
+    </tr>
+  </tbody>
+</table>
+<p>359 rows × 7 columns</p>
+</div>
+
+
+
+
+```python
+# Table 'subnode' that we obtained from web scraping bdodae.com
+subnode = pd.read_sql('SELECT * FROM subnode', con = conn)
+subnode
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>SUBNODE_ID</th>
+      <th>NAME</th>
+      <th>CP</th>
+      <th>BASE_WORKLOAD</th>
+      <th>CURRENT_WORKLOAD</th>
+      <th>ITEM1</th>
+      <th>ITEM2</th>
+      <th>ITEM3</th>
+      <th>ITEM4</th>
+      <th>YIELD1</th>
+      <th>YIELD2</th>
+      <th>YIELD3</th>
+      <th>YIELD4</th>
+      <th>DISTANCE1</th>
+      <th>DISTANCE2</th>
+      <th>DISTANCE3</th>
+      <th>CITY1</th>
+      <th>CITY2</th>
+      <th>CITY3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>Abandoned Iron Mine - Mining.1</td>
+      <td>3</td>
+      <td>200</td>
+      <td>250</td>
+      <td>Zinc Ore</td>
+      <td>Powder Of Time</td>
+      <td>Platinum Ore</td>
+      <td>None</td>
+      <td>7.86</td>
+      <td>1.86</td>
+      <td>0.95</td>
+      <td>NaN</td>
+      <td>1113</td>
+      <td>2063</td>
+      <td>NaN</td>
+      <td>Altinova</td>
+      <td>Tarif</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>Abandoned Iron Mine - Mining.2</td>
+      <td>3</td>
+      <td>500</td>
+      <td>100</td>
+      <td>Iron Ore</td>
+      <td>Powder Of Darkness</td>
+      <td>Rough Black Crystal</td>
+      <td>None</td>
+      <td>10.53</td>
+      <td>1.80</td>
+      <td>1.08</td>
+      <td>NaN</td>
+      <td>1113</td>
+      <td>2063</td>
+      <td>NaN</td>
+      <td>Altinova</td>
+      <td>Tarif</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>Ahto Farm - Farming.1</td>
+      <td>2</td>
+      <td>200</td>
+      <td>100</td>
+      <td>Cotton</td>
+      <td>Cotton Yarn</td>
+      <td>None</td>
+      <td>None</td>
+      <td>12.53</td>
+      <td>0.85</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>702</td>
+      <td>2000</td>
+      <td>2325.0</td>
+      <td>Tarif</td>
+      <td>Heidel</td>
+      <td>Altinova</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>169</th>
+      <td>170</td>
+      <td>Weenie Cabin - Gathering.1</td>
+      <td>2</td>
+      <td>140</td>
+      <td>140</td>
+      <td>Volcanic Umbrella Mushroom</td>
+      <td>Green Pendulous Mushroom</td>
+      <td>None</td>
+      <td>None</td>
+      <td>7.70</td>
+      <td>6.90</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1608</td>
+      <td>3025</td>
+      <td>6005.0</td>
+      <td>Grana</td>
+      <td>Old Wisdom Tree</td>
+      <td>Trent</td>
+    </tr>
+    <tr>
+      <th>170</th>
+      <td>171</td>
+      <td>Weita Island - Fish Drying Yard.1</td>
+      <td>1</td>
+      <td>2400</td>
+      <td>1200</td>
+      <td>Dried Surfperch</td>
+      <td>Dried Bluefish</td>
+      <td>Dried Maomao</td>
+      <td>Dried Nibbler</td>
+      <td>3.60</td>
+      <td>1.80</td>
+      <td>0.90</td>
+      <td>0.08</td>
+      <td>1620</td>
+      <td>3291</td>
+      <td>3340.0</td>
+      <td>Iliya Island</td>
+      <td>Velia</td>
+      <td>Olvia</td>
+    </tr>
+    <tr>
+      <th>171</th>
+      <td>172</td>
+      <td>Wolf Hills - Lumbering.1</td>
+      <td>1</td>
+      <td>150</td>
+      <td>100</td>
+      <td>Ash Timber</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>4.43</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>340</td>
+      <td>1902</td>
+      <td>NaN</td>
+      <td>Olvia</td>
+      <td>Velia</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+<p>172 rows × 19 columns</p>
+</div>
+
+
