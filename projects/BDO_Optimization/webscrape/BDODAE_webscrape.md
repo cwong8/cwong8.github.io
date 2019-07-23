@@ -5,7 +5,7 @@ permalink: /projects/BDO_Optimization/webscrape/
 ---
 
 # Schema
-<center><img src="schema.png"></center>
+<center><img src="schema.PNG"></center>
 
 # Web Scraping
 I web scraped the website [bdodae.com](https://www.bdodae.com/) for data to use for my project. Since I am optimizing profits I need item values and information about the nodes.

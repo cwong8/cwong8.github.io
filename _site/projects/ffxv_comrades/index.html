@@ -35,13 +35,228 @@
       <h1 id="table-of-contents">Table of contents</h1>
 <ol>
   <li><a href="#introduction">Introduction</a></li>
-  <li><a href="/projects/ffxv_comrades/Optimization/">Optimization</a></li>
+  <li><a href="#optimization">Optimization</a></li>
   <li><a href="#future">Future improvements</a></li>
 </ol>
 
 <h2 id="introduction-">Introduction <a name="introduction"></a></h2>
 
 <p>Just a simple linear programming problem I came across while playing Final Fantasy XV Comrades. Uses the PuLP library in Python to minimize experience needed to fulfill weapons’ leveling requirements.</p>
+
+<h2 id="optimization-">Optimization <a name="optimization"></a></h2>
+
+<h2 id="ffxv-comrades-item-optimizer">FFXV Comrades Item Optimizer</h2>
+
+<p>Something I was curious about while playing the game. It works, but it’s not “complete” because I want to add more features such as hosting on a dynamic webpage, calculating optimal solutions for all weapons, adding Cid buff variables, etc.</p>
+
+<p>In general this was a very simple project; the only part that took some time and thought was formulating the problem as a linear programming (LP) problem which I just put through the package PuLP.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Solving a simple linear programming problem following this tutorial:
+# https://pythonhosted.org/PuLP/CaseStudies/a_blending_problem.html
+</span>
+<span class="c1"># Importing the usual packages
+</span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+
+<span class="c1"># Import PuLP modeler functions
+</span><span class="kn">from</span> <span class="nn">pulp</span> <span class="kn">import</span> <span class="o">*</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create the 'prob' variable to contain the problem data
+</span><span class="n">prob</span> <span class="o">=</span> <span class="n">LpProblem</span><span class="p">(</span><span class="s">"FF15 Comrades Weapon Upgrade Optimization"</span><span class="p">,</span> <span class="n">LpMinimize</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Importing spreadsheet containing all upgrade item data from "FFXV Comrades Cheat Sheet 2.0"
+# https://docs.google.com/spreadsheets/d/1BEGmEHH5TlnlZhSRLx1ToZzijeLm7--jB_QafNSSBCk/edit
+</span><span class="n">item_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="s">"FFXV Comrades Cheat Sheet 2.0.xlsx"</span><span class="p">,</span> <span class="n">sheet_name</span> <span class="o">=</span> <span class="s">"Items"</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">usecols</span> <span class="o">=</span> <span class="s">"B:N"</span><span class="p">)</span>
+
+<span class="c1"># Fill missing values with 0
+</span><span class="n">item_data</span> <span class="o">=</span> <span class="n">item_data</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">item_data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Item</th>
+      <th>HP</th>
+      <th>MP</th>
+      <th>STR</th>
+      <th>VIT</th>
+      <th>MAG</th>
+      <th>SPI</th>
+      <th>FIR</th>
+      <th>ICE</th>
+      <th>LNG</th>
+      <th>DRK</th>
+      <th>SHT</th>
+      <th>EXP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Accursed Coin</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.02</td>
+      <td>0.0</td>
+      <td>490</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Ammonite Fossil</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>450</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Anak Antlers</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>890</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Anak Fetlock</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>4.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>550</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Ancient Cloth</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>5.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>860</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Creating list of items
+</span><span class="n">Items</span> <span class="o">=</span> <span class="n">item_data</span><span class="p">[</span><span class="s">"Item"</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+<span class="c1"># Creating dictionary "Items" to contained referenced variables. Also we can only have integer amounts of items used.
+</span><span class="n">item_vars</span> <span class="o">=</span> <span class="n">LpVariable</span><span class="o">.</span><span class="n">dicts</span><span class="p">(</span><span class="s">"Items"</span><span class="p">,</span> <span class="n">Items</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">LpInteger</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create dictionary of all stats
+</span><span class="n">itemSTATS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">item_data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+    <span class="n">itemSTATS</span><span class="p">[</span><span class="n">stat</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">item_data</span><span class="p">[[</span><span class="s">"Item"</span><span class="p">,</span> <span class="n">stat</span><span class="p">]]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">"Item"</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()[</span><span class="n">stat</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Add objective function to 'prob'
+</span><span class="n">prob</span> <span class="o">+=</span> <span class="n">lpSum</span><span class="p">([</span><span class="n">itemSTATS</span><span class="p">[</span><span class="s">"EXP"</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">item_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">Items</span><span class="p">]),</span> <span class="s">"Total experience used"</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">### Can put this in a loop in the final product that takes in a list [str, vit, ..., sht, exp]
+</span>
+<span class="c1"># Add item-specific stat constraints
+# In this case, we will use Corsesca, requiring 20 STR, 20 VIT, 20 MAG, 20 SPI to evolve at level 30 &amp;
+# 99 STR, 99 VIT to evolve at level 60
+</span><span class="n">prob</span> <span class="o">+=</span> <span class="n">lpSum</span><span class="p">([</span><span class="n">itemSTATS</span><span class="p">[</span><span class="s">"STR"</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">item_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">Items</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s">"StrengthRequirement"</span>
+<span class="n">prob</span> <span class="o">+=</span> <span class="n">lpSum</span><span class="p">([</span><span class="n">itemSTATS</span><span class="p">[</span><span class="s">"VIT"</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">item_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">Items</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s">"VitalityRequirement"</span>
+<span class="n">prob</span> <span class="o">+=</span> <span class="n">lpSum</span><span class="p">([</span><span class="n">itemSTATS</span><span class="p">[</span><span class="s">"MAG"</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">item_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">Items</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s">"MagicRequirement"</span>
+<span class="n">prob</span> <span class="o">+=</span> <span class="n">lpSum</span><span class="p">([</span><span class="n">itemSTATS</span><span class="p">[</span><span class="s">"SPI"</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">item_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">Items</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s">"SpiritRequirement"</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># The problem data is written to an .lp file
+</span><span class="n">prob</span><span class="o">.</span><span class="n">writeLP</span><span class="p">(</span><span class="s">"ComradesTest.lp"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># The problem is solved using PuLP's choice of Solver
+</span><span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># The status of the solution is printed to the screen
+</span><span class="k">print</span><span class="p">(</span><span class="s">"Status:"</span><span class="p">,</span> <span class="n">LpStatus</span><span class="p">[</span><span class="n">prob</span><span class="o">.</span><span class="n">status</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Status: Optimal
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Each of the variables is printed with it's resolved optimum value
+</span><span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">prob</span><span class="o">.</span><span class="n">variables</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">varValue</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">"="</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">varValue</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Items_Ancient_Cloth = 1.0
+Items_Dragon_Horn = 1.0
+Items_Octolegs = 1.0
+Items_Rough_Scale = 3.0
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># The optimised objective function value is printed to the screen
+</span><span class="k">print</span><span class="p">(</span><span class="s">"Total experience used = "</span><span class="p">,</span> <span class="n">value</span><span class="p">(</span><span class="n">prob</span><span class="o">.</span><span class="n">objective</span><span class="p">))</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Total experience used =  5580.0
+</code></pre></div></div>
 
 <h2 id="furture-improvements-">Furture improvements <a name="future"></a></h2>
 

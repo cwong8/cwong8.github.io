@@ -1,9 +1,3 @@
----
-layout: page
-title: Warframe.market API scrape
-permalink: /projects/ffxv_comrades/Optimization/
----
-
 ## FFXV Comrades Item Optimizer
 
 Something I was curious about while playing the game. It works, but it's not "complete" because I want to add more features such as hosting on a dynamic webpage, calculating optimal solutions for all weapons, adding Cid buff variables, etc.
