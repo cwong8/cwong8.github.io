@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139929620-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-139929620-1');
+  </script>
+
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Help Desk</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="help-desk"><a href="https://sqlzoo.net/wiki/Help_Desk">Help Desk</a></h1>
+
+<h3 id="helpdesk-easy-questions">Helpdesk Easy Questions</h3>
+
+<ol>
+  <li>There are three issues that include the words “index” and “Oracle”. Find the call_date for each of them.</li>
+</ol>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">call_date</span><span class="p">,</span> <span class="n">call_ref</span>
+<span class="k">FROM</span> <span class="n">Issue</span>
+<span class="k">WHERE</span> <span class="n">detail</span> <span class="k">LIKE</span> <span class="s1">'%index%'</span> <span class="k">AND</span> <span class="n">detail</span> <span class="k">LIKE</span> <span class="s1">'%Oracle%'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>2. Samantha Hall made three calls on 2017-08-14. Show the date and time for each.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span><span class="p">,</span> <span class="n">Caller</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">Caller</span><span class="p">.</span><span class="n">last_name</span>
+<span class="k">FROM</span> <span class="n">Caller</span> <span class="k">JOIN</span> <span class="n">Issue</span> <span class="k">ON</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span>
+<span class="k">WHERE</span> <span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span> <span class="k">LIKE</span> <span class="s1">'%2017-08-14%'</span> <span class="k">AND</span> <span class="n">first_name</span> <span class="o">=</span> <span class="s1">'Samantha'</span> <span class="k">AND</span> <span class="n">last_name</span> <span class="o">=</span> <span class="s1">'Hall'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>3. There are 500 calls in the system (roughly). Write a query that shows the number that have each status.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Issue</span><span class="p">.</span><span class="n">status</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">Volume</span>
+<span class="k">FROM</span> <span class="n">Issue</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">status</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>4. Calls are not normally assigned to a manager but it does happen. How many calls have been assigned to staff who are at Manager Level?</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">mlcc</span>
+<span class="k">FROM</span> <span class="n">Issue</span> <span class="k">JOIN</span> <span class="n">Staff</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">assigned_to</span> <span class="o">=</span> <span class="n">Staff</span><span class="p">.</span><span class="n">staff_code</span>
+  <span class="k">JOIN</span> <span class="k">Level</span> <span class="k">ON</span> <span class="n">Staff</span><span class="p">.</span><span class="n">level_code</span> <span class="o">=</span> <span class="k">Level</span><span class="p">.</span><span class="n">level_code</span>
+<span class="k">WHERE</span> <span class="k">Level</span><span class="p">.</span><span class="n">manager</span> <span class="o">=</span> <span class="s1">'Y'</span>
+</code></pre></div></div>
+
+<p>5. Show the manager for each shift. Your output should include the shift date and type; also the first and last name of the manager.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Shift</span><span class="p">.</span><span class="n">shift_date</span><span class="p">,</span> <span class="n">Shift</span><span class="p">.</span><span class="n">shift_type</span><span class="p">,</span> <span class="n">Staff</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">Staff</span><span class="p">.</span><span class="n">last_name</span>
+<span class="k">FROM</span> <span class="n">Shift</span> <span class="k">JOIN</span> <span class="n">Staff</span> <span class="k">ON</span> <span class="n">Shift</span><span class="p">.</span><span class="n">Manager</span> <span class="o">=</span> <span class="n">Staff</span><span class="p">.</span><span class="n">Staff_code</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">Shift</span><span class="p">.</span><span class="n">shift_date</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="helpdesk-medium-questions">Helpdesk Medium Questions</h3>
+
+<p>6. List the Company name and the number of calls for those companies with more than 18 calls.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">cc</span>
+<span class="k">FROM</span> <span class="n">Issue</span> <span class="k">JOIN</span> <span class="n">Caller</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span>
+  <span class="k">JOIN</span> <span class="n">Customer</span> <span class="k">ON</span> <span class="n">Caller</span><span class="p">.</span><span class="n">company_ref</span> <span class="o">=</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_ref</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span>
+<span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">18</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>7. Find the callers who have never made a call. Show first name and last name.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">first_name</span><span class="p">,</span> <span class="n">last_name</span>
+<span class="k">FROM</span> <span class="n">Caller</span>
+<span class="k">WHERE</span> <span class="n">caller_id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span>
+  <span class="k">FROM</span> <span class="n">Issue</span> <span class="k">JOIN</span> <span class="n">Caller</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>8. For each customer show: Company name, contact name, number of calls where the number of calls is fewer than 5.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">company_name</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">nc</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">nc</span><span class="p">,</span> <span class="n">Customer</span><span class="p">.</span><span class="n">contact_id</span>
+<span class="k">FROM</span> <span class="n">Customer</span> <span class="k">JOIN</span> <span class="n">Caller</span> <span class="k">ON</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_ref</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">company_ref</span>
+  <span class="k">JOIN</span> <span class="n">Issue</span> <span class="k">ON</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span><span class="p">,</span> <span class="n">Customer</span><span class="p">.</span><span class="n">contact_id</span>
+<span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">Caller</span><span class="p">)</span> <span class="k">AS</span> <span class="n">b</span>
+<span class="k">ON</span> <span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">contact_id</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">caller_id</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>9. For each shift show the number of staff assigned. Beware that some roles may be NULL and that the same person might have been assigned to multiple roles (The roles are ‘Manager’, ‘Operator’, ‘Engineer1’, ‘Engineer2’).</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">shift_date</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">shift_type</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="p">(</span><span class="k">role</span><span class="p">))</span> <span class="k">AS</span> <span class="n">cw</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">shift_date</span><span class="p">,</span> <span class="n">shift_type</span><span class="p">,</span> <span class="n">manager</span> <span class="k">AS</span> <span class="k">role</span>
+<span class="k">FROM</span> <span class="n">Shift</span>
+<span class="k">UNION</span> <span class="k">ALL</span>
+<span class="k">SELECT</span> <span class="n">shift_date</span><span class="p">,</span> <span class="n">shift_type</span><span class="p">,</span> <span class="k">operator</span> <span class="k">AS</span> <span class="k">role</span>
+<span class="k">FROM</span> <span class="n">Shift</span>
+<span class="k">UNION</span> <span class="k">ALL</span>
+<span class="k">SELECT</span> <span class="n">shift_date</span><span class="p">,</span> <span class="n">shift_type</span><span class="p">,</span> <span class="n">engineer1</span> <span class="k">AS</span> <span class="k">role</span>
+<span class="k">FROM</span> <span class="n">Shift</span>
+<span class="k">UNION</span> <span class="k">ALL</span>
+<span class="k">SELECT</span> <span class="n">shift_date</span><span class="p">,</span> <span class="n">shift_type</span><span class="p">,</span> <span class="n">engineer2</span> <span class="k">AS</span> <span class="k">role</span>
+<span class="k">FROM</span> <span class="n">Shift</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">shift_date</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">shift_type</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>10. Caller ‘Harry’ claims that the operator who took his most recent call was abusive and insulting. Find out who took the call (full name) and when.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Staff</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">Staff</span><span class="p">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">call_date</span>
+<span class="k">FROM</span> <span class="n">Issue</span> <span class="k">JOIN</span> <span class="n">Caller</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span>
+  <span class="k">JOIN</span> <span class="n">Staff</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">taken_by</span> <span class="o">=</span> <span class="n">Staff</span><span class="p">.</span><span class="n">staff_code</span>
+<span class="k">WHERE</span> <span class="n">Caller</span><span class="p">.</span><span class="n">first_name</span> <span class="o">=</span> <span class="s1">'Harry'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">call_date</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Or instead of using order by desc, we can use</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Staff</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">Staff</span><span class="p">.</span><span class="n">last_name</span><span class="p">,</span> <span class="k">MAX</span><span class="p">(</span><span class="n">call_date</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">Issue</span> <span class="k">JOIN</span> <span class="n">Caller</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span>
+  <span class="k">JOIN</span> <span class="n">Staff</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">taken_by</span> <span class="o">=</span> <span class="n">Staff</span><span class="p">.</span><span class="n">staff_code</span>
+<span class="k">WHERE</span> <span class="n">Caller</span><span class="p">.</span><span class="n">first_name</span> <span class="o">=</span> <span class="s1">'Harry'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Staff</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">Staff</span><span class="p">.</span><span class="n">last_name</span>
+<span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="helpdesk-hard-questions">Helpdesk Hard Questions</h3>
+
+<p>11. Show the manager and number of calls received for each hour of the day on 2017-08-12</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">date_hour</span> <span class="k">AS</span> <span class="n">Hr</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">cc</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">call_date</span><span class="p">,</span> <span class="s1">'%Y-%m-%d %H'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">date_hour</span><span class="p">,</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">call_date</span><span class="p">,</span> <span class="s1">'%Y-%m-%d'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">date</span><span class="p">,</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">call_date</span><span class="p">,</span> <span class="s1">'%H'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">hour</span>
+<span class="k">FROM</span> <span class="n">Issue</span>
+<span class="k">WHERE</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span><span class="p">,</span> <span class="s1">'%Y-%m-%d'</span><span class="p">)</span> <span class="o">=</span> <span class="s1">'2017-08-12'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">JOIN</span> <span class="n">Shift</span> <span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">Shift</span><span class="p">.</span><span class="n">shift_date</span>
+<span class="k">WHERE</span> <span class="n">Shift</span><span class="p">.</span><span class="n">shift_type</span> <span class="o">=</span> <span class="s1">'Early'</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">14</span> <span class="k">OR</span> <span class="n">Shift</span><span class="p">.</span><span class="n">shift_type</span> <span class="o">=</span> <span class="s1">'Late'</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="mi">14</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Shift</span><span class="p">.</span><span class="n">manager</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">date_hour</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">date_hour</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>12. 80/20 rule. It is said that 80% of the calls are generated by 20% of the callers. Is this true? What percentage of calls are generated by the most active 20% of callers.</p>
+
+<p>See this to calculate percentiles in MySQL: https://stackoverflow.com/a/4741301. Basically add a counter to our table of caller_id and calls for each caller_id sorted in descending order. Then we can select the top 20% of callers by using a WHERE statement on the proportion of top callers.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">calls_per_caller</span> <span class="o">/</span> <span class="p">(</span><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">Issue</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span> <span class="k">AS</span> <span class="n">t20pc</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="o">*</span><span class="p">,</span> <span class="o">@</span><span class="n">counter</span> <span class="p">:</span><span class="o">=</span> <span class="o">@</span><span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">AS</span> <span class="n">counter</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="o">@</span><span class="n">counter</span> <span class="p">:</span><span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">initvar</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">caller_id</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">calls_per_caller</span>
+<span class="k">FROM</span> <span class="n">Issue</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">caller_id</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">DESC</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="n">b</span>
+<span class="k">WHERE</span> <span class="n">counter</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="mi">20</span><span class="o">/</span><span class="mi">100</span> <span class="o">*</span> <span class="o">@</span><span class="n">counter</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>13. Annoying customers. Customers who call in the last five minutes of a shift are annoying. Find the most active customer who has never been annoying.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">abna</span>
+<span class="k">FROM</span> <span class="n">Issue</span> <span class="k">JOIN</span> <span class="n">Caller</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span>
+  <span class="k">JOIN</span> <span class="n">Customer</span> <span class="k">ON</span> <span class="n">Caller</span><span class="p">.</span><span class="n">company_ref</span> <span class="o">=</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_ref</span>
+<span class="k">WHERE</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span> <span class="k">NOT</span> <span class="k">IN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span>
+<span class="k">FROM</span> <span class="n">Customer</span> <span class="k">JOIN</span> <span class="n">Caller</span> <span class="k">ON</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_ref</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">company_ref</span>
+  <span class="k">JOIN</span> <span class="n">Issue</span> <span class="k">ON</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span>
+<span class="k">WHERE</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span><span class="p">,</span> <span class="s1">'%H:%i'</span><span class="p">)</span> <span class="k">BETWEEN</span> <span class="s1">'13:55'</span> <span class="k">AND</span> <span class="s1">'14:00'</span>
+  <span class="k">OR</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span><span class="p">,</span> <span class="s1">'%H:%i'</span><span class="p">)</span> <span class="k">BETWEEN</span> <span class="s1">'19:55'</span> <span class="k">AND</span> <span class="s1">'20:00'</span>
+<span class="p">)</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>14. Maximal usage. If every caller registered with a customer makes a call in one day then that customer has “maximal usage” of the service. List the maximal customers for 2017-08-13.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">company_name</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">caller_count</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">issue_count</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">issue_count</span>
+<span class="k">FROM</span> <span class="n">Customer</span> <span class="k">JOIN</span> <span class="n">Caller</span> <span class="k">ON</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_ref</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">company_ref</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="p">(</span><span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span><span class="p">))</span> <span class="k">AS</span> <span class="n">caller_count</span>
+<span class="k">FROM</span> <span class="n">Issue</span> <span class="k">JOIN</span> 
+<span class="n">Caller</span> <span class="k">ON</span> <span class="n">Issue</span><span class="p">.</span><span class="n">caller_id</span> <span class="o">=</span> <span class="n">Caller</span><span class="p">.</span><span class="n">caller_id</span>
+  <span class="k">JOIN</span> <span class="n">Customer</span> <span class="k">ON</span> <span class="n">Caller</span><span class="p">.</span><span class="n">company_ref</span> <span class="o">=</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_ref</span>
+<span class="k">WHERE</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">call_date</span><span class="p">,</span> <span class="s1">'%Y-%m-%d'</span><span class="p">)</span> <span class="o">=</span> <span class="s1">'2017-08-13'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Customer</span><span class="p">.</span><span class="n">company_name</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="n">b</span>
+<span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">issue_count</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">caller_count</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">company_name</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">company_name</span>
+</code></pre></div></div>
+
+<p>15. Consecutive calls occur when an operator deals with two callers within 10 minutes. Find the longest sequence of consecutive calls – give the name of the operator and the first and last call date in the sequence.</p>
+
+<p>Note that you cannot do a SELF JOIN with a.call_date &lt; b.call_date and a.call_ref &lt; b.call_ref because Issue.call_ref is NOT an auto-incrementing integer primary key. You can check yourself using</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">INFORMATION_SCHEMA</span><span class="p">.</span><span class="n">COLUMNS</span>
+<span class="k">WHERE</span> <span class="k">table_name</span> <span class="o">=</span> <span class="s1">'Issue'</span> <span class="k">AND</span> <span class="k">COLUMN_NAME</span> <span class="o">=</span> <span class="s1">'call_ref'</span>
+</code></pre></div></div>
+
+<p>and look under EXTRA which does not have auto-increment.</p>
+
+<p>Basic idea is that we need to have a counter that counts consecutive calls within 10 minutes of one another, a copy of call_date offset by 1 so that we can take time differences, and a variable holding the first call in a sequence of consecutive calls.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">taken_by</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">first_call</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">call_date</span> <span class="k">AS</span> <span class="n">last_call</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">call_count</span> <span class="k">AS</span> <span class="n">calls</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Issue</span><span class="p">.</span><span class="n">taken_by</span><span class="p">,</span> 
+       <span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span><span class="p">,</span>
+       <span class="o">@</span><span class="n">counter</span> <span class="p">:</span><span class="o">=</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="n">TIMESTAMPDIFF</span><span class="p">(</span><span class="k">MINUTE</span><span class="p">,</span> <span class="o">@</span><span class="n">current_call</span><span class="p">,</span> <span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">10</span>
+                          <span class="k">THEN</span> <span class="o">@</span><span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="k">ELSE</span> <span class="mi">1</span>
+                   <span class="k">END</span> <span class="k">AS</span> <span class="n">call_count</span><span class="p">,</span>
+       <span class="o">@</span><span class="n">first_call</span> <span class="p">:</span><span class="o">=</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="o">@</span><span class="n">counter</span> <span class="o">=</span> <span class="mi">1</span>
+                             <span class="k">THEN</span> <span class="o">@</span><span class="n">first_call</span> <span class="p">:</span><span class="o">=</span> <span class="n">call_date</span>
+                           <span class="k">ELSE</span> <span class="o">@</span><span class="n">first_call</span>
+                      <span class="k">END</span> <span class="k">AS</span> <span class="n">first_call</span><span class="p">,</span>
+       <span class="o">@</span><span class="n">current_call</span> <span class="p">:</span><span class="o">=</span> <span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span>
+<span class="k">FROM</span> <span class="n">Issue</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="o">@</span><span class="n">counter</span> <span class="p">:</span><span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="o">@</span><span class="n">first_call</span> <span class="p">:</span><span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="o">@</span><span class="n">current_call</span> <span class="p">:</span><span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">initvar</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">Issue</span><span class="p">.</span><span class="n">taken_by</span><span class="p">,</span> <span class="n">Issue</span><span class="p">.</span><span class="n">call_date</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">call_count</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

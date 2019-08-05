@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139929620-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-139929620-1');
+  </script>
+
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Adventure Works</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="adventure-works"><a href="https://sqlzoo.net/wiki/AdventureWorks">Adventure Works</a></h1>
+
+<h3 id="adventureworks-easy-questions">AdventureWorks Easy Questions</h3>
+
+<ol>
+  <li>Show the first name and the email address of customer with CompanyName ‘Bike World’</li>
+</ol>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">FirstName</span><span class="p">,</span> <span class="n">EmailAddress</span>
+<span class="k">FROM</span> <span class="n">Customer</span>
+<span class="k">WHERE</span> <span class="n">CompanyName</span> <span class="o">=</span> <span class="s1">'Bike World'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>2. Show the CompanyName for all customers with an address in City ‘Dallas’.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CompanyName</span>
+<span class="k">FROM</span> <span class="n">Customer</span> <span class="k">JOIN</span> <span class="n">CustomerAddress</span> <span class="k">ON</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span> <span class="o">=</span> <span class="n">CustomerAddress</span><span class="p">.</span><span class="n">CustomerID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">CustomerAddress</span><span class="p">.</span><span class="n">AddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span>
+<span class="k">WHERE</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span> <span class="o">=</span> <span class="s1">'Dallas'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>3. How many items with ListPrice more than $1000 have been sold?</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">Product</span> <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+<span class="k">WHERE</span> <span class="n">Product</span><span class="p">.</span><span class="n">ListPrice</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>4. Give the CompanyName of those customers with orders over $100000. Include the subtotal plus tax plus freight.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CompanyName</span><span class="p">,</span>
+       <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span><span class="p">,</span>
+       <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">TaxAmt</span><span class="p">,</span>
+       <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">Freight</span>
+<span class="k">FROM</span> <span class="n">Customer</span> <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">CustomerID</span>
+<span class="k">WHERE</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span> <span class="o">+</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">TaxAmt</span> <span class="o">+</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">Freight</span> <span class="o">&gt;</span> <span class="mi">100000</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>5. Find the number of left racing socks (‘Racing Socks, L’) ordered by CompanyName ‘Riding Cycles’</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span>
+<span class="k">FROM</span> <span class="n">Product</span> <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Customer</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">CustomerID</span> <span class="o">=</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span>
+<span class="k">WHERE</span> <span class="n">Product</span><span class="p">.</span><span class="n">Name</span> <span class="o">=</span> <span class="s1">'Racing Socks, L'</span> <span class="k">AND</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CompanyName</span> <span class="o">=</span> <span class="s1">'Riding Cycles'</span>
+</code></pre></div></div>
+
+<h3 id="adventureworks-medium-questions">AdventureWorks Medium Questions</h3>
+
+<p>6. A “Single Item Order” is a customer order where only one item is ordered. Show the SalesOrderID and the UnitPrice for every Single Item Order.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">CustomerID</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">)</span> <span class="k">AS</span> <span class="n">amount_ordered</span>
+<span class="k">FROM</span> <span class="n">SalesOrderDetail</span> <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">CustomerID</span><span class="p">,</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+<span class="k">HAVING</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>7. Where did the racing socks go? List the product name and the CompanyName for all Customers who ordered ProductModel ‘Racing Socks’.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductModelID</span><span class="p">,</span> <span class="n">Product</span><span class="p">.</span><span class="n">Name</span><span class="p">,</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CompanyName</span><span class="p">,</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span>
+<span class="k">FROM</span> <span class="n">Product</span> <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Customer</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">CustomerID</span> <span class="o">=</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span>
+<span class="k">WHERE</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductModelID</span> <span class="o">=</span> 
+  <span class="p">(</span><span class="k">SELECT</span> <span class="n">ProductModelID</span>
+  <span class="k">FROM</span> <span class="n">ProductModel</span>
+  <span class="k">WHERE</span> <span class="n">Name</span> <span class="o">=</span> <span class="s1">'Racing Socks'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>8. Show the product description for culture ‘fr’ for product with ProductID 736.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span><span class="p">,</span> <span class="n">ProductModelProductDescription</span><span class="p">.</span><span class="n">Culture</span><span class="p">,</span> <span class="n">ProductDescription</span><span class="p">.</span><span class="n">Description</span>
+<span class="k">FROM</span> <span class="n">ProductDescription</span> <span class="k">JOIN</span> <span class="n">ProductModelProductDescription</span> <span class="k">ON</span> <span class="n">ProductDescription</span><span class="p">.</span><span class="n">ProductDescriptionID</span> <span class="o">=</span> <span class="n">ProductModelProductDescription</span><span class="p">.</span><span class="n">ProductDescriptionID</span>
+  <span class="k">JOIN</span> <span class="n">ProductModel</span> <span class="k">ON</span> <span class="n">ProductModelProductDescription</span><span class="p">.</span><span class="n">ProductModelID</span> <span class="o">=</span> <span class="n">ProductModel</span><span class="p">.</span><span class="n">ProductModelID</span>
+  <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductModel</span><span class="p">.</span><span class="n">ProductModelID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductModelID</span>
+<span class="k">WHERE</span> <span class="n">ProductModelProductDescription</span><span class="p">.</span><span class="n">Culture</span> <span class="o">=</span> <span class="s1">'fr'</span> <span class="k">AND</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="mi">736</span>
+</code></pre></div></div>
+
+<p>9. Use the SubTotal value in SaleOrderHeader to list orders from the largest to the smallest. For each order show the CompanyName and the SubTotal and the total weight of the order.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CompanyName</span><span class="p">,</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">total_weight</span>
+<span class="k">FROM</span> <span class="n">SalesOrderHeader</span> <span class="k">JOIN</span> <span class="n">Customer</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">CustomerID</span> <span class="o">=</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span>
+  <span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">COALESCE</span><span class="p">(</span><span class="n">Product</span><span class="p">.</span><span class="n">Weight</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_weight</span>
+<span class="k">FROM</span> <span class="n">Product</span> <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">SalesOrderID</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">SalesOrderID</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span> <span class="k">DESC</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>10. How many products in ProductCategory ‘Cranksets’ have been sold to an address in ‘London’?</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span><span class="p">,</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">Name</span><span class="p">,</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">BillToAddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span> <span class="k">AND</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">ShipToAddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">Name</span> <span class="o">=</span> <span class="s1">'Cranksets'</span> <span class="k">AND</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span> <span class="o">=</span> <span class="s1">'London'</span>
+</code></pre></div></div>
+
+<h3 id="adventure-works-hard-questions">Adventure Works Hard Questions</h3>
+
+<p>11. For every customer with a ‘Main Office’ in Dallas show AddressLine1 of the ‘Main Office’ and AddressLine1 of the ‘Shipping’ address - if there is no shipping address leave it blank. Use one row per customer.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">main</span><span class="p">.</span><span class="n">CustomerID</span><span class="p">,</span> <span class="n">main</span><span class="p">.</span><span class="n">MainOffice</span><span class="p">,</span> <span class="n">shipping</span><span class="p">.</span><span class="n">Shipping</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span><span class="p">,</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressLine1</span> <span class="k">AS</span> <span class="n">MainOffice</span>
+<span class="k">FROM</span> <span class="n">Customer</span> <span class="k">JOIN</span> <span class="n">CustomerAddress</span> <span class="k">ON</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span> <span class="o">=</span> <span class="n">CustomerAddress</span><span class="p">.</span><span class="n">CustomerID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">CustomerAddress</span><span class="p">.</span><span class="n">AddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span>
+<span class="k">WHERE</span> <span class="n">CustomerAddress</span><span class="p">.</span><span class="n">AddressType</span> <span class="o">=</span> <span class="s1">'Main Office'</span> <span class="k">AND</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span> <span class="o">=</span> <span class="s1">'Dallas'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">main</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span><span class="p">,</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressLine1</span> <span class="k">AS</span> <span class="n">Shipping</span>
+<span class="k">FROM</span> <span class="n">Customer</span> <span class="k">JOIN</span> <span class="n">CustomerAddress</span> <span class="k">ON</span> <span class="n">Customer</span><span class="p">.</span><span class="n">CustomerID</span> <span class="o">=</span> <span class="n">CustomerAddress</span><span class="p">.</span><span class="n">CustomerID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">CustomerAddress</span><span class="p">.</span><span class="n">AddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span>
+<span class="k">WHERE</span> <span class="n">CustomerAddress</span><span class="p">.</span><span class="n">AddressType</span> <span class="o">=</span> <span class="s1">'Shipping'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">shipping</span>
+<span class="k">ON</span> <span class="n">main</span><span class="p">.</span><span class="n">CustomerID</span> <span class="o">=</span> <span class="n">shipping</span><span class="p">.</span><span class="n">CustomerID</span>
+</code></pre></div></div>
+
+<p>12. For each order show the SalesOrderID and SubTotal calculated three ways:
+  A) From the SalesOrderHeader
+  B) Sum of OrderQty<em>UnitPrice
+  C) Sum of OrderQty</em>ListPrice</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span><span class="p">,</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span> <span class="o">*</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">UnitPrice</span><span class="p">),</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span> <span class="o">*</span> <span class="n">Product</span><span class="p">.</span><span class="n">ListPrice</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">SalesOrderHeader</span> <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span><span class="p">,</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span>
+</code></pre></div></div>
+
+<p>13. Show the best selling item by value.</p>
+
+<p>I don’t think we sort by SalesOrderHeader.SubTotal because a sales order can contain multiple items.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span> <span class="o">*</span> <span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">UnitPrice</span> <span class="o">-</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">UnitPriceDiscount</span><span class="p">))</span> <span class="k">AS</span> <span class="n">total_sales</span>
+<span class="k">FROM</span> <span class="n">SalesOrderHeader</span> <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">ProductID</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">total_sales</span> <span class="k">DESC</span>
+</code></pre></div></div>
+
+<p>14. Show how many orders are in the following ranges (in $):</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RANGE      Num Orders      Total Value
+0-  99   100- 999  1000-9999 10000-
+</code></pre></div></div>
+
+<p>Pretty sure there’s an easier way to do this, but I don’t know how to using MySQL.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">count0_99</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span><span class="p">)</span> <span class="k">AS</span> <span class="n">value0_99</span>
+<span class="k">FROM</span> <span class="n">SalesOrderHeader</span>
+<span class="k">WHERE</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span> <span class="k">BETWEEN</span> <span class="mi">0</span> <span class="k">AND</span> <span class="mi">99</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">count100_999</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span><span class="p">)</span> <span class="k">AS</span> <span class="n">value100_999</span>
+<span class="k">FROM</span> <span class="n">SalesOrderHeader</span>
+<span class="k">WHERE</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span> <span class="k">BETWEEN</span> <span class="mi">100</span> <span class="k">AND</span> <span class="mi">9999</span><span class="p">)</span> <span class="k">AS</span> <span class="n">b</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">count1000_9999</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span><span class="p">)</span> <span class="k">AS</span> <span class="n">value1000_9999</span>
+<span class="k">FROM</span> <span class="n">SalesOrderHeader</span>
+<span class="k">WHERE</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span> <span class="k">BETWEEN</span> <span class="mi">1000</span> <span class="k">AND</span> <span class="mi">9999</span><span class="p">)</span> <span class="k">AS</span> <span class="k">c</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">count10000</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span><span class="p">)</span> <span class="k">AS</span> <span class="n">value10000</span>
+<span class="k">FROM</span> <span class="n">SalesOrderHeader</span>
+<span class="k">WHERE</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SubTotal</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">)</span> <span class="k">AS</span> <span class="n">d</span>
+</code></pre></div></div>
+
+<p>15. Identify the three most important cities. Show the break down of top level product category against city.</p>
+
+<p>Something like this for quantity of items sold to each city.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_sales_quantity</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">ShipToAddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">total_sales</span> <span class="k">DESC</span>
+</code></pre></div></div>
+
+<p>Here it is by dollar amount sold (quantity * unit price).</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span> <span class="o">*</span> <span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">UnitPrice</span> <span class="o">-</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">UnitPriceDiscount</span><span class="p">))</span> <span class="k">AS</span> <span class="n">total_sales</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">ShipToAddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">total_sales</span> <span class="k">DESC</span>
+</code></pre></div></div>
+
+<p>Here is a table containing percentage of quantity sold to each city represented as a percentage.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">City</span><span class="p">,</span> <span class="n">cat1</span><span class="p">.</span><span class="n">bike_percent</span><span class="p">,</span> <span class="n">cat2</span><span class="p">.</span><span class="n">component_percent</span><span class="p">,</span> <span class="n">cat3</span><span class="p">.</span><span class="n">clothing_percent</span><span class="p">,</span> <span class="n">cat4</span><span class="p">.</span><span class="n">accessory_percent</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">DISTINCT</span><span class="p">(</span><span class="n">City</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">Address</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span>
+  <span class="p">(</span><span class="n">COALESCE</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">one</span><span class="p">.</span><span class="n">total_1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">AS</span> <span class="n">bike_percent</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">ShipToAddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_1</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ParentProductCategoryID</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="k">AS</span> <span class="n">one</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ParentProductCategoryID</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span> <span class="n">one</span><span class="p">.</span><span class="n">total_1</span><span class="p">)</span> <span class="k">AS</span> <span class="n">cat1</span>
+<span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">City</span> <span class="o">=</span> <span class="n">cat1</span><span class="p">.</span><span class="n">City</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span>
+  <span class="p">(</span><span class="n">COALESCE</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">two</span><span class="p">.</span><span class="n">total_2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">AS</span> <span class="n">component_percent</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">ShipToAddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_2</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ParentProductCategoryID</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">two</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ParentProductCategoryID</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span> <span class="n">two</span><span class="p">.</span><span class="n">total_2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">cat2</span>
+<span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">City</span> <span class="o">=</span> <span class="n">cat2</span><span class="p">.</span><span class="n">City</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span>
+  <span class="p">(</span><span class="n">COALESCE</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">three</span><span class="p">.</span><span class="n">total_3</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">AS</span> <span class="n">clothing_percent</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">ShipToAddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_3</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ParentProductCategoryID</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">three</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ParentProductCategoryID</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span> <span class="n">three</span><span class="p">.</span><span class="n">total_3</span><span class="p">)</span> <span class="k">AS</span> <span class="n">cat3</span>
+<span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">City</span> <span class="o">=</span> <span class="n">cat3</span><span class="p">.</span><span class="n">City</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span>
+  <span class="p">(</span><span class="n">COALESCE</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">four</span><span class="p">.</span><span class="n">total_4</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">AS</span> <span class="n">accessory_percent</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderHeader</span> <span class="k">ON</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">SalesOrderID</span> <span class="o">=</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">SalesOrderID</span>
+  <span class="k">JOIN</span> <span class="n">Address</span> <span class="k">ON</span> <span class="n">SalesOrderHeader</span><span class="p">.</span><span class="n">ShipToAddressID</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">AddressID</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">SUM</span><span class="p">(</span><span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">OrderQty</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_4</span>
+<span class="k">FROM</span> <span class="n">ProductCategory</span> <span class="k">JOIN</span> <span class="n">Product</span> <span class="k">ON</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ProductCategoryID</span> <span class="o">=</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductCategoryID</span>
+  <span class="k">JOIN</span> <span class="n">SalesOrderDetail</span> <span class="k">ON</span> <span class="n">Product</span><span class="p">.</span><span class="n">ProductID</span> <span class="o">=</span> <span class="n">SalesOrderDetail</span><span class="p">.</span><span class="n">ProductID</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ParentProductCategoryID</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span> <span class="k">AS</span> <span class="n">four</span>
+<span class="k">WHERE</span> <span class="n">ProductCategory</span><span class="p">.</span><span class="n">ParentProductCategoryID</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="p">,</span> <span class="n">four</span><span class="p">.</span><span class="n">total_4</span><span class="p">)</span> <span class="k">AS</span> <span class="n">cat4</span>
+<span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">City</span> <span class="o">=</span> <span class="n">cat4</span><span class="p">.</span><span class="n">City</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">City</span>
+</code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

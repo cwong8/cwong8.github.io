@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139929620-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-139929620-1');
+  </script>
+
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Guest House</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="guest-house"><a href="https://sqlzoo.net/wiki/Guest_House">Guest House</a></h1>
+
+<h3 id="guest-house-easy-questions">Guest House Easy Questions</h3>
+
+<ol>
+  <li>Guest 1183. Give the booking_date and the number of nights for guest 1183.</li>
+</ol>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">booking_date</span><span class="p">,</span> <span class="n">nights</span>
+<span class="k">FROM</span> <span class="n">booking</span>
+<span class="k">WHERE</span> <span class="n">guest_id</span> <span class="o">=</span> <span class="mi">1183</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>2. When do they get here? List the arrival time and the first and last names for all guests due to arrive on 2016-11-05, order the output by time of arrival.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">booking</span><span class="p">.</span><span class="n">arrival_time</span><span class="p">,</span> <span class="n">guest</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">guest</span><span class="p">.</span><span class="n">last_name</span>
+<span class="k">FROM</span> <span class="n">booking</span> <span class="k">JOIN</span> <span class="n">guest</span> <span class="k">ON</span> <span class="n">booking</span><span class="p">.</span><span class="n">guest_id</span> <span class="o">=</span> <span class="n">guest</span><span class="p">.</span><span class="n">id</span>
+<span class="k">WHERE</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span> <span class="o">=</span> <span class="s1">'2016-11-05'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">booking</span><span class="p">.</span><span class="n">arrival_time</span> <span class="k">ASC</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>3. Look up daily rates. Give the daily rate that should be paid for bookings with ids 5152, 5165, 5154 and 5295. Include booking id, room type, number of occupants and the amount.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_id</span><span class="p">,</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_type_requested</span><span class="p">,</span> <span class="n">booking</span><span class="p">.</span><span class="n">occupants</span><span class="p">,</span> <span class="n">rate</span><span class="p">.</span><span class="n">amount</span>
+<span class="k">FROM</span> <span class="n">booking</span> <span class="k">JOIN</span> <span class="n">rate</span> <span class="k">ON</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_type_requested</span> <span class="o">=</span> <span class="n">rate</span><span class="p">.</span><span class="n">room_type</span> <span class="k">AND</span> <span class="n">booking</span><span class="p">.</span><span class="n">occupants</span> <span class="o">=</span> <span class="n">rate</span><span class="p">.</span><span class="n">occupancy</span>
+<span class="k">WHERE</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_id</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">5152</span><span class="p">,</span> <span class="mi">5165</span><span class="p">,</span> <span class="mi">5154</span><span class="p">,</span> <span class="mi">5295</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>4. Who’s in 101? Find who is staying in room 101 on 2016-12-03, include first name, last name and address.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">guest</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">guest</span><span class="p">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">guest</span><span class="p">.</span><span class="n">address</span>
+<span class="k">FROM</span> <span class="n">guest</span> <span class="k">JOIN</span> <span class="n">booking</span> <span class="k">ON</span> <span class="n">guest</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">booking</span><span class="p">.</span><span class="n">guest_id</span>
+<span class="k">WHERE</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_no</span> <span class="o">=</span> <span class="mi">101</span> <span class="k">AND</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span> <span class="o">=</span> <span class="s1">'2016-12-03'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>5. How many bookings, how many nights? For guests 1185 and 1270 show the number of bookings made and the total number of nights. Your output should include the guest id and the total number of bookings and the total number of nights.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">booking</span><span class="p">.</span><span class="n">guest_id</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="n">nights</span><span class="p">),</span> <span class="k">SUM</span><span class="p">(</span><span class="n">nights</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">booking</span>
+<span class="k">WHERE</span> <span class="n">booking</span><span class="p">.</span><span class="n">guest_id</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">1185</span><span class="p">,</span> <span class="mi">1270</span><span class="p">)</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">guest_id</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="guest-house-medium-questions">Guest House Medium Questions</h3>
+
+<p>6. Ruth Cadbury. Show the total amount payable by guest Ruth Cadbury for her room bookings. You should JOIN to the rate table using room_type_requested and occupants.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">SUM</span><span class="p">(</span><span class="n">nights</span><span class="o">*</span><span class="n">amount</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">booking</span> <span class="k">JOIN</span> <span class="n">rate</span> <span class="k">ON</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_type_requested</span> <span class="o">=</span> <span class="n">rate</span><span class="p">.</span><span class="n">room_type</span> <span class="k">AND</span> <span class="n">booking</span><span class="p">.</span><span class="n">occupants</span> <span class="o">=</span> <span class="n">rate</span><span class="p">.</span><span class="n">occupancy</span>
+  <span class="k">JOIN</span> <span class="n">guest</span> <span class="k">ON</span> <span class="n">booking</span><span class="p">.</span><span class="n">guest_id</span> <span class="o">=</span> <span class="n">guest</span><span class="p">.</span><span class="n">id</span>
+<span class="k">WHERE</span> <span class="n">guest</span><span class="p">.</span><span class="n">first_name</span> <span class="o">=</span> <span class="s1">'Ruth'</span> <span class="k">AND</span> <span class="n">guest</span><span class="p">.</span><span class="n">last_name</span> <span class="o">=</span> <span class="s1">'Cadbury'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>7. Including Extras. Calculate the total bill for booking 5346 including extras.</p>
+
+<p>‘Extra’ table is empty for me when I run it in SQLZOO.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="p">(</span><span class="n">rate</span><span class="p">.</span><span class="n">amount</span> <span class="o">+</span> <span class="k">SUM</span><span class="p">(</span><span class="n">extra</span><span class="p">.</span><span class="n">amount</span><span class="p">))</span> <span class="k">AS</span> <span class="n">amount</span>
+<span class="k">FROM</span> <span class="n">booking</span> <span class="k">JOIN</span> <span class="n">rate</span> <span class="k">ON</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_type_requested</span> <span class="o">=</span> <span class="n">rate</span><span class="p">.</span><span class="n">room_type</span> <span class="k">AND</span> <span class="n">booking</span><span class="p">.</span><span class="n">occupants</span> <span class="o">=</span> <span class="n">rate</span><span class="p">.</span><span class="n">occupancy</span>
+  <span class="k">JOIN</span> <span class="n">extra</span> <span class="k">ON</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_id</span> <span class="o">=</span> <span class="n">extra</span><span class="p">.</span><span class="n">booking_id</span>
+<span class="k">WHERE</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_id</span> <span class="o">=</span> <span class="mi">5346</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>8. Edinburgh Residents. For every guest who has the word “Edinburgh” in their address show the total number of nights booked. Be sure to include 0 for those guests who have never had a booking. Show last name, first name, address and number of nights. Order by last name then first name.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">guest</span><span class="p">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">guest</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">guest</span><span class="p">.</span><span class="n">address</span><span class="p">,</span> 
+  <span class="o">@</span><span class="n">nights</span> <span class="p">:</span><span class="o">=</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="k">SUM</span><span class="p">(</span><span class="n">booking</span><span class="p">.</span><span class="n">nights</span><span class="p">)</span> <span class="k">IS</span> <span class="k">NOT</span> <span class="k">NULL</span>
+                  <span class="k">THEN</span> <span class="o">@</span><span class="n">nights</span> <span class="p">:</span><span class="o">=</span> <span class="k">SUM</span><span class="p">(</span><span class="n">booking</span><span class="p">.</span><span class="n">nights</span><span class="p">)</span>
+                  <span class="k">ELSE</span> <span class="o">@</span><span class="n">nights</span> <span class="p">:</span><span class="o">=</span> <span class="mi">0</span>
+             <span class="k">END</span> <span class="k">AS</span> <span class="n">nights</span>
+<span class="k">FROM</span> <span class="n">guest</span> <span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">booking</span> <span class="k">ON</span> <span class="n">guest</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">booking</span><span class="p">.</span><span class="n">guest_id</span>
+<span class="k">WHERE</span> <span class="n">guest</span><span class="p">.</span><span class="n">address</span> <span class="k">LIKE</span> <span class="s1">'%Edinburgh%'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">guest</span><span class="p">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">guest</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">guest</span><span class="p">.</span><span class="n">address</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>9. How busy are we? For each day of the week beginning 2016-11-25 show the number of bookings starting that day. Be sure to show all the days of the week in the correct order.</p>
+
+<p>DATE_ADD adds 6 days because BETWEEN is inclusive, so we already have the first day and we need the end of the week which is first day + 6 days.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">arrivals</span>
+<span class="k">FROM</span> <span class="n">booking</span>
+<span class="k">WHERE</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span> <span class="k">BETWEEN</span> <span class="s1">'2016-11-25'</span> <span class="k">AND</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="s1">'2016-11-25'</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">6</span> <span class="k">DAY</span><span class="p">)</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>10. How many guests? Show the number of guests in the hotel on the night of 2016-11-21. Include all occupants who checked in that day but not those who checked out.</p>
+
+<p>We make a time interval when the guest is staying at the hotel using their arrival date and nights booked. Then we check which intervals contain the date ‘2016-11-21’.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">SUM</span><span class="p">(</span><span class="n">occupants</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">booking</span>
+<span class="k">WHERE</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span> <span class="o">&lt;=</span> <span class="s1">'2016-11-21'</span> <span class="k">AND</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">nights</span> <span class="k">DAY</span><span class="p">)</span> <span class="o">&gt;</span> <span class="s1">'2016-11-21'</span>
+</code></pre></div></div>
+
+<h3 id="guest-house-hard-questions">Guest House Hard Questions</h3>
+
+<p>11. Coincidence. Have two guests with the same surname ever stayed in the hotel on the evening? Show the last name and both first names. Do not include duplicates.</p>
+
+<p>Minus one in DATE_ADD because booking_date counts as one night.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">b</span><span class="p">.</span><span class="n">last_name</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">first_name</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">guest</span> <span class="k">JOIN</span> <span class="n">booking</span> <span class="k">ON</span> <span class="n">guest</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">booking</span><span class="p">.</span><span class="n">guest_id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">guest</span> <span class="k">JOIN</span> <span class="n">booking</span> <span class="k">ON</span> <span class="n">guest</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">booking</span><span class="p">.</span><span class="n">guest_id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">b</span>
+<span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">last_name</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">last_name</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">first_name</span> <span class="o">&lt;&gt;</span> <span class="n">b</span><span class="p">.</span><span class="n">first_name</span>
+<span class="k">WHERE</span> <span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">booking_date</span> <span class="k">BETWEEN</span> <span class="n">b</span><span class="p">.</span><span class="n">booking_date</span> <span class="k">AND</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">b</span><span class="p">.</span><span class="n">nights</span><span class="o">-</span><span class="mi">1</span> <span class="k">DAY</span><span class="p">))</span> <span class="k">OR</span> <span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">booking_date</span> <span class="k">BETWEEN</span> <span class="n">a</span><span class="p">.</span><span class="n">booking_date</span> <span class="k">AND</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">a</span><span class="p">.</span><span class="n">nights</span><span class="o">-</span><span class="mi">1</span> <span class="k">DAY</span><span class="p">))</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">last_name</span>
+</code></pre></div></div>
+
+<p>12. Check out per floor. The first digit of the room number indicates the floor – e.g. room 201 is on the 2nd floor. For each day of the week beginning 2016-11-14 show how many rooms are being vacated that day by floor number. Show all days in the correct order.</p>
+
+<p>I made it really weird and had to switch rows and columns to get the desired table: https://stackoverflow.com/questions/1241178/mysql-rows-to-columns.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">i</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="mi">1</span><span class="n">st</span><span class="p">)</span> <span class="k">AS</span> <span class="mi">1</span><span class="n">st</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="mi">2</span><span class="n">nd</span><span class="p">)</span> <span class="k">AS</span> <span class="mi">2</span><span class="n">nd</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="mi">3</span><span class="n">rd</span><span class="p">)</span> <span class="k">AS</span> <span class="mi">3</span><span class="n">rd</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">nights</span> <span class="k">DAY</span><span class="p">)</span> <span class="k">AS</span> <span class="n">i</span><span class="p">,</span>
+  <span class="o">@</span><span class="n">floor</span> <span class="p">:</span><span class="o">=</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_no</span> <span class="k">LIKE</span> <span class="s1">'1%'</span> <span class="k">THEN</span> <span class="o">@</span><span class="n">floor</span> <span class="p">:</span><span class="o">=</span> <span class="s1">'1st'</span>
+                 <span class="k">WHEN</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_no</span> <span class="k">LIKE</span> <span class="s1">'2%'</span> <span class="k">THEN</span> <span class="o">@</span><span class="n">floor</span> <span class="p">:</span><span class="o">=</span> <span class="s1">'2nd'</span>
+                 <span class="k">WHEN</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_no</span> <span class="k">LIKE</span> <span class="s1">'3%'</span> <span class="k">THEN</span> <span class="o">@</span><span class="n">floor</span> <span class="p">:</span><span class="o">=</span> <span class="s1">'3rd'</span>
+            <span class="k">ELSE</span> <span class="o">@</span><span class="n">floor</span> <span class="p">:</span><span class="o">=</span> <span class="s1">'?????'</span>
+            <span class="k">END</span> <span class="k">AS</span> <span class="n">floor</span><span class="p">,</span>
+  <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">),</span>
+  <span class="k">CASE</span> <span class="k">WHEN</span> <span class="o">@</span><span class="n">floor</span> <span class="o">=</span> <span class="s1">'1st'</span> <span class="k">THEN</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">END</span> <span class="k">AS</span> <span class="mi">1</span><span class="n">st</span><span class="p">,</span> 
+  <span class="k">CASE</span> <span class="k">WHEN</span> <span class="o">@</span><span class="n">floor</span> <span class="o">=</span> <span class="s1">'2nd'</span> <span class="k">THEN</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">END</span> <span class="k">AS</span> <span class="mi">2</span><span class="n">nd</span><span class="p">,</span>
+  <span class="k">CASE</span> <span class="k">WHEN</span> <span class="o">@</span><span class="n">floor</span> <span class="o">=</span> <span class="s1">'3rd'</span> <span class="k">THEN</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">END</span> <span class="k">AS</span> <span class="mi">3</span><span class="n">rd</span>
+<span class="k">FROM</span> <span class="n">booking</span>
+<span class="k">WHERE</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">nights</span> <span class="k">DAY</span><span class="p">)</span> <span class="k">BETWEEN</span> <span class="s1">'2016-11-14'</span> <span class="k">AND</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="s1">'2016-11-14'</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">6</span> <span class="k">DAY</span><span class="p">)</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">booking</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">nights</span> <span class="k">DAY</span><span class="p">),</span> <span class="n">floor</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">i</span>
+</code></pre></div></div>
+
+<p>13. Free rooms? List the rooms that are free on the day 25th Nov 2016.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">DISTINCT</span><span class="p">(</span><span class="n">room_no</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">booking</span>
+<span class="k">WHERE</span> <span class="n">room_no</span> <span class="k">NOT</span> <span class="k">IN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">room_no</span>
+<span class="k">FROM</span> <span class="n">booking</span>
+<span class="k">WHERE</span> <span class="s1">'2016-11-25'</span> <span class="k">BETWEEN</span> <span class="n">booking_date</span> <span class="k">AND</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">nights</span><span class="o">-</span><span class="mi">1</span> <span class="k">DAY</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>14. Single room for three nights required. A customer wants a single room for three consecutive nights. Find the first available date in December 2016.</p>
+
+<p>Super messy because I spent a few hours on this and got tired at the end. My result is not exactly the expected output because it calculates for each single room, but you can add LIMIT 1 at the end.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">e</span><span class="p">.</span><span class="n">room_no</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">earliest_opening</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">d</span><span class="p">.</span><span class="n">room_no</span><span class="p">,</span> <span class="k">MAX</span><span class="p">(</span><span class="n">DATE_ADD</span><span class="p">(</span><span class="n">d</span><span class="p">.</span><span class="n">next_booking</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">d</span><span class="p">.</span><span class="n">nights</span> <span class="k">DAY</span><span class="p">))</span> <span class="k">AS</span> <span class="n">earliest_opening</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">c</span><span class="p">.</span><span class="o">*</span><span class="p">,</span> 
+  <span class="n">TIMESTAMPDIFF</span><span class="p">(</span><span class="k">DAY</span><span class="p">,</span> <span class="k">c</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="k">c</span><span class="p">.</span><span class="n">next_booking</span><span class="p">)</span> <span class="o">-</span> <span class="k">c</span><span class="p">.</span><span class="n">nights</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">room_no</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">nights</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">booking_date</span><span class="p">,</span> <span class="k">MIN</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">booking_date</span><span class="p">)</span> <span class="k">AS</span> <span class="n">next_booking</span>
+<span class="k">FROM</span> <span class="n">booking</span> <span class="k">AS</span> <span class="n">a</span> <span class="k">JOIN</span> <span class="n">booking</span> <span class="k">AS</span> <span class="n">b</span> <span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">booking_date</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">.</span><span class="n">booking_date</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">room_no</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">room_no</span>
+<span class="k">WHERE</span> <span class="n">a</span><span class="p">.</span><span class="n">room_no</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">201</span><span class="p">,</span> <span class="mi">301</span><span class="p">)</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">booking_date</span> <span class="k">LIKE</span> <span class="s1">'2016-12%'</span> <span class="k">AND</span> <span class="n">b</span><span class="p">.</span><span class="n">booking_date</span> <span class="k">LIKE</span> <span class="s1">'2016-12%'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">room_no</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">nights</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">booking_date</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">room_no</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">booking_date</span><span class="p">)</span> <span class="k">AS</span> <span class="k">c</span><span class="p">)</span> <span class="k">AS</span> <span class="n">d</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">d</span><span class="p">.</span><span class="n">room_no</span><span class="p">)</span> <span class="k">AS</span> <span class="n">e</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">e</span><span class="p">.</span><span class="n">earliest_opening</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>15. Gross income by week. Money is collected from guests when they leave. For each Thursday in November and December 2016, show the total amount of money collected from the previous Friday to that day, inclusive.</p>
+
+<p>I did this in MySQL so it will not work in sqlzoo. If anybody has an easy way to get a range of dates in November and December 2016 please let me know.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">weeks</span><span class="p">.</span><span class="n">Thursday</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="n">checkout_bill</span><span class="p">.</span><span class="n">bill</span><span class="p">)</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="o">-</span><span class="mi">6</span> <span class="k">DAY</span><span class="p">)</span> <span class="k">AS</span> <span class="n">previous_Friday</span><span class="p">,</span> <span class="n">booking_date</span> <span class="k">AS</span> <span class="n">Thursday</span> 
+<span class="k">FROM</span> <span class="n">booking</span>
+<span class="k">WHERE</span> <span class="n">DAYOFWEEK</span><span class="p">(</span><span class="n">booking_date</span><span class="p">)</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">booking_date</span><span class="p">)</span> <span class="k">AS</span> <span class="n">weeks</span>
+<span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">booking</span><span class="p">.</span><span class="o">*</span><span class="p">,</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">booking_date</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="n">nights</span> <span class="k">DAY</span><span class="p">)</span> <span class="k">AS</span> <span class="n">checkout_date</span><span class="p">,</span> <span class="p">((</span><span class="n">rate</span><span class="p">.</span><span class="n">amount</span> <span class="o">*</span> <span class="n">booking</span><span class="p">.</span><span class="n">nights</span><span class="p">)</span> <span class="o">+</span> <span class="n">COALESCE</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">extra</span><span class="p">.</span><span class="n">amount</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span> <span class="k">AS</span> <span class="n">bill</span>
+<span class="k">FROM</span> <span class="n">booking</span> <span class="k">JOIN</span> <span class="n">rate</span> <span class="k">ON</span> <span class="n">booking</span><span class="p">.</span><span class="n">room_type_requested</span> <span class="o">=</span> <span class="n">rate</span><span class="p">.</span><span class="n">room_type</span> <span class="k">AND</span> <span class="n">booking</span><span class="p">.</span><span class="n">occupants</span> <span class="o">=</span> <span class="n">rate</span><span class="p">.</span><span class="n">occupancy</span>
+  <span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">extra</span> <span class="k">ON</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_id</span> <span class="o">=</span> <span class="n">extra</span><span class="p">.</span><span class="n">booking_id</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">booking</span><span class="p">.</span><span class="n">booking_id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">checkout_bill</span>
+<span class="k">ON</span> <span class="n">checkout_bill</span><span class="p">.</span><span class="n">checkout_date</span> <span class="k">BETWEEN</span> <span class="n">weeks</span><span class="p">.</span><span class="n">previous_Friday</span> <span class="k">AND</span> <span class="n">weeks</span><span class="p">.</span><span class="n">Thursday</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">weeks</span><span class="p">.</span><span class="n">Thursday</span><span class="p">;</span>
+</code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>
