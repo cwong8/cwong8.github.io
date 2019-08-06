@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139929620-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-139929620-1');
+  </script>
+
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Congestion Charging</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="httpssqlzoonetwikicongestion_charging">https://sqlzoo.net/wiki/Congestion_Charging</h1>
+
+<h3 id="congestion-charging-easy-questions">Congestion Charging Easy Questions</h3>
+
+<ol>
+  <li>Show the name and address of the keeper of vehicle SO 02 PSP.</li>
+</ol>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">keeper</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">keeper</span><span class="p">.</span><span class="n">address</span>
+<span class="k">FROM</span> <span class="n">keeper</span> <span class="k">JOIN</span> <span class="n">vehicle</span> <span class="k">ON</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span>
+<span class="k">WHERE</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="s1">'SO 02 PSP'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>2. Show the number of cameras that take images for incoming vehicles.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">camera</span>
+<span class="k">WHERE</span> <span class="n">perim</span> <span class="o">=</span> <span class="s1">'IN'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>3. List the image details taken by Camera 10 before 26 Feb 2007.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">image</span>
+<span class="k">WHERE</span> <span class="n">camera</span> <span class="o">=</span> <span class="mi">10</span> <span class="k">AND</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">whn</span><span class="p">,</span> <span class="s1">'%Y-%m-%d'</span><span class="p">)</span> <span class="o">&lt;</span> <span class="s1">'2007-02-26'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>4. List the number of images taken by each camera. Your answer should show how many images have been taken by camera 1, camera 2 etc. The list must NOT include the images taken by camera 15, 16, 17, 18 and 19.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">camera</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">images_taken</span>
+<span class="k">FROM</span> <span class="n">image</span>
+<span class="k">WHERE</span> <span class="n">camera</span> <span class="o">&lt;</span> <span class="mi">15</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">camera</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>5. A number of vehicles have permits that start on 30th Jan 2007. List the name and address for each keeper in alphabetical order without duplication.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">DISTINCT</span><span class="p">(</span><span class="n">keeper</span><span class="p">.</span><span class="n">name</span><span class="p">),</span> <span class="n">keeper</span><span class="p">.</span><span class="n">address</span>
+<span class="k">FROM</span> <span class="n">keeper</span> <span class="k">JOIN</span> <span class="n">vehicle</span> <span class="k">ON</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span>
+  <span class="k">JOIN</span> <span class="n">permit</span> <span class="k">ON</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">permit</span><span class="p">.</span><span class="n">reg</span>
+<span class="k">WHERE</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="s1">'%Y-%m-%d'</span><span class="p">)</span> <span class="o">=</span> <span class="s1">'2007-01-30'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">keeper</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">keeper</span><span class="p">.</span><span class="n">address</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="congestion-charging-medium-questions">Congestion Charging Medium Questions</h3>
+
+<p>6. List the owners (name and address) of Vehicles caught by camera 1 or 18 without duplication.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">DISTINCT</span><span class="p">(</span><span class="n">keeper</span><span class="p">.</span><span class="n">name</span><span class="p">),</span> <span class="n">keeper</span><span class="p">.</span><span class="n">address</span>
+<span class="k">FROM</span> <span class="n">keeper</span> <span class="k">JOIN</span> <span class="n">vehicle</span> <span class="k">ON</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span>
+  <span class="k">JOIN</span> <span class="n">image</span> <span class="k">ON</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">image</span><span class="p">.</span><span class="n">reg</span>
+<span class="k">WHERE</span> <span class="n">image</span><span class="p">.</span><span class="n">camera</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">18</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>7. Show keepers (name and address) who have more than 5 vehicles.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">keeper</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">keeper</span><span class="p">.</span><span class="n">address</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">num_vehicles</span>
+<span class="k">FROM</span> <span class="n">keeper</span> <span class="k">JOIN</span> <span class="n">vehicle</span> <span class="k">ON</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">keeper</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">keeper</span><span class="p">.</span><span class="n">address</span>
+<span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>8. For each vehicle show the number of current permits (suppose today is the 1st of Feb 2007). The list should include the vehicle.s registration and the number of permits. Current permits can be determined based on charge types, e.g. for weekly permit you can use the date after 24 Jan 2007 and before 02 Feb 2007.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">reg</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">current_permits</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="o">*</span><span class="p">,</span>
+  <span class="k">CASE</span> <span class="k">WHEN</span> <span class="n">permit</span><span class="p">.</span><span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Daily'</span> <span class="k">THEN</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">DAY</span><span class="p">)</span>
+       <span class="k">WHEN</span> <span class="n">permit</span><span class="p">.</span><span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Weekly'</span> <span class="k">THEN</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="n">WEEK</span><span class="p">)</span>
+       <span class="k">WHEN</span> <span class="n">permit</span><span class="p">.</span><span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Monthly'</span> <span class="k">THEN</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">MONTH</span><span class="p">)</span>
+       <span class="k">WHEN</span> <span class="n">permit</span><span class="p">.</span><span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Annual'</span> <span class="k">THEN</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">YEAR</span><span class="p">)</span>
+  <span class="k">END</span> <span class="k">AS</span> <span class="n">permit_expiration</span>
+<span class="k">FROM</span> <span class="n">permit</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">WHERE</span> <span class="s1">'2007-02-01'</span> <span class="k">BETWEEN</span> <span class="n">a</span><span class="p">.</span><span class="n">sDate</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">permit_expiration</span>
+<span class="c1">-- Why group by? Nobody would buy overlapping permits for their cars...</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">reg</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>9. Obtain a list of every vehicle passing camera 10 on 25th Feb 2007. Show the time, the registration and the name of the keeper if available.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">image</span><span class="p">.</span><span class="n">whn</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">keeper</span><span class="p">.</span><span class="n">name</span>
+<span class="k">FROM</span> <span class="n">image</span> <span class="k">JOIN</span> <span class="n">vehicle</span> <span class="k">ON</span> <span class="n">image</span><span class="p">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">id</span>
+  <span class="k">JOIN</span> <span class="n">keeper</span> <span class="k">ON</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span> <span class="o">=</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span>
+<span class="k">WHERE</span> <span class="n">image</span><span class="p">.</span><span class="n">camera</span> <span class="o">=</span> <span class="mi">10</span> <span class="k">AND</span> <span class="n">DATE_FORMAT</span><span class="p">(</span><span class="n">image</span><span class="p">.</span><span class="n">whn</span><span class="p">,</span> <span class="s1">'%Y-%m-%d'</span><span class="p">)</span> <span class="o">=</span> <span class="s1">'2007-02-25'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>10. List the keepers who have more than 4 vehicles and one of them must have more than 2 permits. The list should include the names and the number of vehicles.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">num_vehicles</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">num_permits</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">keeper</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">num_vehicles</span>
+<span class="k">FROM</span> <span class="n">keeper</span> <span class="k">JOIN</span> <span class="n">vehicle</span> <span class="k">ON</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">keeper</span><span class="p">.</span><span class="n">name</span>
+<span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span><span class="p">,</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">num_permits</span>
+<span class="k">FROM</span> <span class="n">vehicle</span> <span class="k">JOIN</span> <span class="n">permit</span> <span class="k">ON</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">permit</span><span class="p">.</span><span class="n">reg</span>
+  <span class="k">JOIN</span> <span class="n">keeper</span> <span class="k">ON</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span> <span class="o">=</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span>
+<span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">b</span>
+<span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">keeper</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="congestion-charging-hard-questions">Congestion Charging Hard Questions</h3>
+
+<p>11. When creating a view in scott you must specify the schema name of the sources and the destination.</p>
+
+<p>Not really a question so we skip.</p>
+
+<p>12. There are four types of permit. The most popular type means that this type has been issued the highest number of times. Find out the most popular type, together with the total number of permits issued.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">chargeType</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">permit</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">chargeType</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">DESC</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>13. For each of the vehicles caught by camera 19 - show the registration, the earliest time at camera 19 and the time and camera at which it left the zone.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">b</span><span class="p">.</span><span class="o">*</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">camera</span> <span class="k">AS</span> <span class="n">left_camera</span>
+<span class="k">FROM</span> <span class="n">image</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">image</span><span class="p">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">camera</span> <span class="k">AS</span> <span class="n">first_camera</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">first_capture</span><span class="p">,</span> <span class="k">MIN</span><span class="p">(</span><span class="n">whn</span><span class="p">)</span> <span class="k">AS</span> <span class="n">left_zone</span>
+<span class="k">FROM</span> <span class="n">image</span> <span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">camera</span><span class="p">,</span> <span class="n">reg</span><span class="p">,</span> <span class="k">MIN</span><span class="p">(</span><span class="n">whn</span><span class="p">)</span> <span class="k">AS</span> <span class="n">first_capture</span>
+<span class="k">FROM</span> <span class="n">image</span>
+<span class="k">WHERE</span> <span class="n">camera</span> <span class="o">=</span> <span class="mi">19</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">reg</span><span class="p">,</span> <span class="n">camera</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">ON</span> <span class="n">image</span><span class="p">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">reg</span>
+<span class="k">WHERE</span> <span class="n">whn</span> <span class="o">&gt;</span> <span class="n">a</span><span class="p">.</span><span class="n">first_capture</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">image</span><span class="p">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">first_capture</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">camera</span><span class="p">)</span> <span class="k">AS</span> <span class="n">b</span>
+<span class="k">WHERE</span> <span class="n">image</span><span class="p">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">reg</span> <span class="k">AND</span> <span class="n">image</span><span class="p">.</span><span class="n">whn</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">left_zone</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>14. For all 19 cameras - show the position as IN, OUT or INTERNAL and the busiest hour for that camera.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">perim_fixed</span><span class="p">,</span> <span class="k">MAX</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">images_taken</span><span class="p">)</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span>
+  <span class="k">CASE</span> <span class="k">WHEN</span> <span class="n">perim</span> <span class="k">IS</span> <span class="k">NULL</span> <span class="k">THEN</span> <span class="s1">'INTERNAL'</span>
+       <span class="k">ELSE</span> <span class="n">perim</span>
+  <span class="k">END</span> <span class="k">AS</span> <span class="n">perim_fixed</span>
+<span class="k">FROM</span> <span class="n">camera</span><span class="p">)</span> <span class="k">AS</span> <span class="n">a</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">camera</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+  <span class="n">HOUR</span><span class="p">(</span><span class="n">image</span><span class="p">.</span><span class="n">whn</span><span class="p">),</span>
+  <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">images_taken</span>
+<span class="k">FROM</span> <span class="n">camera</span> <span class="k">JOIN</span> <span class="n">image</span> <span class="k">ON</span> <span class="n">camera</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">image</span><span class="p">.</span><span class="n">camera</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">camera</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">HOUR</span><span class="p">(</span><span class="n">image</span><span class="p">.</span><span class="n">whn</span><span class="p">))</span> <span class="k">AS</span> <span class="n">b</span>
+<span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">id</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>15. Anomalous daily permits. Daily permits should not be issued for non-charging days. Find a way to represent charging days. Identify the anomalous daily permits.</p>
+
+<p>Congestion charge information: https://tfl.gov.uk/modes/driving/congestion-charge/congestion-charge-zone</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">permit</span>
+<span class="k">WHERE</span> <span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Daily'</span> <span class="k">AND</span> <span class="n">DAYOFWEEK</span><span class="p">(</span><span class="n">sDate</span><span class="p">)</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>16. Issuing fines: Vehicles using the zone during the charge period, on charging days must be issued with fine notices unless they have a permit covering that day. List the name and address of such culprits, give the camera and the date and time of the first offence.</p>
+
+<p>This returns nothing because all images except one were taken on Sunday, but the logic is there.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">keeper</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">keeper</span><span class="p">.</span><span class="n">address</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">camera</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">whn</span>
+<span class="k">FROM</span> <span class="n">image</span> <span class="k">JOIN</span> <span class="n">vehicle</span> <span class="k">ON</span> <span class="n">image</span><span class="p">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">id</span>
+  <span class="k">JOIN</span> <span class="n">keeper</span> <span class="k">ON</span> <span class="n">vehicle</span><span class="p">.</span><span class="n">keeper</span> <span class="o">=</span> <span class="n">keeper</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">permit</span><span class="p">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span>
+  <span class="k">CASE</span> <span class="k">WHEN</span> <span class="n">permit</span><span class="p">.</span><span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Daily'</span> <span class="k">THEN</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">DAY</span><span class="p">)</span>
+       <span class="k">WHEN</span> <span class="n">permit</span><span class="p">.</span><span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Weekly'</span> <span class="k">THEN</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="n">WEEK</span><span class="p">)</span>
+       <span class="k">WHEN</span> <span class="n">permit</span><span class="p">.</span><span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Monthly'</span> <span class="k">THEN</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">MONTH</span><span class="p">)</span>
+       <span class="k">WHEN</span> <span class="n">permit</span><span class="p">.</span><span class="n">chargeType</span> <span class="o">=</span> <span class="s1">'Annual'</span> <span class="k">THEN</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="n">permit</span><span class="p">.</span><span class="n">sDate</span><span class="p">,</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">YEAR</span><span class="p">)</span>
+  <span class="k">END</span> <span class="k">AS</span> <span class="n">permit_expiration</span>
+<span class="k">FROM</span> <span class="n">permit</span><span class="p">)</span> <span class="k">AS</span> <span class="n">valid_permits</span>
+<span class="c1">-- Not 100% confident in the last part. Gut feeling says I should group by something.</span>
+<span class="k">WHERE</span> <span class="p">(</span><span class="n">DAYOFWEEK</span><span class="p">(</span><span class="n">image</span><span class="p">.</span><span class="n">whn</span><span class="p">)</span> <span class="k">BETWEEN</span> <span class="mi">2</span> <span class="k">AND</span> <span class="mi">6</span><span class="p">)</span> <span class="k">AND</span> <span class="p">(</span><span class="n">HOUR</span><span class="p">(</span><span class="n">image</span><span class="p">.</span><span class="n">whn</span><span class="p">)</span> <span class="k">BETWEEN</span> <span class="mi">7</span> <span class="k">AND</span> <span class="mi">18</span><span class="p">)</span> <span class="k">AND</span> <span class="p">(</span><span class="n">image</span><span class="p">.</span><span class="n">whn</span> <span class="k">NOT</span> <span class="k">BETWEEN</span> <span class="n">valid_permits</span><span class="p">.</span><span class="n">sDate</span> <span class="k">AND</span> <span class="n">valid_permits</span><span class="p">.</span><span class="n">permit_expiration</span><span class="p">);</span>
+</code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>
