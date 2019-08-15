@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139929620-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-139929620-1');
+  </script>
+
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">Draw FrozenLake</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <p>Arrow images from: <a href="https://www.flaticon.com/packs/arrows-41">https://www.flaticon.com/packs/arrows-41</a></p>
+
+<h3 id="main-drawing-and-saving-function">Main drawing and saving function</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Packages
+</span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageTk</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="c1"># For saving images
+</span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">ImageDraw</span>
+
+<span class="k">def</span> <span class="nf">draw_canvas</span><span class="p">(</span><span class="n">qtable</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">save</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="s">'FrozenLake.png'</span><span class="p">):</span>
+    <span class="s">"""
+    Visualizes the FrozenLake environment with the option to save the images.
+    
+    Args:
+        qtable: Q-table from reinforcement learning. Should have either 16 or 64 states for a 4x4 or 8x8 grid respectively.
+        height: Height of output image.
+        width: Width of output image.
+        save: Set save = True to save output to current directory 
+        filename: Filename of image to be saved
+        
+    Returns:
+        Image of the FrozenLake environment with arrows pointing to directions chosen by the Q-table based on maximum value.
+    """</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="n">Tk</span><span class="p">()</span>
+    <span class="n">grid_dim</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">qtable</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">grid_dim</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">!=</span> <span class="n">qtable</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"WARNING: State size is not a perfect square."</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">grid_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">)</span>
+     
+    <span class="c1"># Arrow images scaled to canvas size
+</span>    <span class="n">left</span> <span class="o">=</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"./arrows/left-arrow.png"</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">))))</span>
+    <span class="n">down</span> <span class="o">=</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"./arrows/down-arrow.png"</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">))))</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"./arrows/right-arrow.png"</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">))))</span>
+    <span class="n">up</span> <span class="o">=</span> <span class="n">ImageTk</span><span class="o">.</span><span class="n">PhotoImage</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"./arrows/up-arrow.png"</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">))))</span>
+    <span class="n">arrows</span> <span class="o">=</span> <span class="p">[</span><span class="n">left</span><span class="p">,</span> <span class="n">down</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">up</span><span class="p">]</span> 
+    
+    <span class="c1"># Max Q-value per row
+</span>    <span class="n">max_q</span> <span class="o">=</span> <span class="n">qtable</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">max_q</span> <span class="o">=</span> <span class="n">max_q</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">,</span> <span class="n">grid_dim</span><span class="p">)</span>
+    
+    <span class="c1"># tkinter canvas
+</span>    <span class="n">C</span> <span class="o">=</span> <span class="n">Canvas</span><span class="p">(</span><span class="n">top</span><span class="p">,</span> <span class="n">bd</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bg</span> <span class="o">=</span> <span class="s">"white"</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">width</span><span class="p">)</span>
+    
+    <span class="c1"># Draw grid
+</span>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">)):</span>
+        <span class="c1"># Vertical lines
+</span>        <span class="n">C</span><span class="o">.</span><span class="n">create_line</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">height</span><span class="p">)</span>
+        <span class="c1"># Horizontal lines
+</span>        <span class="n">C</span><span class="o">.</span><span class="n">create_line</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">width</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">))</span>
+    
+    <span class="c1"># Color holes red
+</span>    <span class="k">if</span> <span class="n">grid_dim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">holes</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">elif</span> <span class="n">grid_dim</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+        <span class="n">holes</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"What frozen lake are you using?"</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">hole</span> <span class="ow">in</span> <span class="n">holes</span><span class="p">:</span>
+        <span class="n">C</span><span class="o">.</span><span class="n">create_polygon</span><span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">fill</span> <span class="o">=</span> <span class="s">"red"</span><span class="p">)</span>
+   
+    <span class="c1"># Center our arrow images in the grid and draw them
+</span>    <span class="c1"># Our grid indices looks like this for a 4x4 grid
+</span>    <span class="c1">#  0 |  1 |  2 |  3
+</span>    <span class="c1"># -----------------
+</span>    <span class="c1">#  4 |  5 |  6 |  7
+</span>    <span class="c1"># -----------------
+</span>    <span class="c1">#  8 |  9 | 10 | 11
+</span>    <span class="c1"># -----------------
+</span>    <span class="c1"># 12 | 13 | 14 | 15
+</span>    <span class="c1"># -----------------   
+</span>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">)):</span>
+        <span class="n">C</span><span class="o">.</span><span class="n">create_image</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">)),</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">)),</span> <span class="n">image</span> <span class="o">=</span> <span class="n">arrows</span><span class="p">[</span><span class="n">max_q</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]])</span>
+    
+    <span class="k">if</span> <span class="n">save</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">white</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+        <span class="n">black</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">"RGB"</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="n">white</span><span class="p">)</span>
+        <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        
+        <span class="c1"># Draw grid
+</span>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">)):</span>
+            <span class="c1"># Vertical lines
+</span>            <span class="n">draw</span><span class="o">.</span><span class="n">line</span><span class="p">([</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">height</span><span class="p">],</span> <span class="n">black</span><span class="p">)</span>
+            <span class="c1"># Horizontal lines
+</span>            <span class="n">draw</span><span class="o">.</span><span class="n">line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">width</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">)],</span> <span class="n">black</span><span class="p">)</span>
+        
+        <span class="c1"># Color holes red
+</span>        <span class="k">for</span> <span class="n">hole</span> <span class="ow">in</span> <span class="n">holes</span><span class="p">:</span>
+            <span class="n">draw</span><span class="o">.</span><span class="n">polygon</span><span class="p">([</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">)],</span> <span class="n">fill</span> <span class="o">=</span> <span class="s">"red"</span><span class="p">)</span>
+            
+       <span class="c1"># Center our arrow images in the grid and draw them
+</span>        <span class="c1"># Our grid indices looks like this for a 4x4 grid
+</span>        <span class="c1">#  0 |  1 |  2 |  3
+</span>        <span class="c1"># -----------------
+</span>        <span class="c1">#  4 |  5 |  6 |  7
+</span>        <span class="c1"># -----------------
+</span>        <span class="c1">#  8 |  9 | 10 | 11
+</span>        <span class="c1"># -----------------
+</span>        <span class="c1"># 12 | 13 | 14 | 15
+</span>        <span class="c1"># -----------------   
+</span>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">)):</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">paste</span><span class="p">(</span><span class="n">im</span> <span class="o">=</span> <span class="n">arrows</span><span class="p">[</span><span class="n">max_q</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]],</span> <span class="n">box</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">//</span><span class="n">grid_dim</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">4</span><span class="p">)),</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">//</span><span class="n">grid_dim</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">4</span><span class="p">))])</span>
+        
+        <span class="c1"># Save image
+</span>        <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    
+    <span class="n">C</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+    <span class="n">top</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h3 id="separate-saving-function-if-thats-your-style">Separate saving function if that’s your style</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">ImageDraw</span>
+<span class="c1"># Saves images through PIL by mimicing canvas drawings
+</span><span class="k">def</span> <span class="nf">save_canvas</span><span class="p">(</span><span class="n">qtable</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="s">'FrozenLake.png'</span><span class="p">):</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Tk</span><span class="p">()</span>
+    <span class="n">grid_dim</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">qtable</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">grid_dim</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">!=</span> <span class="n">qtable</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"WARNING: State size is not a perfect square."</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">grid_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">)</span>
+    
+    <span class="n">white</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+    <span class="n">black</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">"RGB"</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="n">white</span><span class="p">)</span>
+    <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    
+    <span class="c1"># Arrow images scaled to canvas size
+</span>    <span class="n">left</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"./arrows/left-arrow.png"</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">down</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"./arrows/down-arrow.png"</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"./arrows/right-arrow.png"</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">up</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"./arrows/up-arrow.png"</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">arrows</span> <span class="o">=</span> <span class="p">[</span><span class="n">left</span><span class="p">,</span> <span class="n">down</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">up</span><span class="p">]</span> 
+    
+    <span class="c1"># Max Q-value per row
+</span>    <span class="n">max_q</span> <span class="o">=</span> <span class="n">qtable</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">max_q</span> <span class="o">=</span> <span class="n">max_q</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">,</span> <span class="n">grid_dim</span><span class="p">)</span>
+    
+    <span class="c1"># Draw grid
+</span>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">)):</span>
+        <span class="c1"># Vertical lines
+</span>        <span class="n">draw</span><span class="o">.</span><span class="n">line</span><span class="p">([</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">height</span><span class="p">],</span> <span class="n">black</span><span class="p">)</span>
+        <span class="c1"># Horizontal lines
+</span>        <span class="n">draw</span><span class="o">.</span><span class="n">line</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">width</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">)],</span> <span class="n">black</span><span class="p">)</span>
+        
+    <span class="c1"># Color holes red
+</span>    <span class="k">if</span> <span class="n">grid_dim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">holes</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">elif</span> <span class="n">grid_dim</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+        <span class="n">holes</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"What frozen lake are you using?"</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">hole</span> <span class="ow">in</span> <span class="n">holes</span><span class="p">:</span>
+        <span class="n">draw</span><span class="o">.</span><span class="n">polygon</span><span class="p">([</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="p">(</span><span class="n">hole</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">),</span> <span class="n">hole</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">grid_dim</span><span class="p">)],</span> <span class="n">fill</span> <span class="o">=</span> <span class="s">"red"</span><span class="p">)</span>
+
+   <span class="c1"># Center our arrow images in the grid and draw them
+</span>    <span class="c1"># Our grid indices looks like this for a 4x4 grid
+</span>    <span class="c1">#  0 |  1 |  2 |  3
+</span>    <span class="c1"># -----------------
+</span>    <span class="c1">#  4 |  5 |  6 |  7
+</span>    <span class="c1"># -----------------
+</span>    <span class="c1">#  8 |  9 | 10 | 11
+</span>    <span class="c1"># -----------------
+</span>    <span class="c1"># 12 | 13 | 14 | 15
+</span>    <span class="c1"># -----------------   
+</span>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid_dim</span><span class="p">)):</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">paste</span><span class="p">(</span><span class="n">im</span> <span class="o">=</span> <span class="n">arrows</span><span class="p">[</span><span class="n">max_q</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]],</span> <span class="n">box</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">width</span><span class="o">//</span><span class="n">grid_dim</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">height</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">4</span><span class="p">)),</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">height</span><span class="o">//</span><span class="n">grid_dim</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">width</span><span class="o">//</span><span class="p">(</span><span class="n">grid_dim</span><span class="o">*</span><span class="mi">4</span><span class="p">))])</span>
+    
+    <span class="c1"># Save image
+</span>    <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        
+        
+</code></pre></div></div>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

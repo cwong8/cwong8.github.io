@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139929620-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-139929620-1');
+  </script>
+
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">FrozenLake</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="table-of-contents">Table of contents</h1>
+<ol>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#main">Q-learning and training</a></li>
+  <li><a href="#visualize">Visualizing training</a></li>
+</ol>
+
+<h2 id="introduction-">Introduction <a name="introduction"></a></h2>
+
+<p>Basic Q-learning trained on the FrozenLake8x8 environment provided by <a href="https://gym.openai.com/envs/FrozenLake8x8-v0/">OpenAI’s gym toolkit</a>. Includes visualization of our agent training throughout episodes and hyperparameter choices.</p>
+
+<h2 id="q-learning-and-training-">Q-learning and training <a name="main"></a></h2>
+
+<p>Code from <a href="https://simoninithomas.github.io/Deep_reinforcement_learning_Course/">https://simoninithomas.github.io/Deep_reinforcement_learning_Course/</a></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Import packages
+</span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+
+<span class="c1"># Visualization function
+</span><span class="o">%</span><span class="n">run</span> <span class="n">Draw_FrozenLake</span><span class="o">.</span><span class="n">ipynb</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create environment
+</span><span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s">"FrozenLake8x8-v0"</span><span class="p">)</span>
+<span class="n">env</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[41mS[0mFFFFFFF
+FFFFFFFF
+FFFHFFFF
+FFFFFHFF
+FFFHFFFF
+FHHFFFHF
+FHFFHFHF
+FFFHFFFG
+</code></pre></div></div>
+
+<h3 id="q-table">Q-table</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">action_size</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">n</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Action size: "</span><span class="p">,</span> <span class="n">action_size</span><span class="p">)</span>
+
+<span class="n">state_size</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">n</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"State size: "</span><span class="p">,</span> <span class="n">state_size</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Action size:  4
+State size:  64
+</code></pre></div></div>
+
+<h3 id="hyperparameters">Hyperparameters</h3>
+
+<ol>
+  <li>Differences from FrozenLake-v0 which is 4x4:
+    <ul>
+      <li>Changes in minimum $\epsilon$ and its decay rate because we have a larger environment to explore (8x8) which is 4 times larger</li>
+      <li>More episodes to train our Q-table on (and as a result we need less decay on $\epsilon$ mentioned above)</li>
+      <li>Higher max_steps because our state_size is 4 times larger</li>
+    </ul>
+    <ul>
+      <li>The chance for a random action sequence to reach the end of the frozen lake in a 4x4 grid in 99 steps is much higher than the chance for an 8x8 grid. To compensate, we give each episode more steps.</li>
+    </ul>
+  </li>
+</ol>
+
+<p>The probability that a random action sequence reaches the end is at WORST 1/(4^6) or 1/4096 for a 4x4 grid because it needs to take 3 steps right and 3 steps down. I say at worst because there are combinations of 3 right, 3 down steps that also reach the end, but in a randomly generated frozen lake, we cannot be certain of the exact probability.</p>
+
+<p>Compare this to an 8x8 frozen lake. We would need to take 7 steps right and 7 steps down at worst, which comes out to 1/(4^14) or 1/268435456. This is 4^8 times or 65,536 times more unlikely.</p>
+
+<p>We keep the number of max_steps close to (action_size * state_size * 2) approximately, and crank the number of episodes up. Of course, if we take a look at our epsilon decay function, we see that it reaches min_epsilon rather quickly, so we decrease epsilon decay_rate and min_epsilon.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">qtable_history</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">score_history</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">qtable</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">state_size</span><span class="p">,</span> <span class="n">action_size</span><span class="p">))</span>
+
+<span class="n">total_episodes</span> <span class="o">=</span> <span class="mi">250000</span>       <span class="c1"># Total episodes
+</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.8</span>           <span class="c1"># Learning rate
+</span><span class="n">max_steps</span> <span class="o">=</span> <span class="mi">400</span>               <span class="c1"># Max steps per episode
+</span><span class="n">gamma</span> <span class="o">=</span> <span class="mf">0.9</span>                  <span class="c1"># Discounting rate
+</span>
+<span class="c1"># Exploration parameters
+</span><span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1.0</span>                 <span class="c1"># Exploration rate
+</span><span class="n">max_epsilon</span> <span class="o">=</span> <span class="mf">1.0</span>             <span class="c1"># Exploration probability at start
+</span><span class="n">min_epsilon</span> <span class="o">=</span> <span class="mf">0.001</span>            <span class="c1"># Minimum exploration probability 
+</span><span class="n">decay_rate</span> <span class="o">=</span> <span class="mf">0.00005</span>             <span class="c1"># Exponential decay rate for exploration prob
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># List of rewards
+</span><span class="n">rewards</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># 2 For life or until learning is stopped
+</span><span class="k">for</span> <span class="n">episode</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_episodes</span><span class="p">):</span>
+    <span class="c1"># Reset the environment
+</span>    <span class="n">state</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">total_rewards</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
+        <span class="c1"># 3. Choose an action a in the current world state (s)
+</span>        <span class="c1">## First we randomize a number
+</span>        <span class="n">exp_exp_tradeoff</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1">## If this number &gt; greater than epsilon --&gt; exploitation (taking the biggest Q value for this state)
+</span>        <span class="k">if</span> <span class="n">exp_exp_tradeoff</span> <span class="o">&gt;</span> <span class="n">epsilon</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">qtable</span><span class="p">[</span><span class="n">state</span><span class="p">,:])</span>
+
+        <span class="c1"># Else doing a random choice --&gt; exploration
+</span>        <span class="k">else</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+
+        <span class="c1"># Take the action (a) and observe the outcome state(s') and reward (r)
+</span>        <span class="n">new_state</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+        <span class="c1"># Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
+</span>        <span class="c1"># qtable[new_state,:] : all the actions we can take from new state
+</span>        <span class="n">qtable</span><span class="p">[</span><span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="n">qtable</span><span class="p">[</span><span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">]</span> <span class="o">+</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="p">(</span><span class="n">reward</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="nb">max</span><span class="p">(</span><span class="n">qtable</span><span class="p">[</span><span class="n">new_state</span><span class="p">,</span> <span class="p">:])</span> <span class="o">-</span> <span class="n">qtable</span><span class="p">[</span><span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">])</span>
+        
+        <span class="n">total_rewards</span> <span class="o">+=</span> <span class="n">reward</span>
+        
+        <span class="c1"># Our new state is state
+</span>        <span class="n">state</span> <span class="o">=</span> <span class="n">new_state</span>
+        
+        <span class="c1"># If done (if we're dead) : finish episode
+</span>        <span class="k">if</span> <span class="n">done</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span> 
+            <span class="k">break</span>
+        
+    <span class="c1"># Reduce epsilon (because we need less and less exploration)
+</span>    <span class="n">epsilon</span> <span class="o">=</span> <span class="n">min_epsilon</span> <span class="o">+</span> <span class="p">(</span><span class="n">max_epsilon</span> <span class="o">-</span> <span class="n">min_epsilon</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">decay_rate</span><span class="o">*</span><span class="n">episode</span><span class="p">)</span> 
+    <span class="n">rewards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_rewards</span><span class="p">)</span>
+    
+    <span class="n">episode_count</span> <span class="o">=</span> <span class="n">episode</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">episode_count</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">qtable_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">qtable</span><span class="p">)</span>
+        <span class="n">score_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span><span class="o">/</span><span class="n">episode_count</span><span class="p">)</span>
+        <span class="n">save_canvas</span><span class="p">(</span><span class="n">qtable</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="s">"./output/FrozenLake_ep"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">episode_count</span><span class="p">)</span> <span class="o">+</span> <span class="s">".png"</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="p">(</span><span class="s">"Score over time: "</span> <span class="o">+</span>  <span class="nb">str</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span><span class="o">/</span><span class="n">total_episodes</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">qtable</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Score over time: 0.399036
+[[3.04990173e-04 3.66468917e-03 2.91640625e-04 3.06738972e-04]
+ [8.12944415e-04 1.28704482e-02 3.62970233e-04 3.43069361e-04]
+ [6.63808684e-04 5.66621774e-04 2.12327589e-02 5.93510983e-04]
+ [3.41741910e-04 2.96820542e-04 3.27044472e-04 3.04134538e-02]
+ [5.71102462e-04 5.65012072e-04 5.88121886e-02 5.75779952e-04]
+ [2.10435793e-03 1.29556209e-03 4.28251102e-02 1.15263826e-03]
+ [1.42663804e-03 2.87830739e-02 1.49533784e-03 1.45791054e-03]
+ [1.13426435e-03 1.93791629e-02 1.78604589e-03 1.84206129e-03]
+ [1.08502846e-04 2.76724565e-04 3.28626958e-04 7.33557266e-03]
+ [3.31607590e-04 1.23364142e-04 7.41970238e-04 9.19624400e-03]
+ [1.66004811e-04 1.83406936e-04 1.60421224e-04 2.31862445e-02]
+ [2.25370034e-07 1.46208101e-04 2.87809984e-04 2.25049867e-02]
+ [9.03344061e-04 4.96618281e-04 1.13750772e-03 2.28387181e-02]
+ [1.08485965e-03 1.22650118e-03 3.29456479e-02 1.09807063e-03]
+ [1.50844136e-03 1.20588961e-03 7.81990546e-02 1.84629870e-03]
+ [2.10435606e-03 2.39722654e-02 2.19260780e-03 2.04546034e-03]
+ [7.82499003e-05 7.74938189e-05 1.41941083e-03 6.84656139e-05]
+ [9.34607223e-04 6.97681216e-05 1.01462811e-04 1.12173501e-04]
+ [1.82205781e-02 5.28718853e-05 6.03444494e-06 3.42444174e-06]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [1.89036002e-05 1.19069542e-04 1.02586209e-02 2.74234737e-04]
+ [2.90250177e-04 4.42974440e-05 1.02546028e-04 2.46165327e-02]
+ [2.17614053e-03 4.32943890e-02 2.32113838e-03 1.90240840e-03]
+ [1.12704056e-01 2.76130927e-03 2.76396539e-03 2.90179092e-03]
+ [6.74580484e-05 6.51009822e-05 1.33239821e-04 6.34701042e-05]
+ [5.56694457e-05 3.88160824e-05 7.13462456e-05 7.22576379e-04]
+ [1.98974849e-04 7.14718503e-06 2.95739439e-05 9.79137570e-04]
+ [4.89614655e-08 5.42833620e-08 7.56178474e-09 1.51907241e-03]
+ [2.20673074e-03 6.03167320e-06 1.57741598e-05 5.22423135e-06]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [1.85503719e-03 1.48172749e-03 5.79354668e-02 8.15463583e-04]
+ [4.93934498e-03 5.40057313e-02 4.93434652e-03 4.90596267e-03]
+ [6.22889218e-06 6.40969219e-06 3.49653515e-06 3.53478974e-04]
+ [9.59124856e-07 1.32637853e-06 9.86143124e-08 2.67235502e-04]
+ [6.86461002e-05 6.77304539e-13 9.13027004e-13 1.53656251e-08]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [1.46422889e-05 6.74440556e-06 1.64303403e-03 2.69120895e-05]
+ [5.29546816e-06 9.22069964e-03 1.35711410e-05 2.94993878e-05]
+ [1.26255803e-03 3.35535942e-04 8.40768695e-04 1.35141535e-01]
+ [2.72171310e-02 1.18858505e-02 4.10934254e-01 2.73956940e-02]
+ [5.75756124e-04 8.32104176e-08 3.82454179e-05 2.48917031e-07]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [6.77080809e-15 3.85642346e-11 6.40755549e-06 1.02003104e-11]
+ [3.30332636e-06 1.32037397e-05 7.40884547e-07 1.65705466e-02]
+ [4.82166939e-03 5.96682004e-06 1.40245500e-05 1.91677621e-06]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [1.01130275e-02 2.85639800e-02 6.20124692e-01 9.44484037e-03]
+ [2.86998181e-04 1.28662960e-07 1.47898208e-08 6.57658571e-08]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [1.45590255e-10 7.64661302e-08 7.78954292e-11 2.38170506e-12]
+ [3.22520831e-10 3.97225723e-10 8.82202328e-14 2.97333644e-06]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [3.29896368e-07 3.73933464e-08 1.14945576e-01 3.73957016e-09]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [1.92174488e-01 3.96927007e-02 9.46978349e-01 6.38379362e-02]
+ [4.40863752e-04 1.07564411e-07 4.98985036e-05 1.14445861e-07]
+ [3.57586175e-09 4.84848149e-04 9.22223734e-09 1.43817314e-08]
+ [2.24396462e-04 1.44025820e-05 5.86374111e-09 3.24148331e-09]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]
+ [8.73854930e-08 5.96160027e-08 1.36159995e-07 7.86907329e-03]
+ [1.85570157e-02 5.69081605e-03 4.58144286e-01 2.60365489e-03]
+ [1.66241150e-02 8.91229367e-01 3.07837756e-02 3.48021718e-02]
+ [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00]]
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">total_test_episodes</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">rewards</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">episode</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_test_episodes</span><span class="p">):</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">total_rewards</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1">#print("****************************************************")
+</span>    <span class="c1">#print("EPISODE ", episode)
+</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
+        <span class="c1"># UNCOMMENT IT IF YOU WANT TO SEE OUR AGENT PLAYING
+</span>        <span class="c1"># env.render()
+</span>        <span class="c1"># Take the action (index) that have the maximum expected future reward given that state
+</span>        <span class="n">action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">qtable</span><span class="p">[</span><span class="n">state</span><span class="p">,:])</span>
+        
+        <span class="n">new_state</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        
+        <span class="n">total_rewards</span> <span class="o">+=</span> <span class="n">reward</span>
+        
+        <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
+            <span class="n">rewards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_rewards</span><span class="p">)</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">"Score"</span><span class="p">,</span> <span class="n">total_rewards</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"Steps: "</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+            <span class="k">break</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">new_state</span>
+<span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="c1">#print ("Score over time: " +  str(sum(rewards)/total_test_episodes))
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Plotting score over time
+</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">250000</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10000</span><span class="p">))[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">score_history</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">"Score vs. number of episodes"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Text(0.5,1,'Score vs. number of episodes')
+</code></pre></div></div>
+
+<p><img src="output_9_1.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Creating a gif with images we saved while training
+</span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">imageio</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">'./output/'</span><span class="p">)</span>
+<span class="n">filenames</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">()</span>
+<span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+    <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">imageio</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+<span class="n">imageio</span><span class="o">.</span><span class="n">mimsave</span><span class="p">(</span><span class="s">'FrozenLake.gif'</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">loop</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">'..'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="visualizing-training-">Visualizing training <a name="visualize"></a></h2>
+
+<p><img src="./output/FrozenLake.gif" width="600" height="600" /></p>
+
+<p>Important things to notice are that our Q-table’s values are training towards moving from the start (top left) to the end (bottom right) while avoiding holes in the ice (red squares). When it is around holes, our Q-table tells our agent to move away from the ice.</p>
+
+<p>This particular gif was created from hyperparameters of 250,000 episodes and 500 max steps per episode. Our agent gets better over time, but plateaus due to the ice being slippery (this means that some actions are overridden by a random action since we slipped).</p>
+
+<p>Visualization/image functions can be found <a href="/projects/FrozenLake/Draw_FrozenLake/">here.</a></p>
+
+<p>Images generated through training can be found <a href="/projects/FrozenLake/output/">here.</a></p>
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>
