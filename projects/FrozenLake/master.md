@@ -27,4 +27,4 @@ This particular gif was created from hyperparameters of 250,000 episodes and 500
 
 Visualization/image functions can be found [here.]({{ site.baseurl }}/projects/FrozenLake/Draw_FrozenLake)
 
-Images generated through training can be found [here.]({{ site.baseurl }}/projects/FrozenLake/output)
+Images generated through training can be found [here.]({{ site.baseurl }}/projects/FrozenLake/output/FrozenLakeOutput.7z)
