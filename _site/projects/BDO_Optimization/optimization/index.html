@@ -32,17 +32,44 @@
 
     <section class="main-content">
       
-      <p>This part of the project is currently on hold. As it turns out, optimizing paths on a graph with many variables is very difficult. I have tried two different methods so far: recursive ant colony optimization and using Python’s igraph library to find and calculate “reasonable” paths. Calculating paths between 300+ nodes on a weighted graph has a high time complexity which seems to make the last method unfeasible.</p>
+      <p>This part is active again! I am going to test and compare a bunch of algorithms to find a solution.</p>
 
-<p>I plan on learning machine learning to see if those methods will assist in finishing this project.</p>
+<h2 id="k-shortest-simple-paths"><a href="/projects/BDO_Optimization/optimization/k-shortest">K shortest simple paths</a></h2>
+
+<p>This algorithm uses networkx’s <a href="https://networkx.github.io/documentation/networkx-1.10/reference/generated/networkx.algorithms.simple_paths.shortest_simple_paths.html">shortest_simple_paths</a> to compute k simple paths.
+From these k simple paths, this algorithm calculates the value of the path with the assumption that the player will take all subnodes available in the path.
+It will then find the total CP cost of taking all nodes and subnodes in the path and take the path value and total CP cost to get a value per CP ratio to rank these k simple paths.
+The path with highest value per CP ratio will be chosen as the best path from k simple paths.</p>
+
+<p>Note that this algorithm is VERY GREEDY! It assumes that players will take all nodes and subnodes in the best chosen path, which is unrealistic as there is a CP softcap in the game.
+I have another algorithm coming that is not as greedy as this one.</p>
+
+<h2 id="iterative-path-builder-in-progress">Iterative path builder (in progress)</h2>
+
+<p>This algorithm finds the shortest path between two given nodes using networkx’s <a href="https://networkx.github.io/documentation/networkx-1.8.1/reference/generated/networkx.algorithms.shortest_paths.weighted.bidirectional_dijkstra.html">bidirectional Dijkstra</a> to compute the shortest path.
+From this shortest path, it iterates over subnodes in the path AS WELL AS subnodes of neighboring nodes up to some depth value (i.e. depth 1 would look at neighbors, depth 2 neighbors of neighbors, etc.).</p>
+
+<p>This becomes complicated quickly because for neighboring nodes, we have to include the base node CP cost into the calculation because it is not in our shortest path.
+Take a neighboring node with two subnodes A and B:</p>
+<ul>
+  <li>The value per CP of any subnode A or B will have to be calculated using A or B’s subnode CP cost as well as the node CP cost because we have to add the node to our path before accessing its subnodes.</li>
+  <li>If we already added A or B to our path, then we do not have to use the base node’s CP cost again because that would be double-counting.</li>
+  <li>Consider neighbors of neighbors and this becomes very complicated.</li>
+</ul>
+
+<p>Once the hard part described above is done, then we can add subnodes to our path that increase its current value per CP (i.e. consider subnodes whose value per CP &gt; path’s current value per CP).
+This should yield better results than K shortest simple paths because this algorithm is more selective of subnodes it adds.</p>
 
 <h2 id="recursive-ant-colony-optimization">Recursive ant colony optimization</h2>
 
-<p>This was my first attempt at optimizing, using a modified version of the ant colony optimization algorithm from <a href="https://github.com/Akavall/AntColonyOptimization">Akavall’s Github</a>. My Python script can be downloaded here: <a href="/projects/BDO_Optimization/optimization/ant_colony_modified.py">ant_colony_modified.py</a></p>
+<p>This was my first attempt at optimizing, using a modified version of the ant colony optimization algorithm from <a href="https://github.com/Akavall/AntColonyOptimization">Akavall’s Github</a>.
+My Python script can be downloaded here: <a href="/projects/BDO_Optimization/optimization/ant_colony_modified.py">ant_colony_modified.py</a>.
+Update: Not too sure where this algorithm fits in now since I want to give users control of which nodes they want to optimize between. This algorithm simply seeks out high value subnodes around a given starting node.</p>
 
-<h2 id="igraph">igraph</h2>
+<h2 id="igraph-depreciated">igraph (Depreciated)</h2>
 
-<p>Second attempt used igraph before I ran into a problem of time complexity. <a href="/projects/BDO_Optimization/optimization/igraph_optimization/">igraph_optimization.md</a></p>
+<p>Second attempt used igraph before I ran into a problem of time complexity. <a href="/projects/BDO_Optimization/optimization/igraph_optimization/">igraph_optimization.md</a>.
+I switched from igraph to networkx in favor of networkx’s bidirections Dijkstra algorithm. This eliminates the problem of time complexity I faced using igraph’s functions.</p>
 
 
       <footer class="site-footer">

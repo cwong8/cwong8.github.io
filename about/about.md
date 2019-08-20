@@ -10,14 +10,7 @@ Just someone who enjoys data, programming, and gaming. Mostly using SQL, Python,
 
 Things I am working on:
 - BDO Optimization
-    - Reviewing optimization part.
-    - Check simple algorithm using Dijkstra's algorithm against recursive ant colony optimization.
-    
-- Learning Javascript
-    - Mostly for building dynamic webpages to show off interactive projects such as BDO Optimization.
-
-- Path of Exile economy project
-    - Going to do some modeling/forecasting with economy data from Path of Exile throughout leagues.
-    
+    - Testing some optimization algorithms.
+       
 - Machine learning
-    - Taking online courses.
+    - Mainly reinforcement learning for training AI to play video games.
