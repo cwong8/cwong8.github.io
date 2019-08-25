@@ -4,8 +4,10 @@ title: K shortest simple paths
 permalink: /projects/BDO_Optimization/optimization/k-shortest
 ---
 
+# Setup
 
-# K shortest simple paths
+Loading packages, initializing data and variables.
+
 
 ```python
 # Importing packages
@@ -106,6 +108,18 @@ subnode_values["value_rank"] = subnode_values["subnode_value_user_per_cp"].rank(
 subnode_values["recent_rank"] = subnode_values["subnode_value_recent_per_cp"].rank(ascending = False)
 ```
 
+# K shortest simple paths
+
+K shortest simple paths is a very greedy algorithm that calculates value based on the assumption that players will take all nodes and subnodes in the returned path. This is not realistic because there is a CP softcap in game.
+
+##### Pseudocode:
+1. Calculate some number k shortest simple paths using networkx's function shortest_simple_paths.
+2. Find the best value per CP path by:
+  1. Calculating combined value of subnodes for nodes in our path
+  2. Finding the total CP cost from the nodes and subnodes
+  3. Dividing. Ta-da...
+3. Extend this to work for inputs of more than one path by basically repeating steps (1) and (2) for each (start, end) pair.
+
 
 ```python
 import itertools
@@ -139,36 +153,6 @@ for path in paths:
     [69, 122, 220, 260, 65, 244, 206, 155, 230, 241, 109, 78, 318, 332, 176, 38, 160, 23, 22]
     [69, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 208, 12, 328, 38, 160, 23, 22]
     [69, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 364, 25, 1, 160, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 38, 255, 40, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 208, 12, 328, 38, 160, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 364, 25, 1, 160, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 38, 255, 40, 23, 22]
-    [69, 101, 97, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 38, 160, 23, 22]
-    [69, 101, 97, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 38, 160, 23, 22]
-    [69, 101, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 38, 160, 23, 22]
-    [69, 101, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 38, 160, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 38, 255, 327, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 38, 255, 327, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 316, 227, 255, 40, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 160, 23, 0, 2, 7, 22]
-    [69, 101, 97, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 255, 40, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 328, 38, 255, 40, 23, 22]
-    [69, 101, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 255, 40, 23, 22]
-    [69, 122, 101, 97, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 160, 23, 22]
-    [69, 122, 219, 238, 261, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 160, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 171, 12, 328, 38, 160, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 74, 329, 189, 227, 255, 40, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 74, 316, 227, 255, 40, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 329, 189, 227, 255, 38, 160, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 227, 255, 38, 160, 23, 22]
-    [69, 101, 97, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 328, 38, 160, 23, 22]
-    [69, 101, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 328, 38, 160, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 316, 227, 255, 327, 23, 22]
-    [69, 101, 97, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 255, 327, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 328, 38, 255, 327, 23, 22]
-    [69, 101, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 255, 327, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 74, 329, 189, 227, 255, 327, 23, 22]
-    [69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 74, 316, 227, 255, 327, 23, 22]
     
 
 
@@ -326,7 +310,7 @@ def optimize_paths(locations, output = False):
     one final path removing duplicates.
     
     Args:
-        locations: Pairings of start and end locations. They should both be start nodes.
+        locations: Pairings of start and end locations. They should both be main nodes.
             Ex. [("Calpheon", "Altinova"), ("Calpheon", "Heidel"), ("Heidel", "Velia")]
         output: Option to print detailed output. Set output = True to see this.
         
@@ -345,18 +329,19 @@ def optimize_paths(locations, output = False):
             print("_______________________________________________________________________________________________________________")
     
     # Output
-    print("Combining paths...")
-    master_path = list(dict.fromkeys(itertools.chain(*master_path)))
-    print("Done")
-    print("Cleaning subnode dataframes...")
-    master_path_df = master_path_df.drop_duplicates()
-    print("Done")
-    print("_______________________________")
-    print("Node CP: " + str(get_total_cp(master_path)))
-    print("Subnode CP: " + str(master_path_df["cp"].sum()))
-    print("Total CP: " + str(get_total_cp(master_path) + master_path_df["cp"].sum()))
-    print("Total value: " + str(master_path_df["subnode_value_user"].sum()))
-    print("Value per CP: " + str(master_path_df["subnode_value_user"].sum() / (get_total_cp(master_path) + master_path_df["cp"].sum())))
+    if output == True:
+        print("Combining paths...")
+        master_path = list(dict.fromkeys(itertools.chain(*master_path)))
+        print("Done")
+        print("Cleaning subnode dataframes...")
+        master_path_df = master_path_df.drop_duplicates()
+        print("Done")
+        print("_______________________________")
+        print("Node CP: " + str(get_total_cp(master_path)))
+        print("Subnode CP: " + str(master_path_df["cp"].sum()))
+        print("Total CP: " + str(get_total_cp(master_path) + master_path_df["cp"].sum()))
+        print("Total value: " + str(master_path_df["subnode_value_user"].sum()))
+        print("Value per CP: " + str(master_path_df["subnode_value_user"].sum() / (get_total_cp(master_path) + master_path_df["cp"].sum())))
     
 ```
 

@@ -32,7 +32,9 @@
 
     <section class="main-content">
       
-      <h1 id="k-shortest-simple-paths">K shortest simple paths</h1>
+      <h1 id="setup">Setup</h1>
+
+<p>Loading packages, initializing data and variables.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Importing packages
 </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
@@ -130,6 +132,20 @@ ORDER BY item_price.subnode_id
 <span class="n">subnode_values</span><span class="p">[</span><span class="s">"recent_rank"</span><span class="p">]</span> <span class="o">=</span> <span class="n">subnode_values</span><span class="p">[</span><span class="s">"subnode_value_recent_per_cp"</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
 </code></pre></div></div>
 
+<h1 id="k-shortest-simple-paths">K shortest simple paths</h1>
+
+<p>K shortest simple paths is a very greedy algorithm that calculates value based on the assumption that players will take all nodes and subnodes in the returned path. This is not realistic because there is a CP softcap in game.</p>
+
+<h5 id="pseudocode">Pseudocode:</h5>
+<ol>
+  <li>Calculate some number k shortest simple paths using networkx’s function shortest_simple_paths.</li>
+  <li>Find the best value per CP path by:</li>
+  <li>Calculating combined value of subnodes for nodes in our path</li>
+  <li>Finding the total CP cost from the nodes and subnodes</li>
+  <li>Dividing. Ta-da…</li>
+  <li>Extend this to work for inputs of more than one path by basically repeating steps (1) and (2) for each (start, end) pair.</li>
+</ol>
+
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">itertools</span>
 <span class="c1"># Find the k shortest paths using CP costs as edge weights
 </span><span class="k">def</span> <span class="nf">k_shortest_paths</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="s">'weight'</span><span class="p">):</span>
@@ -161,36 +177,6 @@ ORDER BY item_price.subnode_id
 [69, 122, 220, 260, 65, 244, 206, 155, 230, 241, 109, 78, 318, 332, 176, 38, 160, 23, 22]
 [69, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 208, 12, 328, 38, 160, 23, 22]
 [69, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 364, 25, 1, 160, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 38, 255, 40, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 208, 12, 328, 38, 160, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 364, 25, 1, 160, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 38, 255, 40, 23, 22]
-[69, 101, 97, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 38, 160, 23, 22]
-[69, 101, 97, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 38, 160, 23, 22]
-[69, 101, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 38, 160, 23, 22]
-[69, 101, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 38, 160, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 230, 109, 78, 318, 332, 176, 38, 255, 327, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 78, 318, 332, 176, 38, 255, 327, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 316, 227, 255, 40, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 160, 23, 0, 2, 7, 22]
-[69, 101, 97, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 255, 40, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 328, 38, 255, 40, 23, 22]
-[69, 101, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 255, 40, 23, 22]
-[69, 122, 101, 97, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 160, 23, 22]
-[69, 122, 219, 238, 261, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 160, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 171, 12, 328, 38, 160, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 74, 329, 189, 227, 255, 40, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 74, 316, 227, 255, 40, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 329, 189, 227, 255, 38, 160, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 227, 255, 38, 160, 23, 22]
-[69, 101, 97, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 328, 38, 160, 23, 22]
-[69, 101, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 328, 38, 160, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 316, 227, 255, 327, 23, 22]
-[69, 101, 97, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 255, 327, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 171, 29, 74, 316, 328, 38, 255, 327, 23, 22]
-[69, 101, 122, 220, 260, 65, 244, 206, 155, 108, 171, 12, 328, 38, 255, 327, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 74, 329, 189, 227, 255, 327, 23, 22]
-[69, 122, 220, 260, 65, 244, 206, 155, 108, 298, 28, 29, 74, 316, 227, 255, 327, 23, 22]
 </code></pre></div></div>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Works best if you have a lot of CP, because this assumes you will take all subnodes
@@ -341,7 +327,7 @@ ORDER BY item_price.subnode_id
     one final path removing duplicates.
     
     Args:
-        locations: Pairings of start and end locations. They should both be start nodes.
+        locations: Pairings of start and end locations. They should both be main nodes.
             Ex. [("Calpheon", "Altinova"), ("Calpheon", "Heidel"), ("Heidel", "Velia")]
         output: Option to print detailed output. Set output = True to see this.
         
@@ -360,18 +346,19 @@ ORDER BY item_price.subnode_id
 </span>            <span class="k">print</span><span class="p">(</span><span class="s">"_______________________________________________________________________________________________________________"</span><span class="p">)</span>
     
     <span class="c1"># Output
-</span>    <span class="k">print</span><span class="p">(</span><span class="s">"Combining paths..."</span><span class="p">)</span>
-    <span class="n">master_path</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">master_path</span><span class="p">)))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"Done"</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"Cleaning subnode dataframes..."</span><span class="p">)</span>
-    <span class="n">master_path_df</span> <span class="o">=</span> <span class="n">master_path_df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"Done"</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"_______________________________"</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"Node CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_total_cp</span><span class="p">(</span><span class="n">master_path</span><span class="p">)))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"Subnode CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">master_path_df</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"Total CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_total_cp</span><span class="p">(</span><span class="n">master_path</span><span class="p">)</span> <span class="o">+</span> <span class="n">master_path_df</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"Total value: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">master_path_df</span><span class="p">[</span><span class="s">"subnode_value_user"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">"Value per CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">master_path_df</span><span class="p">[</span><span class="s">"subnode_value_user"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span> <span class="o">/</span> <span class="p">(</span><span class="n">get_total_cp</span><span class="p">(</span><span class="n">master_path</span><span class="p">)</span> <span class="o">+</span> <span class="n">master_path_df</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">())))</span>
+</span>    <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Combining paths..."</span><span class="p">)</span>
+        <span class="n">master_path</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">master_path</span><span class="p">)))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Done"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Cleaning subnode dataframes..."</span><span class="p">)</span>
+        <span class="n">master_path_df</span> <span class="o">=</span> <span class="n">master_path_df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Done"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"_______________________________"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Node CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_total_cp</span><span class="p">(</span><span class="n">master_path</span><span class="p">)))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Subnode CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">master_path_df</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Total CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_total_cp</span><span class="p">(</span><span class="n">master_path</span><span class="p">)</span> <span class="o">+</span> <span class="n">master_path_df</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Total value: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">master_path_df</span><span class="p">[</span><span class="s">"subnode_value_user"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Value per CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">master_path_df</span><span class="p">[</span><span class="s">"subnode_value_user"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span> <span class="o">/</span> <span class="p">(</span><span class="n">get_total_cp</span><span class="p">(</span><span class="n">master_path</span><span class="p">)</span> <span class="o">+</span> <span class="n">master_path_df</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span><span class="o">.</span><span class="nb">sum</span><span class="p">())))</span>
     
 </code></pre></div></div>
 

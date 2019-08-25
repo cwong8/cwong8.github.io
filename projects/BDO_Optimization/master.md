@@ -9,7 +9,7 @@ permalink: /projects/BDO_Optimization/
 2. [Obtaining the data through web scraping]({{ site.baseurl }}/projects/BDO_Optimization/webscrape/)
   - [Old version]({{ site.baseurl }}/projects/BDO_Optimization/webscrape/old/)
 3. [Exploratory analysis]({{ site.baseurl }}/projects/BDO_Optimization/analysis/)
-4. [Optimization (in progress)]({{ site.baseurl }}/projects/BDO_Optimization/optimization/)
+4. [Optimization]({{ site.baseurl }}/projects/BDO_Optimization/optimization/)
 5. [Interactive world map (in progress)]({{ site.baseurl }}/projects/BDO_Optimization/map/)
 6. [Information](#information)
 

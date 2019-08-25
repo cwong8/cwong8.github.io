@@ -4,7 +4,11 @@ title: Black Desert Online Worker Optimization
 permalink: /projects/BDO_Optimization/optimization/
 ---
 
-This part is active again! I am going to test and compare a bunch of algorithms to find a solution.
+As far as algorithms are concerned, I think K-depth is the best I can do. Further improvements would have to be made using machine learning, but I need A LOT of data (user-generated node networks) that is not readily available at the moment.
+
+Things I still have to do:
+  - Add in workers and worker variables
+  - Maybe export these algorithms to standalone Python scripts
 
 ## [K shortest simple paths]({{ site.baseurl }}/projects/BDO_Optimization/optimization/k-shortest)
 
@@ -14,21 +18,18 @@ It will then find the total CP cost of taking all nodes and subnodes in the path
 The path with highest value per CP ratio will be chosen as the best path from k simple paths.
 
 Note that this algorithm is VERY GREEDY! It assumes that players will take all nodes and subnodes in the best chosen path, which is unrealistic as there is a CP softcap in the game.
-I have another algorithm coming that is not as greedy as this one.
+K-depth iterative path generator is not as greedy as this one.
 
-## Iterative path builder (in progress)
+## [K-depth Iterative Path Generator]({{ site.baseurl }}/projects/BDO_Optimization/optimization/k-depth)
 
 This algorithm finds the shortest path between two given nodes using networkx's [bidirectional Dijkstra](https://networkx.github.io/documentation/networkx-1.8.1/reference/generated/networkx.algorithms.shortest_paths.weighted.bidirectional_dijkstra.html) to compute the shortest path.
 From this shortest path, it iterates over subnodes in the path AS WELL AS subnodes of neighboring nodes up to some depth value (i.e. depth 1 would look at neighbors, depth 2 neighbors of neighbors, etc.).
 
-This becomes complicated quickly because for neighboring nodes, we have to include the base node CP cost into the calculation because it is not in our shortest path.
-Take a neighboring node with two subnodes A and B:
-  - The value per CP of any subnode A or B will have to be calculated using A or B's subnode CP cost as well as the node CP cost because we have to add the node to our path before accessing its subnodes.
-  - If we already added A or B to our path, then we do not have to use the base node's CP cost again because that would be double-counting.
-  - Consider neighbors of neighbors and this becomes very complicated.
-  
-Once the hard part described above is done, then we can add subnodes to our path that increase its current value per CP (i.e. consider subnodes whose value per CP > path's current value per CP).
-This should yield better results than K shortest simple paths because this algorithm is more selective of subnodes it adds.
+Starting with the shortest path between two nodes, the algorithm considers subnodes in the path and subnodes of neighoring nodes. It chooses subnodes that will increase its average value per CP (and thus iteratively improving itself).
+
+## K shortest simple paths vs. K-depth iterative path generator (in progress)
+
+Will have a short comparison between these two algorithms.
 
 ## Recursive ant colony optimization
 

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-139929620-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-139929620-1');
+  </script>
+
+  <meta charset="UTF-8">
+  <title>cwong8.github.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+      <h1 class="project-name"><a href="http://localhost:4000"><font color="white">Christopher Wong</font></a></h1>
+      <a href="/about/" class="btn">About</a>
+      <a href="/resume/Christopher.Wong.pdf" class="btn">Resume</a>
+      <a href="mailto:cwong680@gmail.com" class="btn">Email me</a>
+      <h2 class="page-name"><font color="white" size="22">K-depth Iterative Path Generator</font></h2>
+    </section>
+
+    <section class="main-content">
+      
+      <h1 id="setup">Setup</h1>
+
+<p>Loading packages, initializing data and variables.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Importing packages
+</span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">MySQLdb</span>
+
+<span class="c1"># Display settings
+</span><span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_rows</span> <span class="o">=</span> <span class="mi">6</span>
+
+<span class="c1"># Server connection to MySQL:
+</span><span class="n">conn</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="o">=</span> <span class="s">"localhost"</span><span class="p">,</span>
+                  <span class="n">user</span><span class="o">=</span><span class="s">"yourusername"</span><span class="p">,</span>
+                  <span class="n">passwd</span><span class="o">=</span><span class="s">"yourpassword"</span><span class="p">,</span>
+                  <span class="n">db</span><span class="o">=</span><span class="s">"bdodae_new"</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+<span class="c1"># Importing SQL data
+</span><span class="n">node</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">"SELECT * FROM node;"</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+
+<span class="c1"># Create connection/adjacency matrix weighted with CP costs
+</span><span class="n">cp_connection_matrix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"name"</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"name"</span><span class="p">]))),</span> <span class="n">index</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s">"name"</span><span class="p">],</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s">"name"</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s">"connections"</span><span class="p">],</span> <span class="n">node</span><span class="p">[</span><span class="s">"name"</span><span class="p">]):</span>
+    <span class="n">connections</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">", "</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">connected_nodes</span> <span class="ow">in</span> <span class="n">connections</span><span class="p">:</span>
+        <span class="c1"># Edges going into cities have weight 0 and thus disappear from our graph, but we don't want this to happen
+</span>        <span class="c1"># So we will instead set their weights to a very small value
+</span>        <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="n">node</span><span class="p">[</span><span class="s">"name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">connected_nodes</span><span class="p">][</span><span class="s">"cp"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">cp_connection_matrix</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="n">connected_nodes</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.000000001</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cp_connection_matrix</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="n">connected_nodes</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="n">node</span><span class="p">[</span><span class="s">"name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">connected_nodes</span><span class="p">][</span><span class="s">"cp"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Import networkx
+</span><span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="n">nx</span>
+
+<span class="c1"># Create graph
+</span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">cp_connection_matrix</span><span class="p">),</span> <span class="n">create_using</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">())</span>
+<span class="c1"># Add node attributes
+</span><span class="n">node_attributes</span> <span class="o">=</span> <span class="n">node</span><span class="p">[[</span><span class="s">"name"</span><span class="p">,</span> <span class="s">"cp"</span><span class="p">,</span> <span class="s">"area"</span><span class="p">,</span> <span class="s">"type"</span><span class="p">]]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s">'index'</span><span class="p">)</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_attributes</span><span class="p">)</span>
+
+<span class="c1"># Subnode information for subnode attributes and edges
+</span><span class="n">node_subnode</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span>
+    <span class="s">"""
+    SELECT node.name, subnode.name AS subnode_name, subnode.cp AS subnode_cp, base_workload, current_workload
+    FROM node JOIN subnode ON node.node_id = subnode.node_id;
+    """</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+
+<span class="c1"># Get node ID given a single node's name
+</span><span class="k">def</span> <span class="nf">get_nx_node_id</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">y</span><span class="p">[</span><span class="s">"name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="c1"># Add subnodes to node graph G
+</span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">node_subnode</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1000</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">node_subnode</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_name"</span><span class="p">],</span> <span class="n">cp</span> <span class="o">=</span> <span class="n">node_subnode</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_cp"</span><span class="p">],</span>
+               <span class="n">base_workload</span> <span class="o">=</span> <span class="n">node_subnode</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"base_workload"</span><span class="p">],</span> <span class="n">current_workload</span> <span class="o">=</span> <span class="n">node_subnode</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"current_workload"</span><span class="p">])</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">node_subnode</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"name"</span><span class="p">]),</span> <span class="n">i</span><span class="o">+</span><span class="mi">1000</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="n">node_subnode</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_cp"</span><span class="p">])</span>
+
+<span class="c1"># Get the total value of each subnode
+</span><span class="n">subnode_values</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s">"""
+SELECT item_yield.node_name, item_price.subnode_id, item_yield.subnode_name, item_yield.cp,
+    SUM(item_price.user_average * item_yield.amount) AS subnode_value_user,
+    SUM(item_price.recent_value * item_yield.amount) AS subnode_value_recent,
+    SUM(item_price.vendor_sell * item_yield.amount) AS subnode_value_vendor
+FROM
+    (SELECT subnode_item.subnode_id, item.name, prices.*
+    FROM subnode_item JOIN item ON subnode_item.item_id = item.item_id
+      JOIN prices ON item.item_id = prices.item_id
+    ORDER BY subnode_item.subnode_id, item.item_id) AS item_price
+    JOIN
+    (SELECT subnode.subnode_id, item.item_id, item.name, yield.amount, subnode.name AS subnode_name, subnode.cp, node.name AS node_name
+    FROM subnode JOIN yield ON subnode.subnode_id = yield.subnode_id
+      JOIN item ON yield.item_id = item.item_id
+      JOIN node ON subnode.node_id = node.node_id
+    ORDER BY subnode.subnode_id, item.item_id) AS item_yield
+    ON item_price.subnode_id = item_yield.subnode_id
+        AND item_price.item_id = item_yield.item_id
+        AND item_price.name = item_yield.name
+GROUP BY item_price.subnode_id
+ORDER BY item_price.subnode_id
+"""</span><span class="p">,</span> <span class="n">con</span> <span class="o">=</span> <span class="n">conn</span><span class="p">)</span>
+
+<span class="c1"># Add per CP values
+</span><span class="n">subnode_values</span><span class="p">[</span><span class="s">"subnode_value_user_per_cp"</span><span class="p">]</span> <span class="o">=</span> <span class="n">subnode_values</span><span class="p">[</span><span class="s">"subnode_value_user"</span><span class="p">]</span> <span class="o">/</span> <span class="n">subnode_values</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span>
+<span class="n">subnode_values</span><span class="p">[</span><span class="s">"subnode_value_recent_per_cp"</span><span class="p">]</span> <span class="o">=</span> <span class="n">subnode_values</span><span class="p">[</span><span class="s">"subnode_value_recent"</span><span class="p">]</span> <span class="o">/</span> <span class="n">subnode_values</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span>
+
+<span class="c1"># Add subnode values to node graph G
+</span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">subnode_values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1000</span><span class="p">:</span> <span class="p">{</span><span class="s">"subnode_value_user"</span><span class="p">:</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_value_user"</span><span class="p">],</span>
+                                        <span class="s">"subnode_value_recent"</span><span class="p">:</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_value_recent"</span><span class="p">],</span>
+                                        <span class="s">"subnode_value_vendor"</span><span class="p">:</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_value_vendor"</span><span class="p">]}})</span>
+    
+<span class="c1"># Adding subnode ranks based on their value per CP
+</span><span class="n">subnode_values</span><span class="p">[</span><span class="s">"value_rank"</span><span class="p">]</span> <span class="o">=</span> <span class="n">subnode_values</span><span class="p">[</span><span class="s">"subnode_value_user_per_cp"</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+<span class="n">subnode_values</span><span class="p">[</span><span class="s">"recent_rank"</span><span class="p">]</span> <span class="o">=</span> <span class="n">subnode_values</span><span class="p">[</span><span class="s">"subnode_value_recent_per_cp"</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>    
+    
+    
+<span class="c1"># Add subnode values to node graph G
+</span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">subnode_values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1000</span><span class="p">:</span> <span class="p">{</span><span class="s">"subnode_value_user"</span><span class="p">:</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_value_user"</span><span class="p">],</span>
+                                        <span class="s">"subnode_value_recent"</span><span class="p">:</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_value_recent"</span><span class="p">],</span>
+                                        <span class="s">"subnode_value_vendor"</span><span class="p">:</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">"subnode_value_vendor"</span><span class="p">]}})</span>
+
+<span class="c1">### Helper functions
+# Takes in list as input (use get_nx_node_id for a single node). Also only works on main nodes, no subnodes.
+</span><span class="k">def</span> <span class="nf">get_node_id</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">([</span><span class="n">node</span><span class="p">[</span><span class="n">node</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span> <span class="o">==</span> <span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">name</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">get_node_name</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="s">'name'</span><span class="p">])</span>
+
+<span class="c1"># Gets total CP for a list of NODES only
+</span><span class="k">def</span> <span class="nf">get_total_cp</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="s">'cp'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+
+<span class="c1"># This would be a simple call to a subnode_id's neighbors if I added them in the graph...
+# But since I did not, we have this thing
+</span><span class="k">def</span> <span class="nf">get_parent_node</span><span class="p">(</span><span class="n">subnode_id</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">subnode_id</span><span class="p">][</span><span class="s">"name"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">" - "</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+
+<span class="k">def</span> <span class="nf">get_subnodes</span><span class="p">(</span><span class="n">node_id</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node_id</span><span class="p">))</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">1000</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">itertools</span>
+<span class="k">def</span> <span class="nf">get_neighbors</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">depth</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>   
+    <span class="s">"""
+    Given a path as input, return neighbors with depth/degrees of separation to nodes in the path.
+    
+    Args:
+        path: Any list of nodes that you call a path. In my case, it is the output of networkx's bidirectional Dijkstra.
+            Ex. _, path = nx.bidirectional_dijkstra(G, get_node_id(["Calpheon"])[0], get_node_id(["Altinova"])[0])
+        depth: Depth/degrees of separation for neighbors of nodes in path. Default depth = 1 because I found that the search
+               area for higher depths deviates from our goal of going from start node to end node.
+            Depth = 1 returns neighbors of nodes in path
+            Depth = 2 returns neighbors of neighbors of nodes in path
+            .
+            .
+            .
+            Depth = n returns neighbors of nodes returned by depth n-1
+        
+    Returns:
+        Neighbors with depth/degrees of separation to nodes in the path.
+    """</span>
+    <span class="c1"># Main path will only contain main nodes in our path
+</span>    <span class="n">main_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">path</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">]</span>
+    <span class="c1"># Keep track of what neighboring nodes we have seen. Important for higher depth values where we may not choose
+</span>    <span class="c1"># the first neighbor of a node, but its neighbor's neighbor.
+</span>    <span class="n">nodes_considered</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="c1"># Note that for each depth iteration, we cut off the start and end nodes of our path
+</span>    <span class="c1"># This is so we do not stray too far from getting to our location
+</span>    <span class="c1"># Visually creates an elliptical search area between start and end nodes rather than a large circle
+</span>    <span class="c1"># This does not necessarily mean that our algorithm will not go "backwards"
+</span>    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">main_path</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node_id</span><span class="p">))</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
+            <span class="n">nodes_considered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
+            
+    <span class="c1"># Remove duplicates    
+</span>    <span class="n">nodes_considered</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">nodes_considered</span><span class="p">)))</span> 
+    <span class="k">return</span><span class="p">(</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">nodes_considered</span><span class="p">,</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</code></pre></div></div>
+
+<h1 id="k-depth-iterative-path-generator">K-depth iterative path generator</h1>
+
+<p>Let me tell ya, this algorithm hurt my head when building it. The amount of code here is only a fraction of what I had to write to test, build, and experiment with for this algorithm.</p>
+
+<h5 id="pseudocode">Pseudocode:</h5>
+<ol>
+  <li>Find shortest path given a start and end node using bidirectional Dijkstra’s.</li>
+  <li>Get all subnodes in the path.</li>
+  <li>Find neighbors of nodes in the path given some depth/degree of separation.</li>
+  <li>Get those neighbors’ subnodes (if they exist).</li>
+  <li>Combine subnodes from (2) and (4).</li>
+  <li>Calculate value per CP for each subnode:
+    <ul>
+      <li>Value per CP is subnode value divided by subnode CP IF the main node is already in the path</li>
+      <li>Otherwise the value per CP is subnode value divided by subnode CP plus node CP</li>
+    </ul>
+  </li>
+</ol>
+
+<p>Basically
+<script type="math/tex">% <![CDATA[
+\text{check_value} = \text{Value per CP(subnode)} =  \left\{
+\begin{array}{ll}
+      \frac{\text{Subnode value}}{\text{Subnode CP cost}} & \text{if main node in path} \\
+      \frac{\text{Subnode value}}{\text{Subnode CP cost + Node CP cost}} & \text{if main node NOT in path} \\
+\end{array} 
+\right. %]]></script></p>
+
+<p>However, we only need to do this for the best value per CP subnode if there are multiple. See below.</p>
+
+<h5 id="how-this-all-works">How this all works</h5>
+<ul>
+  <li>If the node is not in the path (i.e. is a neighboring node), then include the main node CP in calculations.</li>
+  <li>Then “add” the neighbor node to path so its other subnodes keep their original subnode_value_user_per_cp. Don’t really add 
+the neighbor node to the path yet. We keep track of this in node_not_in_path. We only truly add the main node to the 
+path when the check_value of the “best” subnode of that neighbor increases our path value.</li>
+  <li>This allows us to have the best check if a neighboring subnode is worth including in our path.</li>
+</ul>
+
+<p>Ex:</p>
+
+<p>Neighboring node costs 3 CP with subnodes A and B with:
+    * Subnode A has 70k value for 2CP (so 35k value per CP)
+    * Subnode B has 50k value for 3CP (so 16.6k value per CP)
+  We pick the best subnode (in this case subnode A), and add the node CP to it.
+  So, when we do calculations, subnode A has a check_value of 70k value for 5CP (or 14k value per CP).
+  Note this is worse than subnode B, now, but consider the other case if we added node CP to subnode B.
+  Then subnode B would have a check_value of 50k value for 6 CP (or 8.33k value per CP).
+  It has a much lower check_value than subnode A so our algorithm would most likely skip it, even though subnode A
+  has an amazing 35k value per CP.
+  By using the best subnode for each neighbor, we ensure that we maximize the check_value for neighbors’ subnodes
+  and thus their likelihood of being added to the path.
+  So, let’s go back and add subnode A with check_value 14k value per CP.
+  Two cases exist:
+    1. The other subnode is better value per CP than the best subnode’s check_value, so in this case subnode B
+        with value per CP of 16.6k is better than subnode A’s check_value of 14k value per CP.
+        For this case, we also add subnode B to our path because the path’s value per CP would increase.
+    2. The other subnode is worse value per CP. Let’s call this subnode C with 5k value per CP.
+        Then we just skip subnode C because it adds no value to our path.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s">"adf"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>adf
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">optimize_path</span><span class="p">(</span><span class="n">initpath</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">max_depth</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
+    <span class="s">"""
+    Optimizes a path by maximizing value per CP.
+    Turn on diagnostics (diagnostics = True) to see the algorithm in action.
+    Turn on output (output = True) to see information of the final optimized path.
+    
+    Args:
+        initpath: The path you want optimized. Recommend to use the path generated by networkx's bidirectional Dijkstra.
+                  Use this if you have multiple paths you want to optimize on, otherwise specify a start and end node.
+        max_depth: Maximum depth our algorithm searches through. See get_neighbors for more information on depth.
+                   Recommended max_depth = 1 for the same reasons as in get_neighbors.
+        output: Prints information of the final optimized path.
+        Diagnostics: Prints the thought process of the algorithm.
+        
+    Returns:
+        1. A path with the best value per CP from start to end, including searching for neighboring nodes up to max_depth.
+        2. A dataframe containing information on chosen subnodes that added value to our path.
+    """</span>
+    
+    <span class="c1"># If you choose to use start and end
+</span>    <span class="k">if</span> <span class="p">(</span><span class="n">start</span> <span class="ow">and</span> <span class="n">end</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Initial path is stored in "initpath", and the iterative path we build is stored in "path"
+</span>        <span class="c1"># This is because of how I set up the get_neighbors function
+</span>        <span class="n">_</span><span class="p">,</span> <span class="n">initpath</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bidirectional_dijkstra</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">get_node_id</span><span class="p">([</span><span class="n">start</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="n">get_node_id</span><span class="p">([</span><span class="n">end</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">start</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Error: You must specify both start and end if you are using them!"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">()</span>
+    
+    <span class="c1"># If you choose to use initpath
+</span>    <span class="c1"># This is useful if you want to have multiple start and end locations. Then create initpath using combine_paths.
+</span>    <span class="k">if</span> <span class="n">initpath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">initpath</span>
+    
+    <span class="c1"># Our initial path only contains nodes, so there is zero value
+</span>    <span class="n">path_value</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Get the total node CP cost for nodes in our initial path
+</span>    <span class="n">path_node_CP</span> <span class="o">=</span> <span class="n">get_total_cp</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="c1"># We start with no subnodes in our path, so we do not have any subnode CP cost
+</span>    <span class="n">path_subnode_CP</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Simple division to get the path value per CP 
+</span>    <span class="n">path_value_per_cp</span> <span class="o">=</span> <span class="n">path_value</span> <span class="o">/</span> <span class="p">(</span><span class="n">path_node_CP</span> <span class="o">+</span> <span class="n">path_subnode_CP</span><span class="p">)</span>
+    <span class="c1"># Will contain subnodes the algorithm chooses (i.e. subnodes that increase the path's value per CP)
+</span>    <span class="n">subnodes_chosen</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Will be the dataframe for data about subnodes we have chosen
+</span>    <span class="n">subnodes_chosen_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="c1"># Master dataframe containing data on subnodes in our path and its neighbors
+</span>    <span class="n">all_subnodes_df</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Diagnostics
+</span>    <span class="k">if</span> <span class="n">diagnostics</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Start path value: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_value</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Node CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_node_CP</span><span class="p">)</span> <span class="o">+</span> <span class="s">"</span><span class="se">\t</span><span class="s">Subnode CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_subnode_CP</span><span class="p">)</span> <span class="o">+</span> <span class="s">"</span><span class="se">\t</span><span class="s">Total CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_node_CP</span> <span class="o">+</span> <span class="n">path_subnode_CP</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"***********************************************************************************************"</span><span class="p">)</span>
+
+    <span class="c1"># Loop that gets neighbors up to a certain depth/degree of separation
+</span>    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_depth</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Initial path thingy
+</span>        <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">path_subnodes_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="c1"># Get subnodes in shortest path
+</span>            <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+                <span class="c1"># path_subnodes_df contains all subnodes along our path
+</span>                <span class="n">path_subnodes_df</span> <span class="o">=</span> <span class="n">path_subnodes_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subnode_values</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">subnode_values</span><span class="p">[</span><span class="s">"node_name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s">"name"</span><span class="p">]])</span>    
+
+
+        <span class="c1"># Neighbors and their subnodes
+</span>        <span class="n">neighbors</span> <span class="o">=</span> <span class="n">get_neighbors</span><span class="p">(</span><span class="n">initpath</span><span class="p">,</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">d</span><span class="p">)</span>
+        <span class="n">neighbor_subnodes_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">subnode_values</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
+            <span class="c1"># For higher depths, neighbors of neighbors may contain nodes in our path so we check this
+</span>            <span class="k">if</span> <span class="n">neighbor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+                <span class="c1"># Get subnode IDs of a neighboring node
+</span>                <span class="n">subnode_ids</span> <span class="o">=</span> <span class="n">get_subnodes</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
+                <span class="c1"># Get dataframe containing all neighbors' subnode data
+</span>                <span class="k">for</span> <span class="n">subnode_id</span> <span class="ow">in</span> <span class="n">subnode_ids</span><span class="p">:</span>
+                    <span class="n">subnode_name</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">subnode_id</span><span class="p">][</span><span class="s">"name"</span><span class="p">]</span>
+                    <span class="n">neighbor_subnodes_df</span> <span class="o">=</span> <span class="n">neighbor_subnodes_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subnode_values</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">subnode_values</span><span class="p">[</span><span class="s">"subnode_name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">subnode_name</span><span class="p">])</span>
+
+
+        <span class="c1"># Put path subnodes and neighbors' subnodes together for comparison later, drop duplicates, order by value per CP
+</span>        <span class="n">all_subnodes_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">path_subnodes_df</span><span class="p">,</span> <span class="n">neighbor_subnodes_df</span><span class="p">])</span>
+        <span class="n">all_subnodes_df</span> <span class="o">=</span> <span class="n">all_subnodes_df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+        <span class="n">all_subnodes_df</span> <span class="o">=</span> <span class="n">all_subnodes_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s">"subnode_value_user_per_cp"</span><span class="p">,</span> <span class="n">ascending</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+
+        
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">all_subnodes_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="c1"># I use a binary variable for not in path as opposed to is in path because I want my binary variable to have
+</span>            <span class="c1"># value 1 (or True) when the node is not in our path and 0 (or False) when the node is in our path
+</span>            <span class="c1"># It makes sense when you see how I use it to calculate check_value
+</span>            <span class="n">node_not_in_path</span> <span class="o">=</span> <span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"node_name"</span><span class="p">])</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">path</span>
+            <span class="c1"># Get the subnode ID to check if we already added it to the path
+</span>            <span class="n">subnode_id</span> <span class="o">=</span> <span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"subnode_name"</span><span class="p">])</span>
+            <span class="c1"># Main node CP for the corresponding subnode
+</span>            <span class="n">node_cp</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"node_name"</span><span class="p">])][</span><span class="s">"cp"</span><span class="p">]</span>
+            <span class="c1"># check_value is value we check, basically a modified "subnode_value_user_per_cp" column for neighbors' subnodes
+</span>            <span class="n">check_value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s">"subnode_value_user_per_cp"</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span> <span class="o">+</span> <span class="n">node_cp</span> <span class="o">*</span> <span class="n">node_not_in_path</span><span class="p">)</span>
+            <span class="c1"># Actually I can just use an if/else statement for the above so I might be dumb.
+</span>
+            <span class="c1"># If the adjusted value per CP will improve our path value, then add both node and subnode to path
+</span>            <span class="k">if</span> <span class="p">(</span><span class="n">check_value</span> <span class="o">&gt;</span> <span class="n">path_value_per_cp</span> <span class="ow">and</span> <span class="n">subnode_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">subnodes_chosen</span><span class="p">):</span>
+                <span class="c1"># If the node is not in the path already, then add it along with its CP cost
+</span>                <span class="k">if</span> <span class="n">node_not_in_path</span><span class="p">:</span>
+                    <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"node_name"</span><span class="p">]))</span>
+                    <span class="n">path_node_CP</span> <span class="o">+=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"node_name"</span><span class="p">])][</span><span class="s">"cp"</span><span class="p">]</span>
+                    <span class="c1"># Diagnostics
+</span>                    <span class="k">if</span> <span class="n">diagnostics</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="k">print</span><span class="p">(</span><span class="s">"Node added: "</span> <span class="o">+</span> <span class="n">row</span><span class="p">[</span><span class="s">"node_name"</span><span class="p">])</span>
+                <span class="c1"># Add subnode to path
+</span>                <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"subnode_name"</span><span class="p">]))</span>
+                <span class="c1"># Update path value
+</span>                <span class="n">path_value</span> <span class="o">+=</span> <span class="n">row</span><span class="p">[</span><span class="s">"subnode_value_user"</span><span class="p">]</span>
+                <span class="c1"># Add subnode CP
+</span>                <span class="n">path_subnode_CP</span> <span class="o">+=</span> <span class="n">row</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span>
+                <span class="c1"># Update path value per CP
+</span>                <span class="n">path_value_per_cp</span> <span class="o">=</span> <span class="n">path_value</span> <span class="o">/</span> <span class="p">(</span><span class="n">path_node_CP</span> <span class="o">+</span> <span class="n">path_subnode_CP</span><span class="p">)</span>
+                <span class="c1"># Keeping track of chosen subnodes
+</span>                <span class="n">subnodes_chosen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subnode_id</span><span class="p">)</span>
+                <span class="n">subnodes_chosen_df</span> <span class="o">=</span> <span class="n">subnodes_chosen_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                
+                <span class="c1"># Diagnostics
+</span>                <span class="k">if</span> <span class="n">diagnostics</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">"Subnode added: "</span> <span class="o">+</span> <span class="n">row</span><span class="p">[</span><span class="s">"subnode_name"</span><span class="p">])</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">"New path value: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_value</span><span class="p">))</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">"Node CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_node_CP</span><span class="p">)</span> <span class="o">+</span> <span class="s">"</span><span class="se">\t</span><span class="s">Subnode CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_subnode_CP</span><span class="p">)</span> <span class="o">+</span> <span class="s">"</span><span class="se">\t</span><span class="s">Total CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_node_CP</span> <span class="o">+</span> <span class="n">path_subnode_CP</span><span class="p">))</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">"Updated path value per CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_value_per_cp</span><span class="p">))</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">"_______________________________________________________________________________________________"</span><span class="p">)</span>
+        
+    <span class="c1"># Now let's offload lower value subnodes
+</span>    <span class="n">subnodes_chosen_df</span> <span class="o">=</span> <span class="n">subnodes_chosen_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s">"subnode_value_user_per_cp"</span><span class="p">,</span> <span class="n">ascending</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="c1"># Basically reverse iteration, going through subnodes that we have chosen to see which ones can be dropped to increase
+</span>    <span class="c1"># our average path value per CP
+</span>    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">subnodes_chosen_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"subnode_value_user_per_cp"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">path_value_per_cp</span><span class="p">):</span>
+            <span class="c1"># Remove subnode from path
+</span>            <span class="n">path</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">get_nx_node_id</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s">"subnode_name"</span><span class="p">]))</span>
+            <span class="c1"># Decrease path value because subnode is no longer in path
+</span>            <span class="n">path_value</span> <span class="o">-=</span> <span class="n">row</span><span class="p">[</span><span class="s">"subnode_value_user"</span><span class="p">]</span>
+            <span class="c1"># Decrease subnode CP because subnode is no longer in path
+</span>            <span class="n">path_subnode_CP</span> <span class="o">-=</span> <span class="n">row</span><span class="p">[</span><span class="s">"cp"</span><span class="p">]</span>
+            <span class="c1"># Recalculate value per CP (it should increase if you need a sanity check)
+</span>            <span class="n">path_value_per_cp</span> <span class="o">=</span> <span class="n">path_value</span> <span class="o">/</span> <span class="p">(</span><span class="n">path_node_CP</span> <span class="o">+</span> <span class="n">path_subnode_CP</span><span class="p">)</span>
+            
+            <span class="c1"># Diagnostics
+</span>            <span class="k">if</span> <span class="n">diagnostics</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"Subnode removed: "</span> <span class="o">+</span> <span class="n">row</span><span class="p">[</span><span class="s">"subnode_name"</span><span class="p">])</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"New path value: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_value</span><span class="p">))</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"Node CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_node_CP</span><span class="p">)</span> <span class="o">+</span> <span class="s">"</span><span class="se">\t</span><span class="s">Subnode CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_subnode_CP</span><span class="p">)</span> <span class="o">+</span> <span class="s">"</span><span class="se">\t</span><span class="s">Total CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_node_CP</span> <span class="o">+</span> <span class="n">path_subnode_CP</span><span class="p">))</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"Updated path value per CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_value_per_cp</span><span class="p">))</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"_______________________________________________________________________________________________"</span><span class="p">)</span>
+                
+    <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="si">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="s">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">start</span> <span class="ow">and</span> <span class="n">end</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"Start: "</span> <span class="o">+</span> <span class="n">start</span> <span class="o">+</span> <span class="s">" | End: "</span> <span class="o">+</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Node CP cost: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_node_CP</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Subnode CP cost: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_subnode_CP</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Total CP cost: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_node_CP</span> <span class="o">+</span> <span class="n">path_subnode_CP</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Path value: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_value</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Path value per CP: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">path_value_per_cp</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="si">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="s">"</span><span class="p">)</span>
+    
+    <span class="c1"># Just reordering subnodes by value per CP, purely optional and up to your preference
+</span>    <span class="n">subnodes_chosen_df</span> <span class="o">=</span> <span class="n">subnodes_chosen_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s">"subnode_value_user_per_cp"</span><span class="p">,</span> <span class="n">ascending</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">subnodes_chosen_df</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Demonstration of optimize_path
+</span><span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">optimize_path</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="s">"Calpheon"</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="s">"Altinova"</span><span class="p">,</span> <span class="n">max_depth</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Start path value: 0
+Node CP: 18	Subnode CP: 0	Total CP: 18
+***********************************************************************************************
+Subnode added: Lynch Farm Ruins - Excavation.2
+New path value: 19963.259972453117
+Node CP: 18	Subnode CP: 1	Total CP: 19
+Updated path value per CP: 1050.697893287006
+_______________________________________________________________________________________________
+Subnode added: Oze Pass - Lumbering.1
+New path value: 30534.01968896389
+Node CP: 18	Subnode CP: 2	Total CP: 20
+Updated path value per CP: 1526.7009844481945
+_______________________________________________________________________________________________
+Subnode added: Northern Plain Of Serendia - Lumbering.2
+New path value: 36717.06983745098
+Node CP: 18	Subnode CP: 3	Total CP: 21
+Updated path value per CP: 1748.4318970214754
+_______________________________________________________________________________________________
+Subnode added: Ahto Farm - Farming.1
+New path value: 47777.66969001293
+Node CP: 18	Subnode CP: 5	Total CP: 23
+Updated path value per CP: 2077.289986522301
+_______________________________________________________________________________________________
+Subnode added: Kamasylve Temple - Farming.2
+New path value: 57252.50991791487
+Node CP: 18	Subnode CP: 7	Total CP: 25
+Updated path value per CP: 2290.100396716595
+_______________________________________________________________________________________________
+Subnode added: Northern Plain Of Serendia - Gathering.1
+New path value: 60079.44001716375
+Node CP: 18	Subnode CP: 8	Total CP: 26
+Updated path value per CP: 2310.747692967837
+_______________________________________________________________________________________________
+Subnode added: Lynch Farm Ruins - Gathering.1
+New path value: 62819.75991791487
+Node CP: 18	Subnode CP: 9	Total CP: 27
+Updated path value per CP: 2326.6577747375877
+_______________________________________________________________________________________________
+Node added: Ancient Ruins Excavation Site
+Subnode added: Ancient Ruins Excavation Site - Excavation.1
+New path value: 114314.3696629405
+Node CP: 19	Subnode CP: 12	Total CP: 31
+Updated path value per CP: 3687.560311707758
+_______________________________________________________________________________________________
+Node added: Alejandro Farm
+Subnode added: Alejandro Farm - Farming.2
+New path value: 130023.76940125227
+Node CP: 21	Subnode CP: 13	Total CP: 34
+Updated path value per CP: 3824.2285118015375
+_______________________________________________________________________________________________
+Node added: Lynch Ranch
+Subnode added: Lynch Ranch - Farming.1
+New path value: 142246.8889234662
+Node CP: 23	Subnode CP: 14	Total CP: 37
+Updated path value per CP: 3844.5105114450325
+_______________________________________________________________________________________________
+Subnode removed: Lynch Farm Ruins - Gathering.1
+New path value: 139506.5690227151
+Node CP: 23	Subnode CP: 13	Total CP: 36
+Updated path value per CP: 3875.182472853197
+_______________________________________________________________________________________________
+Subnode removed: Northern Plain Of Serendia - Gathering.1
+New path value: 136679.6389234662
+Node CP: 23	Subnode CP: 12	Total CP: 35
+Updated path value per CP: 3905.132540670463
+_______________________________________________________________________________________________
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Start: Calpheon | End: Altinova
+	Node CP cost: 23
+	Subnode CP cost: 12
+	Total CP cost: 35
+	Path value: 136679.6389234662
+	Path value per CP: 3905.132540670463
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+</code></pre></div></div>
+
+<h5 id="simple-extension-of-our-algorithm-to-do-multiple-paths-at-once">Simple extension of our algorithm to do multiple paths at once</h5>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">combine_paths</span><span class="p">(</span><span class="n">locations</span><span class="p">):</span>
+    <span class="s">"""
+    Can take multiple start and end location pairings and will combine all shortest paths between location pairings
+    generated by networkx's bidirectional Dijkstra.
+    
+    Args:
+        locations: Pairings of start and end locations. They should both be main nodes.
+            Ex. [("Calpheon", "Altinova"), ("Calpheon", "Heidel"), ("Heidel", "Velia")]
+        
+    Returns:
+        One master path that connects all location pairings given as input.   
+    """</span>
+    <span class="n">master_path</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">path_location</span> <span class="ow">in</span> <span class="n">locations</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bidirectional_dijkstra</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">get_node_id</span><span class="p">([</span><span class="n">path_location</span><span class="p">[</span><span class="mi">0</span><span class="p">]])[</span><span class="mi">0</span><span class="p">],</span> <span class="n">get_node_id</span><span class="p">([</span><span class="n">path_location</span><span class="p">[</span><span class="mi">1</span><span class="p">]])[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">master_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        
+    <span class="n">master_path</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">master_path</span><span class="p">)))</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">master_path</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">initpath</span> <span class="o">=</span> <span class="n">combine_paths</span><span class="p">([(</span><span class="s">"Calpheon"</span><span class="p">,</span> <span class="s">"Altinova"</span><span class="p">),</span> <span class="p">(</span><span class="s">"Calpheon"</span><span class="p">,</span> <span class="s">"Heidel"</span><span class="p">),</span> <span class="p">(</span><span class="s">"Heidel"</span><span class="p">,</span> <span class="s">"Velia"</span><span class="p">)])</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">main</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">optimize_path</span><span class="p">(</span><span class="n">initpath</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Start path value: 0
+Node CP: 25	Subnode CP: 0	Total CP: 25
+***********************************************************************************************
+Subnode added: Lynch Farm Ruins - Excavation.2
+New path value: 19963.259972453117
+Node CP: 25	Subnode CP: 1	Total CP: 26
+Updated path value per CP: 767.8176912481969
+_______________________________________________________________________________________________
+Subnode added: Oze Pass - Lumbering.1
+New path value: 30534.01968896389
+Node CP: 25	Subnode CP: 2	Total CP: 27
+Updated path value per CP: 1130.8896181097737
+_______________________________________________________________________________________________
+Subnode added: Northern Plain Of Serendia - Lumbering.2
+New path value: 36717.06983745098
+Node CP: 25	Subnode CP: 3	Total CP: 28
+Updated path value per CP: 1311.3239227661065
+_______________________________________________________________________________________________
+Subnode added: Ahto Farm - Farming.1
+New path value: 47777.66969001293
+Node CP: 25	Subnode CP: 5	Total CP: 30
+Updated path value per CP: 1592.5889896670976
+_______________________________________________________________________________________________
+Subnode added: Forest Of Plunder - Gathering.1
+New path value: 53048.879828095436
+Node CP: 25	Subnode CP: 6	Total CP: 31
+Updated path value per CP: 1711.2541880030785
+_______________________________________________________________________________________________
+Subnode added: Kamasylve Temple - Farming.2
+New path value: 62523.72005599737
+Node CP: 25	Subnode CP: 8	Total CP: 33
+Updated path value per CP: 1894.6581835150719
+_______________________________________________________________________________________________
+Subnode added: Northern Plain Of Serendia - Gathering.1
+New path value: 65350.65015524626
+Node CP: 25	Subnode CP: 9	Total CP: 34
+Updated path value per CP: 1922.077945742537
+_______________________________________________________________________________________________
+Subnode added: Lynch Farm Ruins - Gathering.1
+New path value: 68090.97005599737
+Node CP: 25	Subnode CP: 10	Total CP: 35
+Updated path value per CP: 1945.4562873142106
+_______________________________________________________________________________________________
+Node added: Ancient Ruins Excavation Site
+Subnode added: Ancient Ruins Excavation Site - Excavation.1
+New path value: 119585.579801023
+Node CP: 26	Subnode CP: 13	Total CP: 39
+Updated path value per CP: 3066.296917974949
+_______________________________________________________________________________________________
+Node added: Alejandro Farm
+Subnode added: Alejandro Farm - Farming.2
+New path value: 135294.97953933477
+Node CP: 28	Subnode CP: 14	Total CP: 42
+Updated path value per CP: 3221.309036650828
+_______________________________________________________________________________________________
+Node added: Lynch Ranch
+Subnode added: Lynch Ranch - Farming.1
+New path value: 147518.0990615487
+Node CP: 30	Subnode CP: 15	Total CP: 45
+Updated path value per CP: 3278.179979145527
+_______________________________________________________________________________________________
+Node added: Costa Farm
+Subnode added: Costa Farm - Farming.2
+New path value: 157459.48875111341
+Node CP: 32	Subnode CP: 16	Total CP: 48
+Updated path value per CP: 3280.406015648196
+_______________________________________________________________________________________________
+Subnode added: Costa Farm - Farming.1
+New path value: 160988.8688456416
+Node CP: 32	Subnode CP: 17	Total CP: 49
+Updated path value per CP: 3285.4871192988085
+_______________________________________________________________________________________________
+Subnode removed: Lynch Farm Ruins - Gathering.1
+New path value: 158248.5489448905
+Node CP: 32	Subnode CP: 16	Total CP: 48
+Updated path value per CP: 3296.8447696852186
+_______________________________________________________________________________________________
+Subnode removed: Northern Plain Of Serendia - Gathering.1
+New path value: 155421.6188456416
+Node CP: 32	Subnode CP: 15	Total CP: 47
+Updated path value per CP: 3306.8429541625874
+_______________________________________________________________________________________________
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	Node CP cost: 32
+	Subnode CP cost: 15
+	Total CP cost: 47
+	Path value: 155421.6188456416
+	Path value per CP: 3306.8429541625874
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+</code></pre></div></div>
+
+<p>Final path our algorithm produced.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">main</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">id_</span><span class="p">][</span><span class="s">"name"</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Calpheon
+Falres Dirt Farm
+Marni Farm Ruins
+Oze Pass
+Bradie Fortress
+Northern Plain Of Serendia
+Lynch Farm Ruins
+Heidel
+Eastern Border
+Kamasylve Temple
+Ahto Farm
+Stonetail Horse Ranch
+Asula Highland
+Highland Junction
+Altinova Entrance
+Altinova
+Northern Guard Camp
+Heidel Pass
+Forest Of Plunder
+Velia
+Lynch Farm Ruins - Excavation.2
+Oze Pass - Lumbering.1
+Northern Plain Of Serendia - Lumbering.2
+Ahto Farm - Farming.1
+Forest Of Plunder - Gathering.1
+Kamasylve Temple - Farming.2
+Ancient Ruins Excavation Site
+Ancient Ruins Excavation Site - Excavation.1
+Alejandro Farm
+Alejandro Farm - Farming.2
+Lynch Ranch
+Lynch Ranch - Farming.1
+Costa Farm
+Costa Farm - Farming.2
+Costa Farm - Farming.1
+</code></pre></div></div>
+
+
+
+      <footer class="site-footer">
+  <span class="site-footer-owner"><a href="http://localhost:4000">cwong8.github.io</a> is maintained by <a href="https://github.com/cwong8">Christopher Wong</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>
