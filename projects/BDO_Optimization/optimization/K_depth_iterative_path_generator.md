@@ -232,14 +232,6 @@ Ex:
 
 
 ```python
-if x is not None: print("adf")
-```
-
-    adf
-    
-
-
-```python
 def optimize_path(initpath = None, start = None, end = None, max_depth = 1, output = False, diagnostics = False):
     """
     Optimizes a path by maximizing value per CP.
